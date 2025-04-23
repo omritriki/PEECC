@@ -19,7 +19,7 @@ Entity FSM_controller is
 			reset : IN std_logic;
 			valid_in : IN std_logic;
 			en_gen_data, en_gen_err, en_enc, en_bus, en_dec,en_trans_count,en_bf1,en_bf2, en_k_comp : OUT std_logic;
-			trigger : OUT std_logic
+			trigger, done, load_seed : OUT std_logic
 	);
 end entity;
 
@@ -49,6 +49,7 @@ Architecture controller_beh of FSM_controller is
 						if valid_in = '1' then
 							nextstate <= S0;
 							enable_cnt <= '1';
+							load_seed <= '1';
 						else
 							nextstate <= idle;
 							enable_cnt <= '0';
@@ -96,6 +97,7 @@ Architecture controller_beh of FSM_controller is
 						en_bus <= '0';
 						en_dec <= '0';
 						en_trans_count <= '0';
+						done <= '0';
 						en_bf1 <= '0';
 						en_bf2 <= '0';
 						en_k_comp <= '0';
@@ -105,6 +107,7 @@ Architecture controller_beh of FSM_controller is
 						en_bus <= '0';
 						en_dec <= '0';
 						en_trans_count <= '0';
+						done <= '0';
 						en_bf1 <= '0';
 						en_bf2 <= '0';
 						en_k_comp <= '0';
@@ -114,6 +117,7 @@ Architecture controller_beh of FSM_controller is
 						en_bus <= '0';
 						en_dec <= '0';
 						en_trans_count <= '0';
+						done <= '0';
 						en_bf1 <= '0';
 						en_bf2 <= '0';
 						en_k_comp <= '0';
@@ -123,6 +127,7 @@ Architecture controller_beh of FSM_controller is
 						en_bus <= '1';
 						en_dec <= '0';
 						en_trans_count <= '0';
+						done <= '0';
 						en_bf1 <= '0';
 						en_bf2 <= '0';
 						en_k_comp <= '0';
@@ -132,6 +137,7 @@ Architecture controller_beh of FSM_controller is
 						en_bus <= '1';
 						en_dec <= '1';
 						en_trans_count <= '0';
+						done <= '0';
 						en_bf1 <= '0';
 						en_bf2 <= '0';
 						en_k_comp <= '0';
@@ -143,6 +149,7 @@ Architecture controller_beh of FSM_controller is
 						en_bus <= '1';
 						en_dec <= '1';
 						en_trans_count <= '1';
+						done <= '1';
 						en_bf1 <= '1';
 						en_bf2 <= '1';
 						en_k_comp <= '1';
@@ -154,6 +161,7 @@ Architecture controller_beh of FSM_controller is
 						en_bus <= '0';
 						en_dec <= '0';
 						en_trans_count <= '0';
+						done <= '0';
 						en_bf1 <= '0';
 						en_bf2 <= '0';
 						en_k_comp <= '0';

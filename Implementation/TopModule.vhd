@@ -15,12 +15,16 @@ use IEEE.STD_LOGIC_1164.ALL;
 -- arithmetic functions with Signed or Unsigned values
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
+
+-- Define the type, currently manually set to 19 registers of 11 bits
+type reg_array_type is array (0 to 18) of std_logic_vector(10 downto 0);
+
 entity TopModule is
     Port ( 
 		CLK : in  STD_LOGIC;
 		RST : in STD_LOGIC;
-		ValidIn : out STD_LOGIC;
-		Count : out STD_LOGIC
+		ValidIn : in STD_LOGIC;
+		registers : out reg_array_type;
 		IsEqual : out STD_LOGIC);
 end TopModule;
 
@@ -32,7 +36,7 @@ architecture Behavioral of TopModule is
 			reset : IN std_logic;
 			valid_in : IN std_logic;
 			en_gen_data, en_gen_err, en_enc, en_bus, en_dec, en_trans_count, en_bf1, en_bf2, en_k_comp : OUT std_logic;
-			trigger : OUT std_logic);
+			trigger, done : OUT std_logic);
 	end component FSM_controller;
 
 	component DataPath is
@@ -43,9 +47,9 @@ architecture Behavioral of TopModule is
 		port (	
 			clk : IN std_logic;
 			rst : IN std_logic;
+			done : IN std_logic;
 			en_gen_data, en_gen_err, en_enc, en_bus, en_dec, en_trans_count, en_bf1, en_bf2, en_k_comp : IN std_logic;
-			cnt : out std_logic_vector(ceil_log2(k+1)-1 downto 0);
-			isequal : OUT std_logic);
+≈≈≈			isequal : OUT std_logic);
 	end component DataPath;
 
 	-- SIGNALS
@@ -59,6 +63,7 @@ architecture Behavioral of TopModule is
 	signal en_bf1 : std_logic;
 	signal en_bf2 : std_logic;
 	signal en_k_comp : std_logic;
+	signal done : std_logic;
 
 	begin
 		U1 : FSM_controller
@@ -75,13 +80,15 @@ architecture Behavioral of TopModule is
 				en_bf1 => en_bf1,
 				en_bf2 => en_bf2,
 				en_k_comp => en_k_comp,
-				trigger => trigger);
+				trigger => trigger,
+				done => done);
 					
 		U2 : DataPath
 			generic map ()
 			port map (	
 				clk => CLK,
 				reset => RST,
+				done => done,
 				en_gen_data => en_gen_data,
 				en_gen_err => en_gen_err,
 				en_enc => en_enc,
@@ -90,8 +97,8 @@ architecture Behavioral of TopModule is
 				en_trans_count => en_trans_count,
 				en_bf1 => en_bf1,
 				en_bf2 => en_bf2,
-				en_k_comp => en_k_comp
-				cnt => Count,
+				en_k_comp => en_k_comp,
+				registers => registers,
 				isequal => IsEqual);
 
 end Behavioral;
