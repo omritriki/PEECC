@@ -8,17 +8,24 @@
 ======================================================
 """
 
+import logging
 import Encoder
 import Generator
 import Transition_Count
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
 
 # Description: Controls the encoding process, testing both random and all possible
 #              k-bit input words while tracking transition statistics
 # Inputs:
 #              None
 # Outputs:
-#              Prints max and average transitions for random words and all possible words
+#              Logs max and average transitions for random words and all possible words
 
 def Controller():
     k = 16
@@ -30,7 +37,7 @@ def Controller():
     choice = input("Simulate t random words (1) or Simulate all possible words starting from 0 (2)? ")
 
     if choice == '1':
-        print("Simulating t random words")
+        logging.info("Simulating t random words")
         # Reset counters and bus
         c_prev = [0] * n
         Transition_Count.Transition_Count(c_prev, c_prev, RESET=True)
@@ -42,12 +49,12 @@ def Controller():
             Transition_Count.Transition_Count(c, c_prev)
             c_prev = c
 
-        max, avg = Transition_Count.Transition_Count(c_prev, c_prev)
-        print("Max transitions: ", max)
-        print("Avg transitions: ", avg / t)
+        max_transitions, avg_transitions = Transition_Count.Transition_Count(c_prev, c_prev)
+        logging.info(f"Max transitions: {max_transitions}")
+        logging.info(f"Avg transitions: {avg_transitions / t}")
 
-    if choice == '2':
-        print("Simulating all possible words starting from 0")
+    elif choice == '2':
+        logging.info("Simulating all possible words starting from 0")
         # Reset counters and bus
         c_prev = [0] * n
         Transition_Count.Transition_Count(c_prev, c_prev, RESET=True)
@@ -59,9 +66,12 @@ def Controller():
             c = Encoder.mBitBusInvert(s, c_prev, M)
             Transition_Count.Transition_Count(c, c_prev)
 
-        max, avg = Transition_Count.Transition_Count(c_prev, c_prev)
-        print("Max transitions: ", max)
-        print("Avg transitions: ", avg / ((2 ** k) - 1))
+        max_transitions, avg_transitions = Transition_Count.Transition_Count(c_prev, c_prev)
+        logging.info(f"Max transitions: {max_transitions}")
+        logging.info(f"Avg transitions: {avg_transitions / ((2 ** k) - 1)}")
+
+    else:
+        logging.warning("Invalid choice. Please select either 1 or 2.")
 
 
 if __name__ == '__main__':
