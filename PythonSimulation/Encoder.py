@@ -23,6 +23,7 @@ logging.basicConfig(
     handlers=[file_handler]  # Logs go only to the file
 )
 
+
 # Description: Applies M-bit bus inversion encoding to the input sequence s,
 #              dividing it into M segments and updating based on previous codeword c_prev
 # Inputs:

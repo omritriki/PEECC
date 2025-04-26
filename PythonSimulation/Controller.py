@@ -10,7 +10,9 @@
 
 import logging
 import Encoder
+import Decoder
 import Generator
+import Comparator
 import Transition_Count
 
 # Configure logging for external modules (logs go to the file)
@@ -53,24 +55,45 @@ def Controller():
     n = k + M
 
     # Ask the user for their choice
-    choice = input("Simulate t random words (1) or Simulate all possible words starting from 0 (2)? ")
+    choice = input(f"Simulate {t} random words (1) or Simulate all possible words starting from 0 (2)? ")
+    print()  
+    controller_logger.info(f"Parameters: k = {k}, M = {M}, n = {n}")
+    print()  
 
     if choice == '1':
-        controller_logger.info("Simulating t random words")
+        controller_logger.info(f"Simulating {t} random words")
         # Reset counters and bus
         c_prev = [0] * n
         Transition_Count.Transition_Count(c_prev, c_prev, RESET=True)
 
         # Simulate t random words
         for i in range(t):
-            s = Generator.generate(k)
-            c = Encoder.mBitBusInvert(s, c_prev, M)
+            # Generate a random k-bit binary number
+            s_in = Generator.generate(k, 1)
+
+            # Apply M-bit bus inversion encoding
+            c = Encoder.mBitBusInvert(s_in, c_prev, M)
+
+            # Count transitions
             Transition_Count.Transition_Count(c, c_prev)
+
+            # Encode the new codeword
+            s_out = Decoder.Decoder(c, M)
+
+            # Check if the new codeword is different from the previous one
+            if not Comparator.Comparator(s_in, s_out):
+                controller_logger.warning(f"Mismatch between input and output for word {i + 1}: {s_in} != {s_out}")
+                print(f"Mismatch between input and output for word {i + 1}: {s_in} != {s_out}")
+                break
+
+            # Update the previous codeword
             c_prev = c
 
         max_transitions, avg_transitions = Transition_Count.Transition_Count(c_prev, c_prev)
+        print()  
         controller_logger.info(f"Max transitions: {max_transitions}")
         controller_logger.info(f"Avg transitions: {avg_transitions / t}")
+        print()  
 
     elif choice == '2':
         controller_logger.info("Simulating all possible words starting from 0")
@@ -80,17 +103,31 @@ def Controller():
 
         # Simulate all possible words starting from 0
         for j in range((2 ** k) - 1):
+            # Reset the bus for each new word
             c_prev = [0] * n
-            s = [int(bit) for bit in format(j, f'0{k}b')]
+
+            # Generate the k-bit binary number from j
+            s = Generator.generate(k, mode=2, i=j)
+
+            # Apply M-bit bus inversion encoding
             c = Encoder.mBitBusInvert(s, c_prev, M)
+
+            # Count transitions
             Transition_Count.Transition_Count(c, c_prev)
 
+            # Encode the new codeword
+
         max_transitions, avg_transitions = Transition_Count.Transition_Count(c_prev, c_prev)
+        print()  
         controller_logger.info(f"Max transitions: {max_transitions}")
         controller_logger.info(f"Avg transitions: {avg_transitions / ((2 ** k) - 1)}")
+        print()  
 
     else:
         controller_logger.warning("Invalid choice. Please select either 1 or 2.")
+
+    controller_logger.info("Simulation ended")
+    print()
 
 
 if __name__ == '__main__':

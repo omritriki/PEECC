@@ -24,13 +24,23 @@ logging.basicConfig(
 # Outputs:
 #              s (array): An array of n binary digits
 
-def generate(n):
-    if n <= 0:
-        logging.warning(f"Invalid input: n={n}. Number of bits must be positive.")
+def generate(k, mode = 1, i = 0):
+    if k <= 0:
+        logging.warning(f"Invalid input: n={k}. Number of bits must be positive.")
         return []
 
-    random_num = randint(0, (2 ** n) - 1)
-    s = [int(bit) for bit in format(random_num, f'0{n}b')]  # Convert each bit to an integer
+    if mode == 1:
+        # Generate a random n-bit binary number
+        logging.info(f"Generating a random {k}-bit binary number.")
+        random_num = randint(0, (2 ** k) - 1)
+        s = [int(bit) for bit in format(random_num, f'0{k}b')]  # Convert each bit to an integer
 
-    logging.info(f"Generated {n}-bit binary number: {s}")
+    elif mode == 2:
+        # Generate i as a k-bit binary number
+        logging.info(f"Generating a {k}-bit binary number from i={i}.")
+        s = [int(bit) for bit in format(i, f'0{k}b')]
+
+        
+
+    logging.info(f"Generated {k}-bit binary number: {s}")
     return s

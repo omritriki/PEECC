@@ -23,22 +23,22 @@ logging.basicConfig(
 #              output (array): Decoded word (length - k)
 # Outputs:
 #              isEqual (bool): True only if info_word == output
-def Comparator(info_word, output):
+def Comparator(s_in, s_out):
+    
     # Input validation
-    if not isinstance(info_word, list) or not isinstance(output, list):
+    if not isinstance(s_in, list) or not isinstance(s_out, list):
         logging.error("Invalid input: Both info_word and output must be lists.")
         raise ValueError("Both info_word and output must be lists.")
-    if len(info_word) != len(output):
-        logging.error(f"Length mismatch: info_word length={len(info_word)}, output length={len(output)}")
+    if len(s_in) != len(s_out):
+        logging.error(f"Length mismatch: info_word length={len(s_in)}, output length={len(s_out)}")
         raise ValueError("info_word and output must have the same length.")
 
-    logging.info(f"Comparing info_word={info_word} with output={output}")
+    logging.info(f"Comparing info_word={s_in} with output={s_out}")
 
     # Comparison logic
-    for i in range(len(info_word)):
-        if info_word[i] != output[i]:
-            logging.info("Words do not match.")
-            return False
+    if s_in != s_out:
+        logging.info("Words do not match.")
+        return False
 
     logging.info("Words match.")
     return True
