@@ -8,7 +8,7 @@ module MUX2x1 #(parameter A = 8)(
     output wire [A-1:0] out
 );
     assign out = sel ? b : a;
-    initial begin 
+    always @(*) begin
 	$monitor("mux2x1: ", $time, out);
     end
 endmodule
@@ -104,7 +104,7 @@ module CheckInvert #(parameter A = 8)( // verify different A's
     input wire clk,
     input wire rst, 
     input wire en,  //is it needed?
-    input wire [A-1:0] S_i,
+    input wire [A-1:0] S_i,  //7
     output wire [A-1:0] X_i,
     output wire INV_i
 );
@@ -151,30 +151,34 @@ module Encoder #(parameter M = 5, k = 32, A = 8)(
     genvar i;
     generate
         for (i = 0; i < (k + M) % M; i = i + 1) begin : check_invert_gen1
-            wire [A:0] S_part1 = S[i*(A+1) +: (A+1)];
-            wire [A:0] X_part1;
-            CheckInvert #(A+1) ci1 (
+            wire [A-2:0] S_part1 = S[i*(A-1) +: (A-1)];
+            wire [A-2:0] X_part1;
+            CheckInvert #(A-1) ci1 (
                 .clk(clk), .rst(rst), .en(en),
                 .S_i(S_part1),
                 .X_i(X_part1),  // X_part1 is assigned here
                 .INV_i(INV[i])
             );
-            assign X[i*(A+1) +: (A+1)] = X_part1;  // X_part1 is assigned to part-select of X
+            assign X[i*(A-1) +: (A-1)] = X_part1;  // X_part1 is assigned to part-select of X
         end
     endgenerate
     
     genvar j; //k=32, M=5, A=8
     generate
-        for (j = (k + M) % M; j < M-1; j = j + 1) begin : check_invert_gen2
-            wire [A-1:0] S_part2 = S[j*(A) +: (A)];
-            wire [A-1:0] X_part2;
-            CheckInvert #(A) ci2(
+        for (j = 0; j < (M - ((k + M) % M)); j = j + 1) begin : check_invert_gen2
+	    localparam integer start = ((k+M)%M)*(A-1) + j*(A-2);
+	    initial begin
+	        $display("start: ", start);
+	    end
+            wire [A-3:0] S_part2 = S[start +: (A-2)];
+            wire [A-3:0] X_part2;
+            CheckInvert #(A-2) ci2(
                 .clk(clk), .rst(rst), .en(en),
                 .S_i(S_part2),
                 .X_i(X_part2),  // X_part2 is assigned here
-                .INV_i(INV[j])
+                .INV_i(INV[((k+M)%M)+j])
             );
-            assign X[j*A +: A] = X_part2;  // X_part2 is assigned to part-select of X
+            assign X[start +: (A-2)] = X_part2;  // X_part2 is assigned to part-select of X
         end
     endgenerate
 endmodule
@@ -238,42 +242,43 @@ module Transition_Counter #(parameter n = 37) (
 );
 
     reg [n-1:0] prev_data;
-    wire [n-1:0] xor_result;
+    reg [n-1:0] xor_result;
     reg [10:0] registers_cnt [(n/2):0]; 
-    reg [$clog2(n+1)-1:0] transition_count;
     
-    integer i, j;
+    integer i, j, transition_count;
 
     initial begin
-        for (i = 0; i <= (11*(n/2)-1); i = i + 1) begin
+        for (i = 0; i <= (n/2); i = i + 1) begin //the limit was changed from 11*(n/2)-1
             registers_cnt[i] = 11'b0;
         end
-        transition_count = {$clog2(n+1){1'b0}};
     end
     
-    assign xor_result = data_in ^ prev_data;
+    
      
     always @(posedge clk or posedge rst) begin
         if (rst) begin
-            prev_data <= {(n-1){1'b0}};
+            prev_data <= {n{1'b0}};
             // Reset all counters
-            for (i = 0; i <= (11*(n/2)-1); i = i + 1) begin
-                registers[i] <= 0; 
+            for (i = 0; i <= (n/2); i = i + 1) begin    //I added this in the rst. not tested but it seems more right
+                registers[i] <= 11'b0; 
             end
-        end else if (en) begin
-            prev_data <= data_in;
-            transition_count <= 0;
+	    registers <= 0;  //change the reset assignment from a for loop to just assigning 0
+        end 
+	else if (en) begin
+	    xor_result = data_in ^ prev_data;
+            transition_count = 0;
             // Count the number of transitions
             for (i = 0; i < n; i = i + 1) begin
                 transition_count = transition_count + xor_result[i];
             end
+	    prev_data <= data_in;
             // Increment the corresponding register0
             registers_cnt[transition_count] <= registers_cnt[transition_count] + 1;            
         end
         // Store the final count in the output register after 2000 cycles
         if (done) begin
-            for (j = 0; j <= (11*(n/2)-1); j = j + 1) begin
-                registers[j] <= registers_cnt[j];
+            for (j = 0; j <= (n/2); j = j + 1) begin  ////the limit was changed from 11*(n/2)-1
+                registers[j*11 +: 11] <= registers_cnt[j]; //registers is not an array but a bit vector so I needed to change from registers[j] to registers[j*11 +: 11]
             end
         end
     end
@@ -315,7 +320,6 @@ module LFSR_seeded #(parameter k = 32) (
             end 
             else begin
                 lfsr_out <= {lfsr_out[k-2:0], lfsr_out[k-1] ^ lfsr_out[k-2]};
-		$display("lfsr: ", $time, lfsr_out);
             end
         end
     end
@@ -340,7 +344,6 @@ module Input_Data_Generator #(parameter k = 32) (
             S_data <= 0;
         end 
         else if (en) begin
-	    $display("geneator_S_data: ", $time, lfsr_out);
             S_data <= lfsr_out;
         end
     end

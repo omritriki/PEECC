@@ -43,7 +43,7 @@ module FSM_controller (
     // Counter signals
     reg  enable_cnt;
     reg  done_cnt;
-    reg [10:0] cnt;
+    reg [6:0] cnt;
 
     // Synchronous state register
     always @(posedge clk or posedge reset) begin
@@ -68,6 +68,8 @@ module FSM_controller (
                 end
 
                 cnt <= cnt + 1'b1;
+		$display("counter: ", cnt);
+		$monitor("state: ", state);
 
                 // If (cnt > 0) and (cnt < 4) => set trigger
                 // Check cnt next-state to see if it is > 0 and < 4

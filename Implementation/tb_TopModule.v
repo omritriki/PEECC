@@ -39,7 +39,7 @@ module tb_TopModule();
 	#23
       	ValidIn = 1'b1;
          // Let the design run for a while
-         #500;
+         #5000;
 
          // Stop simulation
          $stop;
