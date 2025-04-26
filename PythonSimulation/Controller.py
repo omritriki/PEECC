@@ -10,36 +10,10 @@
 
 import logging
 
-from coding_schemes import mbit_bi
+from coding_schemes import mbit_bi, dapbi
 from core import Generator
 from core import Comparator
 from core import Transition_Count
-
-# Configure logging for external modules (logs go to the file)
-file_handler = logging.FileHandler("simulation_logs.log")
-file_handler.setLevel(logging.INFO)
-file_handler.setFormatter(logging.Formatter(
-    "%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-))
-
-logging.basicConfig(
-    level=logging.INFO,
-    handlers=[file_handler]  # Logs from other modules go only to the file
-)
-
-# Configure a separate logger for the Controller (logs go to the terminal)
-controller_logger = logging.getLogger("Controller")
-controller_logger.setLevel(logging.INFO)
-
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-console_handler.setFormatter(logging.Formatter(
-    "%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-))
-
-controller_logger.addHandler(console_handler)
 
 # Description: Controls the encoding process, testing both random and all possible
 #              k-bit input words while tracking transition statistics
@@ -53,6 +27,8 @@ def Controller():
     t = 5000
     M = 3
     n = k + M
+
+    controller_logger = logging.getLogger("Controller")
 
     coding_scheme = mbit_bi.MbitBI()
 
@@ -139,6 +115,35 @@ def Controller():
 
     controller_logger.info("Simulation ended")
     print()
+
+def setup_file_logging():
+    """Configure logging for external modules (logs go to the file)."""
+    file_handler = logging.FileHandler("simulation_logs.log")
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(logging.Formatter(
+        "%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    ))
+    logging.basicConfig(
+        level=logging.INFO,
+        handlers=[file_handler]  # Logs from other modules go only to the file
+    )
+
+def setup_controller_logging():
+    """Configure a separate logger for the Controller (logs go to the terminal)."""
+    controller_logger = logging.getLogger("Controller")
+    controller_logger.setLevel(logging.INFO)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(logging.Formatter(
+        "%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    ))
+
+    controller_logger.addHandler(console_handler)
+    return controller_logger
+
 
 
 if __name__ == '__main__':

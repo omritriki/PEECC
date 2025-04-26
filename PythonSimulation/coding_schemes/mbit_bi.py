@@ -79,18 +79,14 @@ class MbitBI(CodingScheme):
     def Check_Invert(self, s, c_prev):
         logging.debug(f"Checking inversion for segment: s={s}, c_prev={c_prev}")
         A = len(s)
-        curr_transitions = 0
 
-        for i in range(A):
-            if s[i] != c_prev[i]:
-                curr_transitions += 1
+        curr_transitions = sum(1 for i in range(A) if s[i] != c_prev[i])
 
         logging.debug(f"Current transitions: {curr_transitions}, Threshold: {A // 2}")
 
         if curr_transitions > A // 2 or (curr_transitions == A // 2 and c_prev[-1] == 1):
             # Invert the segment
-            for i in range(A):
-                s[i] = 1 if s[i] == 0 else 0
+            s = [bit ^ 1 for bit in s]  # Flip all bits using list comprehension
             s.append(1)  # Set INV bit to 1
             logging.info(f"Segment inverted: {s}")
         else:
