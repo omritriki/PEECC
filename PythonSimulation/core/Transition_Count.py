@@ -8,14 +8,11 @@
 ======================================================
 """
 
+from logging_config import configure_logging
 import logging
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
+configure_logging()
 
 # Global variables
 avg_transitions = 0

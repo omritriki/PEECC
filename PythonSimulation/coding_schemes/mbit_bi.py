@@ -9,20 +9,11 @@
 """
 
 from coding_schemes.base_coding_scheme import CodingScheme
+from logging_config import configure_logging
 import logging
 
-# Configure logging to write to the log file
-file_handler = logging.FileHandler("simulation_logs.log")
-file_handler.setLevel(logging.INFO)
-file_handler.setFormatter(logging.Formatter(
-    "%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-))
-
-logging.basicConfig(
-    level=logging.INFO,
-    handlers=[file_handler]  # Logs go only to the file
-)
+# Configure logging
+configure_logging()
 
 
 class MbitBI(CodingScheme):
