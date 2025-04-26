@@ -1,2 +1,4 @@
 __pycache__/
 simulation_logs.log
+.idea/
+.vscode/
