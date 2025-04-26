@@ -9,11 +9,11 @@
 """
 
 import logging
-import Encoder
-import Decoder
-import Generator
-import Comparator
-import Transition_Count
+from coding_schemes import Encoder
+from coding_schemes import Decoder
+from core import Generator
+from core import Comparator
+from core import Transition_Count
 
 # Configure logging for external modules (logs go to the file)
 file_handler = logging.FileHandler("simulation_logs.log")
