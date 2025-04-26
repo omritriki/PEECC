@@ -9,8 +9,7 @@
 """
 
 import logging
-from coding_schemes import Encoder
-from coding_schemes import Decoder
+from coding_schemes import mbit_bi
 from core import Generator
 from core import Comparator
 from core import Transition_Count
@@ -54,6 +53,11 @@ def Controller():
     M = 3
     n = k + M
 
+    coding_scheme = mbit_bi.MbitBI()
+
+    Encoder = coding_scheme.encode
+    Decoder = coding_scheme.decode
+
     # Ask the user for their choice
     choice = input(f"Simulate {t} random words (1) or Simulate all possible words starting from 0 (2)? ")
     print()  
@@ -72,13 +76,13 @@ def Controller():
             s_in = Generator.generate(k, 1)
 
             # Apply M-bit bus inversion encoding
-            c = Encoder.mBitBusInvert(s_in, c_prev, M)
+            c = Encoder(s_in, c_prev, M)
 
             # Count transitions
             Transition_Count.Transition_Count(c, c_prev)
 
             # Encode the new codeword
-            s_out = Decoder.Decoder(c, M)
+            s_out = Decoder(c, M)
 
             # Check if the new codeword is different from the previous one
             if not Comparator.Comparator(s_in, s_out):
@@ -106,13 +110,13 @@ def Controller():
             s_in = Generator.generate(k, mode=2, i=j)
 
             # Apply M-bit bus inversion encoding
-            c = Encoder.mBitBusInvert(s_in, c_prev, M)
+            c = Encoder(s_in, c_prev, M)
 
             # Count transitions
             Transition_Count.Transition_Count(c, c_prev)
 
             # Encode the new codeword
-            s_out = Decoder.Decoder(c, M)
+            s_out = Decoder(c, M)
 
             # Check if the new codeword is different from the previous one
             if not Comparator.Comparator(s_in, s_out):
