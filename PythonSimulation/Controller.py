@@ -83,7 +83,6 @@ def Controller():
             # Check if the new codeword is different from the previous one
             if not Comparator.Comparator(s_in, s_out):
                 controller_logger.warning(f"Mismatch between input and output for word {i + 1}: {s_in} != {s_out}")
-                print(f"Mismatch between input and output for word {i + 1}: {s_in} != {s_out}")
                 break
 
             # Update the previous codeword
@@ -103,19 +102,26 @@ def Controller():
 
         # Simulate all possible words starting from 0
         for j in range((2 ** k) - 1):
-            # Reset the bus for each new word
-            c_prev = [0] * n
-
             # Generate the k-bit binary number from j
-            s = Generator.generate(k, mode=2, i=j)
+            s_in = Generator.generate(k, mode=2, i=j)
 
             # Apply M-bit bus inversion encoding
-            c = Encoder.mBitBusInvert(s, c_prev, M)
+            c = Encoder.mBitBusInvert(s_in, c_prev, M)
 
             # Count transitions
             Transition_Count.Transition_Count(c, c_prev)
 
             # Encode the new codeword
+            s_out = Decoder.Decoder(c, M)
+
+            # Check if the new codeword is different from the previous one
+            if not Comparator.Comparator(s_in, s_out):
+                controller_logger.warning(f"Mismatch between input and output for word {i + 1}: {s_in} != {s_out}")
+                break
+            
+            # Update the previous codeword
+            c_prev = [0] * n
+
 
         max_transitions, avg_transitions = Transition_Count.Transition_Count(c_prev, c_prev)
         print()  
