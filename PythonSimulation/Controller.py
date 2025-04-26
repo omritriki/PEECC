@@ -13,12 +13,31 @@ import Encoder
 import Generator
 import Transition_Count
 
-# Configure logging
+# Configure logging for external modules (logs go to the file)
+file_handler = logging.FileHandler("simulation_logs.log")
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(logging.Formatter(
+    "%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+))
+
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
+    handlers=[file_handler]  # Logs from other modules go only to the file
 )
+
+# Configure a separate logger for the Controller (logs go to the terminal)
+controller_logger = logging.getLogger("Controller")
+controller_logger.setLevel(logging.INFO)
+
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(logging.Formatter(
+    "%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+))
+
+controller_logger.addHandler(console_handler)
 
 # Description: Controls the encoding process, testing both random and all possible
 #              k-bit input words while tracking transition statistics
@@ -37,7 +56,7 @@ def Controller():
     choice = input("Simulate t random words (1) or Simulate all possible words starting from 0 (2)? ")
 
     if choice == '1':
-        logging.info("Simulating t random words")
+        controller_logger.info("Simulating t random words")
         # Reset counters and bus
         c_prev = [0] * n
         Transition_Count.Transition_Count(c_prev, c_prev, RESET=True)
@@ -50,11 +69,11 @@ def Controller():
             c_prev = c
 
         max_transitions, avg_transitions = Transition_Count.Transition_Count(c_prev, c_prev)
-        logging.info(f"Max transitions: {max_transitions}")
-        logging.info(f"Avg transitions: {avg_transitions / t}")
+        controller_logger.info(f"Max transitions: {max_transitions}")
+        controller_logger.info(f"Avg transitions: {avg_transitions / t}")
 
     elif choice == '2':
-        logging.info("Simulating all possible words starting from 0")
+        controller_logger.info("Simulating all possible words starting from 0")
         # Reset counters and bus
         c_prev = [0] * n
         Transition_Count.Transition_Count(c_prev, c_prev, RESET=True)
@@ -67,11 +86,11 @@ def Controller():
             Transition_Count.Transition_Count(c, c_prev)
 
         max_transitions, avg_transitions = Transition_Count.Transition_Count(c_prev, c_prev)
-        logging.info(f"Max transitions: {max_transitions}")
-        logging.info(f"Avg transitions: {avg_transitions / ((2 ** k) - 1)}")
+        controller_logger.info(f"Max transitions: {max_transitions}")
+        controller_logger.info(f"Avg transitions: {avg_transitions / ((2 ** k) - 1)}")
 
     else:
-        logging.warning("Invalid choice. Please select either 1 or 2.")
+        controller_logger.warning("Invalid choice. Please select either 1 or 2.")
 
 
 if __name__ == '__main__':
