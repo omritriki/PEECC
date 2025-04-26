@@ -1,5 +1,7 @@
 *.out
 .DS_Store
-.DS_Store
-TODO LIST
+.vscode/
 TODO LIST.md
+__pycache__/
+simulation_logs.log
+
