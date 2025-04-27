@@ -13,6 +13,8 @@ from coding_schemes import mbit_bi, dapbi
 from core import generator
 from core import comparator
 from core import transition_count
+from logging_config import configure_logging
+import argparse
 
 # Description: Controls the encoding process, testing both random and all possible
 #              k-bit input words while tracking transition statistics
@@ -23,7 +25,7 @@ from core import transition_count
 
 def controller():
     k = 32
-    t = 50000
+    t = 5000
     M = 5
     n = k + M
 
@@ -38,10 +40,9 @@ def controller():
     choice = input(f"Simulate {t} random words (1) or Simulate all possible words starting from 0 (2)? ")
     print()  
     controller_logger.info(f"Parameters: k = {k}, M = {M}, n = {n}")
-    print()  
 
     if choice == '1':
-        controller_logger.info(f"Simulating {t} random words")
+        controller_logger.debug(f"Simulating {t} random words")
         # Reset counters and bus
         c_prev = [0] * n
         transition_count.transition_count(c_prev, c_prev, RESET=True)
@@ -75,7 +76,7 @@ def controller():
         print()  
 
     elif choice == '2':
-        controller_logger.info("Simulating all possible words starting from 0")
+        controller_logger.debug("Simulating all possible words starting from 0")
         # Reset counters and bus
         c_prev = [0] * n
         transition_count.transition_count(c_prev, c_prev, RESET=True)
@@ -110,7 +111,7 @@ def controller():
         print()  
 
     elif choice == '3':
-        controller_logger.info("Simulating all possible words starting from 0")
+        controller_logger.debug("Simulating all possible words starting from 0")
         # Reset counters and bus
         c_prev = [0] * n
         transition_count.transition_count(c_prev, c_prev, RESET=True)
@@ -118,7 +119,6 @@ def controller():
         seed = [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
 
         for j in range(t):
-            # print(f"seed: {seed}")
             # Generate the k-bit binary number from j
             s_in = generator.generate(k, mode=3, i=j, seed=seed)
             seed = s_in
@@ -140,49 +140,42 @@ def controller():
             # Update the previous codeword
             c_prev = c
 
-
         max_transitions, avg_transitions = transition_count.transition_count(c_prev, c_prev)
-        print()  
         controller_logger.info(f"Max transitions: {max_transitions}")
-        print(f"Max transitions: {max_transitions}")
         controller_logger.info(f"Avg transitions: {avg_transitions / t}")
-        print(f"Avg transitions: {avg_transitions / t}")
         print()  
 
     else:
         controller_logger.warning("Invalid choice. Please select either 1 or 2.")
 
-    controller_logger.info("Simulation ended")
-    print()
+    controller_logger.debug("Simulation ended")
 
-def setup_file_logging():
-    """Configure logging for external modules (logs go to the file)."""
-    file_handler = logging.FileHandler("simulation_logs.log")
-    file_handler.setLevel(logging.INFO)
-    file_handler.setFormatter(logging.Formatter(
-        "%(asctime)s - %(levelname)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
-    ))
-    logging.basicConfig(
-        level=logging.INFO,
-        handlers=[file_handler]  # Logs from other modules go only to the file
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Run the simulation controller.")
+    parser.add_argument(
+        "-loglevel", 
+        type=int, 
+        choices=[1, 2, 3, 4, 5],
+        default=2,  # Default to INFO
+        help="Log level: 1=DEBUG, 2=INFO, 3=WARNING, 4=ERROR, 5=CRITICAL"
     )
-
-def setup_controller_logging():
-    """Configure a separate logger for the Controller (logs go to the terminal)."""
-    controller_logger = logging.getLogger("Controller")
-    controller_logger.setLevel(logging.INFO)
-
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-    console_handler.setFormatter(logging.Formatter(
-        "%(asctime)s - %(levelname)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
-    ))
-
-    controller_logger.addHandler(console_handler)
-    return controller_logger
+    return parser.parse_args()
 
 
-if __name__ == '__main__':
+def map_log_level(level_number):
+    level_map = {
+        1: logging.DEBUG,
+        2: logging.INFO,
+        3: logging.WARNING,
+        4: logging.ERROR,
+        5: logging.CRITICAL,
+    }
+    return level_map.get(level_number, logging.INFO)
+
+
+if __name__ == '__main__': 
+    args = parse_arguments()
+    console_level = map_log_level(args.loglevel)
+    configure_logging(console_level=console_level)  
     controller()

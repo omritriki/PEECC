@@ -20,7 +20,7 @@ class MbitBI(CodingScheme):
     name = "M-bit Bus Invert"
 
     def encode(self, s, c_prev, M):
-        logging.info(f"Starting M-bit bus inversion with M={M}, s={s}, c_prev={c_prev}")
+        logging.debug(f"Starting M-bit bus inversion with M={M}, s={s}, c_prev={c_prev}")
         n = len(s) + M
         segments = [n // M] * (n % M) + [n // M - 1] * (M - n % M)
 
@@ -45,7 +45,7 @@ class MbitBI(CodingScheme):
             start_s += seg_len
             start_c += seg_len + 1
 
-        logging.info(f"Completed M-bit bus inversion. Resulting codeword: {c}")
+        logging.debug(f"Completed M-bit bus inversion. Resulting codeword: {c}")
         return c
 
 
@@ -71,13 +71,13 @@ class MbitBI(CodingScheme):
             # Move start index for c
             start_c += seg_len + 1
 
-        logging.info(f"Completed M-bit bus inversion. Resulting codeword: {c}")
+        logging.debug(f"Completed M-bit bus inversion. Resulting codeword: {c}")
 
         return s
 
 
     def check_invert(self, s, c_prev):
-        logging.debug(f"Checking inversion for segment: s={s}, c_prev={c_prev}")
+        #logging.debug(f"Checking inversion for segment: s={s}, c_prev={c_prev}")
         A = len(s)
 
         curr_transitions = sum(1 for i in range(A) if s[i] != c_prev[i])
@@ -88,9 +88,9 @@ class MbitBI(CodingScheme):
             # Invert the segment
             s = [bit ^ 1 for bit in s]  # Flip all bits using list comprehension
             s.append(1)  # Set INV bit to 1
-            logging.info(f"Segment inverted: {s}")
+            logging.debug(f"Segment inverted: {s}")
         else:
             s.append(0)  # Set INV bit to 0 (if no inversion)
-            logging.info(f"Segment not inverted: {s}")
+            logging.debug(f"Segment not inverted: {s}")
 
         return s

@@ -12,7 +12,7 @@ from logging_config import configure_logging
 import logging
 
 # Configure logging
-configure_logging()
+# configure_logging()
 
 # Global variables
 avg_transitions = 0
@@ -35,9 +35,9 @@ def transition_count(c=0, c_prev=0, RESET=False):
     curr_transitions = 0
 
     if RESET:
-        avg_transitions = 0
+        avg_transitions = 0 
         max_transitions = -1
-        logging.info("Transition counters have been reset.")
+        logging.debug("Transition counters have been reset.")
 
     try:
         # Count transitions
@@ -52,8 +52,8 @@ def transition_count(c=0, c_prev=0, RESET=False):
             max_transitions = curr_transitions
 
         logging.debug(f"Current transitions: {curr_transitions}")
-        logging.info(f"Updated max transitions: {max_transitions}")
-        logging.info(f"Updated average transitions: {avg_transitions}")
+        logging.debug(f"Updated max transitions: {max_transitions}")
+        logging.debug(f"Updated average transitions: {avg_transitions}")
 
     except IndexError as e:
         logging.error("Index out of range while processing transitions.", exc_info=True)

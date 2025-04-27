@@ -12,7 +12,7 @@ from logging_config import configure_logging
 import logging
 
 # Configure logging
-configure_logging()
+# configure_logging()
 
 # Description: Checks if the input to the encoder is the same as the output of the decoder
 # Inputs:
@@ -30,13 +30,13 @@ def comparator(s_in, s_out):
         logging.error(f"Length mismatch: info_word length={len(s_in)}, output length={len(s_out)}")
         raise ValueError("info_word and output must have the same length.")
 
-    logging.info(f"Comparing info_word={s_in} with output={s_out}")
+    logging.debug(f"Comparing info_word={s_in} with output={s_out}")
 
     # Comparison logic
     if s_in != s_out:
         logging.info("Words do not match.")
         return False
 
-    logging.info("Words match.")
+    logging.debug("Words match.")
     return True
 

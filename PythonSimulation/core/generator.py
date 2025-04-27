@@ -13,7 +13,7 @@ from logging_config import configure_logging
 import logging
 
 # Configure logging
-configure_logging()
+# configure_logging()
 
 # Description: Generates a random n-bit binary number and returns it as a list of bits
 # Inputs:
@@ -23,29 +23,27 @@ configure_logging()
 
 def generate(k, mode = 1, i = 0, seed = 0):
     if k <= 0:
-        logging.warning(f"Invalid input: n={k}. Number of bits must be positive.")
+        logging.error(f"Invalid input: n={k}. Number of bits must be positive.")
         return []
 
     if mode == 1:
         # Generate a random n-bit binary number
-        logging.info(f"Generating a random {k}-bit binary number.")
+        logging.debug(f"Generating a random {k}-bit binary number.")
         random_num = randint(0, (2 ** k) - 1)
         s = [int(bit) for bit in format(random_num, f'0{k}b')]  # Convert each bit to an integer
 
     elif mode == 2:
         # Generate i as a k-bit binary number
-        logging.info(f"Generating a {k}-bit binary number from i={i}.")
+        logging.debug(f"Generating a {k}-bit binary number from i={i}.")
         s = [int(bit) for bit in format(i, f'0{k}b')]
 
     elif mode == 3:
         # Generate i using LFSR
-        logging.info(f"Generating a {k}-bit binary number from i={i}.")
+        logging.debug(f"Generating a {k}-bit binary number from i={i}.")
         #lfsr_out = seed.copy()
 
         new_bit = seed[0] ^ seed[1]  # XOR of two MSBs
         lfsr_out = seed[1:]  # Shift left
         s = lfsr_out + [new_bit]  # Insert new_bit at LSB
 
-
-    logging.info(f"Generated {k}-bit binary number: {s}")
     return s

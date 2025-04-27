@@ -35,10 +35,10 @@ class DAPBI(CodingScheme):
             # Invert the segment
             s = [bit ^ 1 for bit in s]  # Flip all bits using list comprehension
             s.append(1)  # Set INV bit to 1
-            logging.info(f"Segment inverted: {s}")
+            logging.debug(f"Segment inverted: {s}")
         else:
             s.append(0)  # Set INV bit to 0 (if no inversion)
-            logging.info(f"Segment not inverted: {s}")
+            logging.debug(f"Segment not inverted: {s}")
 
         # Current word: [s, INV]
 
@@ -54,7 +54,7 @@ class DAPBI(CodingScheme):
 
         # Append the parity bit to the codeword
         s.append(parity)
-        logging.info(f"Final encoded word with parity: {s}")
+        logging.debug(f"Final encoded word with parity: {s}")
 
         # Current word: [s, INV, parity]
 
@@ -64,7 +64,7 @@ class DAPBI(CodingScheme):
             c.append(bit)
             c.append(bit)
         c.append(s[-1])
-        logging.info(f"Final encoded word with duplication: {c}")
+        logging.debug(f"Final encoded word with duplication: {c}")
 
         # Current word: [s_duplicated, INV_duplicated, parity]
 
@@ -86,13 +86,13 @@ class DAPBI(CodingScheme):
         error = calculated_parity ^ parity
 
         if error == 0:
-            logging.info("No error detected in the received codeword.")
+            logging.debug("No error detected in the received codeword.")
             if w[-1] == 1:
                 # Invert the last bit of the word
                 w = [1 - bit for bit in w[:-1]]
             return w[:-1]  # Return the word without the INV bit
         else:
-            logging.info("Error detected in the received codeword.")
+            logging.debug("Error detected in the received codeword.")
             # Take all odd bits
             w = c[1::2]
             if w[-1] == 1:
