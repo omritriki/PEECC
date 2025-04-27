@@ -10,9 +10,9 @@
 
 import logging
 from coding_schemes import mbit_bi, dapbi
-from core import Generator
-from core import Comparator
-from core import Transition_Count
+from core import generator
+from core import comparator
+from core import transition_count
 
 # Description: Controls the encoding process, testing both random and all possible
 #              k-bit input words while tracking transition statistics
@@ -21,18 +21,18 @@ from core import Transition_Count
 # Outputs:
 #              Logs max and average transitions for random words and all possible words
 
-def Controller():
-    k = 16
-    t = 5000
-    M = 3
+def controller():
+    k = 32
+    t = 50000
+    M = 5
     n = k + M
 
     controller_logger = logging.getLogger("Controller")
 
     coding_scheme = mbit_bi.MbitBI()
 
-    Encoder = coding_scheme.encode
-    Decoder = coding_scheme.decode
+    encoder = coding_scheme.encode
+    decoder = coding_scheme.decode
 
     # Ask the user for their choice
     choice = input(f"Simulate {t} random words (1) or Simulate all possible words starting from 0 (2)? ")
@@ -44,31 +44,31 @@ def Controller():
         controller_logger.info(f"Simulating {t} random words")
         # Reset counters and bus
         c_prev = [0] * n
-        Transition_Count.Transition_Count(c_prev, c_prev, RESET=True)
+        transition_count.transition_count(c_prev, c_prev, RESET=True)
 
         # Simulate t random words
         for i in range(t):
             # Generate a random k-bit binary number
-            s_in = Generator.generate(k, 1)
+            s_in = generator.generate(k, 1)
 
             # Apply M-bit bus inversion encoding
-            c = Encoder(s_in, c_prev, M)
+            c = encoder(s_in, c_prev, M)
 
             # Count transitions
-            Transition_Count.Transition_Count(c, c_prev)
+            transition_count.transition_count(c, c_prev)
 
             # Encode the new codeword
-            s_out = Decoder(c, M)
+            s_out = decoder(c, M)
 
             # Check if the new codeword is different from the previous one
-            if not Comparator.Comparator(s_in, s_out):
+            if not comparator.comparator(s_in, s_out):
                 controller_logger.warning(f"Mismatch between input and output for word {i + 1}: {s_in} != {s_out}")
                 break
 
             # Update the previous codeword
             c_prev = c
 
-        max_transitions, avg_transitions = Transition_Count.Transition_Count(c_prev, c_prev)
+        max_transitions, avg_transitions = transition_count.transition_count(c_prev, c_prev)
         print()  
         controller_logger.info(f"Max transitions: {max_transitions}")
         controller_logger.info(f"Avg transitions: {avg_transitions / t}")
@@ -78,24 +78,24 @@ def Controller():
         controller_logger.info("Simulating all possible words starting from 0")
         # Reset counters and bus
         c_prev = [0] * n
-        Transition_Count.Transition_Count(c_prev, c_prev, RESET=True)
+        transition_count.transition_count(c_prev, c_prev, RESET=True)
 
         # Simulate all possible words starting from 0
         for j in range((2 ** k) - 1):
             # Generate the k-bit binary number from j
-            s_in = Generator.generate(k, mode=2, i=j)
+            s_in = generator.generate(k, mode=2, i=j)
 
             # Apply M-bit bus inversion encoding
-            c = Encoder(s_in, c_prev, M)
+            c = encoder(s_in, c_prev, M)
 
             # Count transitions
-            Transition_Count.Transition_Count(c, c_prev)
+            transition_count.transition_count(c, c_prev)
 
             # Encode the new codeword
-            s_out = Decoder(c, M)
+            s_out = decoder(c, M)
 
             # Check if the new codeword is different from the previous one
-            if not Comparator.Comparator(s_in, s_out):
+            if not comparator.comparator(s_in, s_out):
                 controller_logger.warning(f"Mismatch between input and output for word {i + 1}: {s_in} != {s_out}")
                 break
             
@@ -103,10 +103,50 @@ def Controller():
             c_prev = [0] * n
 
 
-        max_transitions, avg_transitions = Transition_Count.Transition_Count(c_prev, c_prev)
+        max_transitions, avg_transitions = transition_count.transition_count(c_prev, c_prev)
         print()  
         controller_logger.info(f"Max transitions: {max_transitions}")
         controller_logger.info(f"Avg transitions: {avg_transitions / ((2 ** k) - 1)}")
+        print()  
+
+    elif choice == '3':
+        controller_logger.info("Simulating all possible words starting from 0")
+        # Reset counters and bus
+        c_prev = [0] * n
+        transition_count.transition_count(c_prev, c_prev, RESET=True)
+
+        seed = [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+
+        for j in range(t):
+            # print(f"seed: {seed}")
+            # Generate the k-bit binary number from j
+            s_in = generator.generate(k, mode=3, i=j, seed=seed)
+            seed = s_in
+
+            # Apply M-bit bus inversion encoding
+            c = encoder(s_in, c_prev, M)
+
+            # Count transitions
+            transition_count.transition_count(c, c_prev)
+
+            # Encode the new codeword
+            s_out = decoder(c, M)
+
+            # Check if the new codeword is different from the previous one
+            if not comparator.comparator(s_in, s_out):
+                controller_logger.warning(f"Mismatch between input and output for word {i + 1}: {s_in} != {s_out}")
+                break
+            
+            # Update the previous codeword
+            c_prev = c
+
+
+        max_transitions, avg_transitions = transition_count.transition_count(c_prev, c_prev)
+        print()  
+        controller_logger.info(f"Max transitions: {max_transitions}")
+        print(f"Max transitions: {max_transitions}")
+        controller_logger.info(f"Avg transitions: {avg_transitions / t}")
+        print(f"Avg transitions: {avg_transitions / t}")
         print()  
 
     else:
@@ -144,6 +184,5 @@ def setup_controller_logging():
     return controller_logger
 
 
-
 if __name__ == '__main__':
-    Controller()
+    controller()

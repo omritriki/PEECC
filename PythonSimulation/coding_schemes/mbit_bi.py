@@ -21,8 +21,8 @@ class MbitBI(CodingScheme):
 
     def encode(self, s, c_prev, M):
         logging.info(f"Starting M-bit bus inversion with M={M}, s={s}, c_prev={c_prev}")
-        n = len(s)
-        segments = [n // M + 1] * (n % M) + [n // M] * (M - n % M)
+        n = len(s) + M
+        segments = [n // M] * (n % M) + [n // M - 1] * (M - n % M)
 
         c = []
 
@@ -36,7 +36,7 @@ class MbitBI(CodingScheme):
             logging.debug(f"Processing segment: seg_s={seg_s}, seg_c={seg_c}")
 
             # Call Check_Invert and append the modified segment to output
-            new_segment = self.Check_Invert(seg_s, seg_c)
+            new_segment = self.check_invert(seg_s, seg_c)
             c.extend(new_segment)
 
             logging.debug(f"New segment after inversion: {new_segment}")
@@ -76,7 +76,7 @@ class MbitBI(CodingScheme):
         return s
 
 
-    def Check_Invert(self, s, c_prev):
+    def check_invert(self, s, c_prev):
         logging.debug(f"Checking inversion for segment: s={s}, c_prev={c_prev}")
         A = len(s)
 

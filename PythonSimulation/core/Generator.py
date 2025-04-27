@@ -21,7 +21,7 @@ configure_logging()
 # Outputs:
 #              s (array): An array of n binary digits
 
-def generate(k, mode = 1, i = 0):
+def generate(k, mode = 1, i = 0, seed = 0):
     if k <= 0:
         logging.warning(f"Invalid input: n={k}. Number of bits must be positive.")
         return []
@@ -36,6 +36,16 @@ def generate(k, mode = 1, i = 0):
         # Generate i as a k-bit binary number
         logging.info(f"Generating a {k}-bit binary number from i={i}.")
         s = [int(bit) for bit in format(i, f'0{k}b')]
+
+    elif mode == 3:
+        # Generate i using LFSR
+        logging.info(f"Generating a {k}-bit binary number from i={i}.")
+        #lfsr_out = seed.copy()
+
+        new_bit = seed[0] ^ seed[1]  # XOR of two MSBs
+        lfsr_out = seed[1:]  # Shift left
+        s = lfsr_out + [new_bit]  # Insert new_bit at LSB
+
 
     logging.info(f"Generated {k}-bit binary number: {s}")
     return s

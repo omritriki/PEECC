@@ -29,7 +29,7 @@ max_transitions = -1
 #               max_transitions (int): Highest recorded transitions
 #               avg_transitions (int): Cumulative transition count
 
-def Transition_Count(c=0, c_prev=0, RESET=False):
+def transition_count(c=0, c_prev=0, RESET=False):
     global avg_transitions
     global max_transitions
     curr_transitions = 0

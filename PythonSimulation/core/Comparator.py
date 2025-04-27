@@ -20,7 +20,7 @@ configure_logging()
 #              output (array): Decoded word (length - k)
 # Outputs:
 #              isEqual (bool): True only if info_word == output
-def Comparator(s_in, s_out):
+def comparator(s_in, s_out):
     
     # Input validation
     if not isinstance(s_in, list) or not isinstance(s_out, list):
