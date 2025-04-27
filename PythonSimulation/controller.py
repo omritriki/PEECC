@@ -33,122 +33,72 @@ def controller():
 
     coding_scheme = mbit_bi.MbitBI()
 
+    global encoder, decoder
     encoder = coding_scheme.encode
     decoder = coding_scheme.decode
 
     # Ask the user for their choice
-    choice = input(f"Simulate {t} random words (1) or Simulate all possible words starting from 0 (2)? ")
+    choice = input(f"Simulate {t} random words (1), Simulate all possible words starting from 0 (2), or Simulate using LFSR (3)? ")
     print()  
     controller_logger.info(f"Parameters: k = {k}, M = {M}, n = {n}")
 
     if choice == '1':
         controller_logger.debug(f"Simulating {t} random words")
-        # Reset counters and bus
-        c_prev = [0] * n
-        transition_count.transition_count(c_prev, c_prev, RESET=True)
-
-        # Simulate t random words
-        for i in range(t):
-            # Generate a random k-bit binary number
-            s_in = generator.generate(k, 1)
-
-            # Apply M-bit bus inversion encoding
-            c = encoder(s_in, c_prev, M)
-
-            # Count transitions
-            transition_count.transition_count(c, c_prev)
-
-            # Encode the new codeword
-            s_out = decoder(c, M)
-
-            # Check if the new codeword is different from the previous one
-            if not comparator.comparator(s_in, s_out):
-                controller_logger.warning(f"Mismatch between input and output for word {i + 1}: {s_in} != {s_out}")
-                break
-
-            # Update the previous codeword
-            c_prev = c
-
-        max_transitions, avg_transitions = transition_count.transition_count(c_prev, c_prev)
-        print()  
-        controller_logger.info(f"Max transitions: {max_transitions}")
-        controller_logger.info(f"Avg transitions: {avg_transitions / t}")
-        print()  
+        simulate(k, t, M, n, mode=1)
 
     elif choice == '2':
         controller_logger.debug("Simulating all possible words starting from 0")
-        # Reset counters and bus
-        c_prev = [0] * n
-        transition_count.transition_count(c_prev, c_prev, RESET=True)
-
-        # Simulate all possible words starting from 0
-        for j in range((2 ** k) - 1):
-            # Generate the k-bit binary number from j
-            s_in = generator.generate(k, mode=2, i=j)
-
-            # Apply M-bit bus inversion encoding
-            c = encoder(s_in, c_prev, M)
-
-            # Count transitions
-            transition_count.transition_count(c, c_prev)
-
-            # Encode the new codeword
-            s_out = decoder(c, M)
-
-            # Check if the new codeword is different from the previous one
-            if not comparator.comparator(s_in, s_out):
-                controller_logger.warning(f"Mismatch between input and output for word {i + 1}: {s_in} != {s_out}")
-                break
-            
-            # Update the previous codeword
-            c_prev = [0] * n
-
-
-        max_transitions, avg_transitions = transition_count.transition_count(c_prev, c_prev)
-        print()  
-        controller_logger.info(f"Max transitions: {max_transitions}")
-        controller_logger.info(f"Avg transitions: {avg_transitions / ((2 ** k) - 1)}")
-        print()  
+        simulate(k, t, M, n, mode=2)
 
     elif choice == '3':
-        controller_logger.debug("Simulating all possible words starting from 0")
-        # Reset counters and bus
-        c_prev = [0] * n
-        transition_count.transition_count(c_prev, c_prev, RESET=True)
-
+        controller_logger.debug("Simulating using LFSR")
         seed = [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
-
-        for j in range(t):
-            # Generate the k-bit binary number from j
-            s_in = generator.generate(k, mode=3, i=j, seed=seed)
-            seed = s_in
-
-            # Apply M-bit bus inversion encoding
-            c = encoder(s_in, c_prev, M)
-
-            # Count transitions
-            transition_count.transition_count(c, c_prev)
-
-            # Encode the new codeword
-            s_out = decoder(c, M)
-
-            # Check if the new codeword is different from the previous one
-            if not comparator.comparator(s_in, s_out):
-                controller_logger.warning(f"Mismatch between input and output for word {i + 1}: {s_in} != {s_out}")
-                break
-            
-            # Update the previous codeword
-            c_prev = c
-
-        max_transitions, avg_transitions = transition_count.transition_count(c_prev, c_prev)
-        controller_logger.info(f"Max transitions: {max_transitions}")
-        controller_logger.info(f"Avg transitions: {avg_transitions / t}")
-        print()  
+        simulate(k, t, M, n, mode=3, seed=seed)
 
     else:
-        controller_logger.warning("Invalid choice. Please select either 1 or 2.")
+        controller_logger.warning("Invalid choice. Please select either 1, 2, or 3.")
 
     controller_logger.debug("Simulation ended")
+
+
+def simulate(k, t, M, n, mode, seed=None):
+    controller_logger = logging.getLogger("Controller")
+    c_prev = [0] * n  # Initialize the bus
+    transition_count.transition_count(c_prev, c_prev, RESET=True)  # Reset counters
+
+    for i in range(t if mode == 1 or mode == 3 else (2 ** k)):
+        # Generate input word based on the mode
+        if mode == 1:
+            s_in = generator.generate(k, mode=1)  # Random generation
+        elif mode == 2:
+            s_in = generator.generate(k, mode=2, i=i)  # All possible words
+        elif mode == 3:
+            s_in = generator.generate(k, mode=3, seed=seed)  # LFSR
+            seed = s_in  # Update the seed for the next iteration
+
+        # Apply M-bit bus inversion encoding
+        c = encoder(s_in, c_prev, M)
+
+        # Count transitions
+        transition_count.transition_count(c, c_prev)
+
+        # Decode the codeword
+        s_out = decoder(c, M)
+
+        # Compare input and output words
+        if not comparator.comparator(s_in, s_out):
+            controller_logger.warning(f"Mismatch between input and output for word {i + 1}: {s_in} != {s_out}")
+            break
+
+        # Update the previous codeword
+        c_prev = c
+
+
+    # Log transition statistics
+    max_transitions, avg_transitions = transition_count.transition_count(c_prev, c_prev)
+    controller_logger.info(f"Max transitions: {max_transitions}")
+    controller_logger.info(f"Avg transitions: {avg_transitions / (t if mode == 1 or mode == 3 else (2 ** k))}")
+    print()
 
 
 def parse_arguments():
