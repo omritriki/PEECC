@@ -18,16 +18,6 @@ configure_logging()
 
 
 class DAPBI(CodingScheme):
-    """
-    Here, we consider the combination
-    of the DAP code with bus-invert based LPC. The joint code,
-    referred to as duplicate-add-parity bus-invert (DAPBI) code, is
-    shown in Fig. 7. As this code uses bus-invert based LPC and
-    parity based ECC, we employ the technique described in Sec-
-    tion III-B to reduce the encoder delay. Further, the invert bit
-    is duplicated (LXC1) to ensure error-correction and crosstalk
-    avoidance for the bit."""
-
     name = "DAPBI"
 
     def encode(self, s, c_prev):
@@ -82,4 +72,31 @@ class DAPBI(CodingScheme):
     
 
     def decode(self, c):
-        pass
+        # Extract the parity bit and remove it from the codeword
+        parity = c[-1]  
+        c = c[:-1]
+
+        # Take all even bits
+        w = c[::2]
+
+        # XOR all even bits to calculate parity
+        calculated_parity = reduce(lambda x, y: x ^ y, w)
+
+        # XOR the calculated parity with the received parity
+        error = calculated_parity ^ parity
+
+        if error == 0:
+            logging.info("No error detected in the received codeword.")
+            if w[-1] == 1:
+                # Invert the last bit of the word
+                w = [1 - bit for bit in w[:-1]]
+            return w[:-1]  # Return the word without the INV bit
+        else:
+            logging.info("Error detected in the received codeword.")
+            # Take all odd bits
+            w = c[1::2]
+            if w[-1] == 1:
+                # Invert the last bit of the word
+                w = [1 - bit for bit in w[:-1]]
+            return w[:-1]   # Return the word without the INV bit
+            

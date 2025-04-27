@@ -9,7 +9,6 @@
 """
 
 import logging
-
 from coding_schemes import mbit_bi, dapbi
 from core import Generator
 from core import Comparator

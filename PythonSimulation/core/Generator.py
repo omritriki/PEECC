@@ -37,7 +37,5 @@ def generate(k, mode = 1, i = 0):
         logging.info(f"Generating a {k}-bit binary number from i={i}.")
         s = [int(bit) for bit in format(i, f'0{k}b')]
 
-        
-
     logging.info(f"Generated {k}-bit binary number: {s}")
     return s

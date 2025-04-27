@@ -1,0 +1,9 @@
+# Logging and utilities
+loguru==0.7.0
+
+# Functional programming utilities
+functools32; python_version < "3.4"
+
+# Abstract base classes
+abc; python_version >= "3.4"
+
