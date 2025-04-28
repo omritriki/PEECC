@@ -65,6 +65,12 @@ def controller():
 
 def simulate(k, t, M, n, mode, seed=None):
     controller_logger = logging.getLogger("Controller")
+    
+    valid = validate_input(k, M, n, mode)
+    if not valid:
+        controller_logger.error("Invalid input parameters. Exiting simulation.")
+        return
+    
     c_prev = [0] * n  # Initialize the bus
     transition_count.transition_count(c_prev, c_prev, RESET=True)  # Reset counters
 
@@ -100,6 +106,18 @@ def simulate(k, t, M, n, mode, seed=None):
     controller_logger.info(f"Max transitions: {max_transitions}")
     controller_logger.info(f"Avg transitions: {avg_transitions / (t if mode == 1 or mode == 3 else (2 ** k))}")
     print()
+
+
+def validate_input(k, M, n, mode):
+    controller_logger = logging.getLogger("Controller")
+    # input validation
+    if M > (k/2):
+        controller_logger.error(f"Invalid input: M={M}. M must be less than or equal to k/2.")
+        return False
+    if mode > 3 or mode < 1:
+        controller_logger.error(f"Invalid input: mode={mode}. Mode must be 1, 2, or 3.")
+        return
+    return True
 
 
 def parse_arguments():
