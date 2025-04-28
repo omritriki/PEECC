@@ -1,0 +1,20 @@
+TODO LIST
+
+- Add requirements file
+- Validate different k, M
+
+
+Shlomit
+- Add input validation to each function
+- Implement error generator (1 bit only) with some probability
+
+
+Omri
+- Implement DAPBI
+
+
+- Conventions:
+    File names - small letters
+    Classes - Capital letters
+    functions - small letters
+    variables with underscore
