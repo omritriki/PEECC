@@ -40,6 +40,9 @@ def transition_count(c=0, c_prev=0, RESET=False):
         logging.debug("Transition counters have been reset.")
 
     try:
+        
+        #print(f"Comparing c     ={c}")
+        #print(f"with c_prev     ={c_prev}")
         # Count transitions
         for i in range(len(c)):
             if c[i] != c_prev[i]:

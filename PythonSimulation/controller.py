@@ -25,13 +25,15 @@ import argparse
 
 def controller():
     k = 32
-    t = 5000
+    t = 10000
     M = 5
-    n = k + M
 
     controller_logger = logging.getLogger("Controller")
 
-    coding_scheme = mbit_bi.MbitBI()
+    # coding_scheme = mbit_bi.MbitBI()
+    # n = k + M
+    coding_scheme = dapbi.DAPBI()
+    n = 2 * k + 3
 
     global encoder, decoder
     encoder = coding_scheme.encode
@@ -76,7 +78,6 @@ def simulate(k, t, M, n, mode, seed=None):
             s_in = generator.generate(k, mode=3, seed=seed)  # LFSR
             seed = s_in  # Update the seed for the next iteration
 
-        # Apply M-bit bus inversion encoding
         c = encoder(s_in, c_prev, M)
 
         # Count transitions
