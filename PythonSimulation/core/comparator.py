@@ -30,13 +30,11 @@ def comparator(s_in, s_out):
         logging.error(f"Length mismatch: s_in length={len(s_in)}, s_out length={len(s_out)}")
         raise ValueError("info_word and output must have the same length.")
 
-    logging.debug(f"Comparing info_word={s_in} with output={s_out}")
-
     # Comparison logic
     if s_in != s_out:
         logging.info("Words do not match.")
         return False
 
-    logging.debug("Words match.")
+    logging.debug("Input and output words match.")
     return True
 
