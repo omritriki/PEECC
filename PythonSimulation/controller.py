@@ -13,6 +13,7 @@ from coding_schemes import mbit_bi, dapbi
 from core import generator
 from core import comparator
 from core import transition_count
+from core import mbit_bi_average
 from logging_config import configure_logging
 import argparse
 
@@ -24,16 +25,16 @@ import argparse
 #              Logs max and average transitions for random words and all possible words
 
 def controller():
-    k = 32
-    t = 10000
-    M = 5
+    k = 20
+    t = 50000
+    M = 1
 
     controller_logger = logging.getLogger("Controller")
 
-    # coding_scheme = mbit_bi.MbitBI()
-    # n = k + M
-    coding_scheme = dapbi.DAPBI()
-    n = 2 * k + 3
+    coding_scheme = mbit_bi.MbitBI()
+    n = k + M
+    # coding_scheme = dapbi.DAPBI()
+    # n = 2 * k + 3
 
     global encoder, decoder
     encoder = coding_scheme.encode
@@ -105,6 +106,8 @@ def simulate(k, t, M, n, mode, seed=None):
     max_transitions, avg_transitions = transition_count.transition_count(c_prev, c_prev)
     controller_logger.info(f"Max transitions: {max_transitions}")
     controller_logger.info(f"Avg transitions: {avg_transitions / (t if mode == 1 or mode == 3 else (2 ** k))}")
+    controller_logger.info(f"Expected Avg transitions: {mbit_bi_average.mbit_bi_average(k, M)}")
+
     print()
 
 

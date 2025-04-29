@@ -1,16 +1,19 @@
-TODO LIST
+TODO: 
 
 - Add requirements file
+- Update README
+- Sync comments
 - Validate different k, M
-
 
 Shlomit
 - Add input validation to each function
 - Implement error generator (1 bit only) with some probability
 
-
 Omri
 - Implement DAPBI
+- Max transitions returns a wrong number
+- Nothing goes to the log file
+- Change seed to x^n + x^(n-1) + 1 (dependant of n)
 
 
 - Conventions:
