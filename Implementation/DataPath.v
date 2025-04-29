@@ -8,9 +8,6 @@ module MUX2x1 #(parameter A = 8)(
     output wire [A-1:0] out
 );
     assign out = sel ? b : a;
-    always @(*) begin
-	$monitor("mux2x1: ", $time, out);
-    end
 endmodule
 
 
@@ -36,21 +33,19 @@ module FourCycleDelay #(parameter k = 32)(
     input wire [k-1:0] data_in,
     output reg [k-1:0] data_out
 );
-    reg [k-1:0] buf0, buf1, buf2, buf3;
+    reg [k-1:0] buf0, buf1, buf2;
 
     always @(posedge clk or posedge rst) begin
         if (rst) begin
             buf0 <= 0;
             buf1 <= 0;
             buf2 <= 0;
-            buf3 <= 0;
         end 
         else begin
-            buf3 <= buf2;
             buf2 <= buf1;
             buf1 <= buf0;
             buf0 <= data_in;
-            data_out <= buf3;
+            data_out <= buf2;
         end
     end
 endmodule
@@ -205,28 +200,29 @@ module Decoder #(parameter M = 5, k = 32, A = 8)(
     genvar i;
     generate
         for (i = 0; i < (k + M) % M; i = i + 1) begin : mux_gen1
-            wire [A:0] mux_out1;
-            MUX2x1 #(A+1) mux_inst1 (
+            wire [A-2:0] mux_out1;
+            MUX2x1 #(A-1) mux_inst1 (
                 .sel(INV[i]),
-                .a(X[i*(A+1) +: (A+1)]),
-                .b(~X[i*(A+1) +: (A+1)]),
+                .a(X[i*(A-1) +: (A-1)]),
+                .b(~X[i*(A-1) +: (A-1)]),
                 .out(mux_out1)
             );
-            assign S_out[i*(A+1) +: (A+1)] = mux_out1;
+            assign S_out[i*(A-1) +: (A-1)] = mux_out1;
         end
     endgenerate
     
     genvar j;
     generate
-        for (j = (k + M) % M; j < M-1; j = j + 1) begin : mux_gen2
-            wire [A-1:0] mux_out2;
-            MUX2x1 #(A) mux_inst2 (
-                .sel(INV[j]),
-                .a(X[j*(A) +: (A)]),
-                .b(~X[j*(A) +: (A)]),
+        for (j = 0; j < M-((k+M)%M); j = j + 1) begin : mux_gen2
+	    localparam integer start = ((k+M)%M)*(A-1) +(j*(A-2));
+            wire [A-3:0] mux_out2;
+            MUX2x1 #(A-2) mux_inst2 (
+                .sel(INV[j+((k+M)%M)]),
+                .a(X[start +: (A-2)]),
+                .b(~X[start +: (A-2)]),
                 .out(mux_out2)
             );
-            assign S_out[j*A +: A] = mux_out2;
+            assign S_out[start +: (A-2)] = mux_out2;
         end
     endgenerate
 endmodule
@@ -279,6 +275,7 @@ module Transition_Counter #(parameter n = 37) (
         if (done) begin
             for (j = 0; j <= (n/2); j = j + 1) begin  ////the limit was changed from 11*(n/2)-1
                 registers[j*11 +: 11] <= registers_cnt[j]; //registers is not an array but a bit vector so I needed to change from registers[j] to registers[j*11 +: 11]
+		$display("register", j, ": ", registers_cnt[j]);
             end
         end
     end
@@ -337,6 +334,7 @@ module Input_Data_Generator #(parameter k = 32) (
 
     // k is currently constatnt
     wire [31:0] seed = 32'b11000000000000000000000000000001;
+
     LFSR_seeded #(k) lfsr_gen (.clk(clk), .rst(rst), .load(en), .seed(seed), .lfsr_out(lfsr_out));
     
     always @(posedge clk or posedge rst) begin
@@ -358,8 +356,8 @@ module DataPath #(parameter M = 5, k = 32, A = 8)(
     output wire isequal,
     output reg [11*((k+M)/2)-1:0] registers
 );
-    wire [k-1:0] X, enc_mux_out, kcomp_mux_out;
-    wire [(k+M)-1:0] bus_mux_out, dec_mux_out;
+    wire [k-1:0] X, enc_mux_out, kcomp_mux_out, enc_reg_out, kcomp_reg_out;
+    wire [(k+M)-1:0] bus_reg_out, bus_mux_out, dec_reg_out, dec_mux_out;
     wire [M-1:0] INV;
     wire [k-1:0] S_data, S_data_2cmp, S_out;
     wire [k-1:0] k_zero_input = {k{1'b0}};
@@ -375,15 +373,23 @@ module DataPath #(parameter M = 5, k = 32, A = 8)(
         .b(S_data),
         .out(enc_mux_out)
     );
+
+    Buffer #(k) enc_reg (
+	.clk(clk), .rst(rst), .en(en_enc), .in(enc_mux_out), .out(enc_reg_out)
+    );
         
     Encoder enc (
-        .clk(clk), .rst(rst), .en(en_enc), .S(enc_mux_out), .X(X), .INV(INV)
+        .clk(clk), .rst(rst), .en(en_enc), .S(enc_reg_out), .X(X), .INV(INV)
+    );
+
+    Buffer #(k+M) bus_reg (
+	.clk(clk), .rst(rst), .en(en_bus), .in({X, INV}), .out(bus_reg_out)
     );
 
     MUX2x1 #(k+M) bus_mux (
         .sel(en_bus & ~rst),
         .a(n_zero_input), 
-        .b({X, INV}),
+        .b(bus_reg_out),
         .out(bus_mux_out)
     );
             
@@ -393,16 +399,24 @@ module DataPath #(parameter M = 5, k = 32, A = 8)(
         .b(bus_mux_out),
         .out(dec_mux_out)
     );
+
+    Buffer #(k+M) dec_reg (
+	.clk(clk), .rst(rst), .en(en_dec), .in(dec_mux_out), .out(dec_reg_out)
+    );
     
     Decoder dec (
-        .X(dec_mux_out[(k+M)-1:M]), .INV(dec_mux_out[M-1:0]),
+        .X(dec_reg_out[(k+M)-1:M]), .INV(dec_reg_out[M-1:0]),
         .S_out(S_out)
+    );
+
+    Buffer #(k) kcomp_reg (
+	.clk(clk), .rst(rst), .en(en_k_comp), .in(S_out), .out(kcomp_reg_out)
     );
     
     MUX2x1 #(k) kcomp_mux (
         .sel(en_k_comp & ~rst),
         .a(S_data_2cmp),  
-        .b(S_out),
+        .b(kcomp_reg_out),
         .out(kcomp_mux_out)
     );
 

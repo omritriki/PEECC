@@ -43,23 +43,22 @@ module FSM_controller (
     // Counter signals
     reg  enable_cnt;
     reg  done_cnt;
-    reg [6:0] cnt;
+    reg [10:0] cnt; ///////////////////////need to change back to [10:0]
 
     // Synchronous state register
     always @(posedge clk or posedge reset) begin
         if (reset) begin
             state       <= IDLE;
             enable_cnt  <= 1'b0;
-            cnt         <= 11'd0;
+            cnt         <= 11'b1;
             done_cnt    <= 1'b0;
             trigger     <= 1'b0;
         end
         else begin
             state <= nextstate;
 
-            // Counter logic
+         // Counter
             if (enable_cnt) begin
-                // Check if cnt = 0
                 if (cnt == 11'd0) begin
                     done_cnt <= 1'b1;
                 end
@@ -68,8 +67,6 @@ module FSM_controller (
                 end
 
                 cnt <= cnt + 1'b1;
-		$display("counter: ", cnt);
-		$monitor("state: ", state);
 
                 // If (cnt > 0) and (cnt < 4) => set trigger
                 // Check cnt next-state to see if it is > 0 and < 4
@@ -82,7 +79,7 @@ module FSM_controller (
                 end
             end
             else begin
-                cnt      <= 11'd0;
+                cnt      <= 11'd1;
                 done_cnt <= 1'b0;
                 trigger  <= 1'b0;
             end
@@ -110,35 +107,32 @@ module FSM_controller (
                 if (done_cnt == 1'b1) begin
                     nextstate = S1;
                 end
-                enable_cnt = 1'b1;
             end
 
             S1: begin
                 if (done_cnt == 1'b1) begin
                     nextstate = S2;
                 end
-                enable_cnt = 1'b1;
             end
 
             S2: begin
                 if (done_cnt == 1'b1) begin
                     nextstate = S3;
                 end
-                enable_cnt = 1'b1;
             end
 
             S3: begin
                 if (done_cnt == 1'b1) begin
                     nextstate = S4;
                 end
-                enable_cnt = 1'b1;
             end
 
             S4: begin
                 if (done_cnt == 1'b1) begin
                     nextstate = IDLE;
+		    done = 1'b1;
+		    enable_cnt = 1'b0;
                 end
-                enable_cnt = 1'b1;
             end
 
             default: begin
@@ -194,7 +188,6 @@ module FSM_controller (
                 en_bus         = 1'b1;
                 en_dec         = 1'b1;
                 en_trans_count = 1'b1;
-                done           = 1'b1;
                 en_bf1         = 1'b1;
                 en_bf2         = 1'b1;
                 en_k_comp      = 1'b1;

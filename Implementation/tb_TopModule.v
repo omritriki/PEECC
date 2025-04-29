@@ -32,14 +32,13 @@ module tb_TopModule();
       	#1
         rst = 1'b1;
 	#2
+	rst = 1'b0;
+	#4
 	ValidIn = 1'b1;
-        #20;
-        rst = 1'b0;
+        #10;
 	ValidIn = 1'b0;
-	#23
-      	ValidIn = 1'b1;
          // Let the design run for a while
-         #5000;
+         #90000;
 
          // Stop simulation
          $stop;
