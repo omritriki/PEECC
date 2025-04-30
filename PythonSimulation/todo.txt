@@ -11,9 +11,8 @@ Shlomit
 
 Omri
 - Implement DAPBI
-- Max transitions returns a wrong number
+- Max transitions returns a wrong number in dapbi
 - Nothing goes to the log file
-- Change seed to x^n + x^(n-1) + 1 (dependant of n)
 
 
 - Conventions:
@@ -21,3 +20,8 @@ Omri
     Classes - Capital letters
     functions - small letters
     variables with underscore
+
+
+
+Comments and logs:
+    logging_config - V
