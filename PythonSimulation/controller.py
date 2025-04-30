@@ -14,6 +14,7 @@ from core import generator
 from core import comparator
 from core import transition_count
 from core import mbit_bi_average
+from core import error_generator
 from logging_config import configure_logging
 import argparse
 
@@ -100,7 +101,10 @@ def simulate(k, t, M, n, mode, seed=None):
 
         # Count transitions
         transition_count.transition_count(c, c_prev)
-
+        # Generate error
+        c_tilde = error_generator.error_generator(c)
+        controller_logger.debug(f"codeword:            {c}")
+        controller_logger.debug(f"Codeword with error: {c_tilde}")
         # Decode the codeword
         s_out = decoder(c, M)
 

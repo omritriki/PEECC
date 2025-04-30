@@ -6,8 +6,6 @@ TODO:
 - Validate different k, M
 
 Shlomit
-- Add input validation to each function
-- Implement error generator (1 bit only) with some probability
 
 Omri
 - Implement DAPBI
