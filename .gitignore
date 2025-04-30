@@ -1,7 +1,6 @@
 *.out
 .DS_Store
 .vscode/
-TODO LIST.md
 __pycache__/
 simulation_logs.log
 .idea/
