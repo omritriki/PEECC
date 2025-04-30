@@ -25,9 +25,9 @@ import argparse
 #              Logs max and average transitions for random words and all possible words
 
 def controller():
-    k = 20
-    t = 50000
-    M = 1
+    k = 32
+    t = 1000
+    M = 5
 
     controller_logger = logging.getLogger("Controller")
 
@@ -55,13 +55,23 @@ def controller():
 
     elif choice == '3':
         controller_logger.debug("Simulating using LFSR")
-        seed = [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+        seed = generate_seed(k)
         simulate(k, t, M, n, mode=3, seed=seed)
 
     else:
         controller_logger.warning("Invalid choice. Please select either 1, 2, or 3.")
 
     controller_logger.debug("Simulation ended")
+
+def generate_seed(k):
+    # The seed is x^n + x^(n-1) +x^0
+    seed = [0] * k
+
+    for i in [0, 1, -1]:
+        seed[i] = 1
+
+    print(f"Generated seed: {seed}")
+    return seed
 
 
 def simulate(k, t, M, n, mode, seed=None):
