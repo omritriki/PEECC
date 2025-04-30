@@ -25,9 +25,9 @@ import argparse
 #              Logs max and average transitions for random words and all possible words
 
 def controller():
-    k = 32
+    k = 16
     t = 1000
-    M = 5
+    M = 3
 
     controller_logger = logging.getLogger("Controller")
 
@@ -63,6 +63,7 @@ def controller():
 
     controller_logger.debug("Simulation ended")
 
+
 def generate_seed(k):
     # The seed is x^n + x^(n-1) +x^0
     seed = [0] * k
@@ -70,7 +71,6 @@ def generate_seed(k):
     for i in [0, 1, -1]:
         seed[i] = 1
 
-    print(f"Generated seed: {seed}")
     return seed
 
 
@@ -90,6 +90,7 @@ def simulate(k, t, M, n, mode, seed=None):
         if mode == 1:
             s_in = generator.generate(k, mode=1)  # Random generation
         elif mode == 2:
+            c_prev = [0] * n  # Initialize the bus
             s_in = generator.generate(k, mode=2, i=i)  # All possible words
         elif mode == 3:
             s_in = generator.generate(k, mode=3, seed=seed)  # LFSR
