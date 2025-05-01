@@ -51,9 +51,6 @@ def transition_count(c=0, c_prev=0, RESET=False):
         if curr_transitions > max_transitions: 
             max_transitions = curr_transitions
 
-        logging.debug(f"Counting transitions between:   {c}")
-        logging.debug(f"And:                            {c_prev}")
-
         logging.debug(f"Curr transitions:       {curr_transitions}")
         logging.debug(f"Curr max. transitions:  {max_transitions}")
         logging.debug(f"Curr avg. transitions:  {avg_transitions}")
