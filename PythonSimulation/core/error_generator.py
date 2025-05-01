@@ -1,8 +1,13 @@
 import random
 
 
-def error_generator(input_vector):
+def error_generator(input_vector, error_probability=0.1):
     n = len(input_vector)
+
+    # Decide whether to introduce an error based on the probability
+    if random.random() > error_probability:
+        # No error introduced, return the input vector as is
+        return input_vector
 
     # Generate a n-bit error vector with a single random bit set to 1
     error_vector = [0] * n

@@ -102,7 +102,8 @@ def simulate(k, t, M, n, mode, seed=None):
         # Count transitions
         transition_count.transition_count(c, c_prev)
         # Generate error
-        c_tilde = error_generator.error_generator(c)
+        error_probability = 0.5
+        c_tilde = error_generator.error_generator(c, error_probability)
         controller_logger.debug(f"codeword:            {c}")
         controller_logger.debug(f"Codeword with error: {c_tilde}")
         # Decode the codeword
