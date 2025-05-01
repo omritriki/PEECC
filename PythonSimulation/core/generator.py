@@ -15,11 +15,17 @@ import logging
 # Configure logging
 # configure_logging()
 
-# Description: Generates a random n-bit binary number and returns it as a list of bits
+# Description: Generates a k-bit binary number based on the specified mode.
+#              Mode 1 generates a random binary number.
+#              Mode 2 generates a binary number from the integer i.
+#              Mode 3 generates a binary number using an LFSR with the given seed.
 # Inputs:
-#              n (int): Number of bits in the generated binary number
+#              k (int): Number of bits in the generated binary number.
+#              mode (int): Mode of generation (1=random, 2=from integer, 3=LFSR).
+#              i (int): Integer to convert to binary (used in mode 2).
+#              seed (list[int]): Seed for LFSR (used in mode 3).
 # Outputs:
-#              s (array): An array of n binary digits
+#              s (list[int]): A list of k binary digits.
 
 def generate(k, mode = 1, i = 0, seed = 0):
     if k <= 0:
@@ -28,22 +34,18 @@ def generate(k, mode = 1, i = 0, seed = 0):
 
     if mode == 1:
         # Generate a random n-bit binary number
-        logging.debug(f"Generating a random {k}-bit binary number")
         random_num = randint(0, (2 ** k) - 1)
-        s = [int(bit) for bit in format(random_num, f'0{k}b')]  # Convert each bit to an integer
+        s = [int(bit) for bit in format(random_num, f'0{k}b')]  
 
     elif mode == 2:
         # Generate i as a k-bit binary number
-        logging.debug(f"Generating a {k}-bit binary number from i={i}")
         s = [int(bit) for bit in format(i, f'0{k}b')]
 
     elif mode == 3:
         # Generate i using LFSR
-        logging.debug(f"Generating a {k}-bit binary number from i={i}")
-        #lfsr_out = seed.copy()
+        new_bit = seed[0] ^ seed[1]  
+        lfsr_out = seed[1:]  
+        s = lfsr_out + [new_bit]  
 
-        new_bit = seed[0] ^ seed[1]  # XOR of two MSBs
-        lfsr_out = seed[1:]  # Shift left
-        s = lfsr_out + [new_bit]  # Insert new_bit at LSB
-
+    logging.debug(f"Generated a {k}-bit word: {s}")
     return s
