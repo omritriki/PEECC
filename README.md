@@ -1,30 +1,32 @@
-
 # Power Efficient Error Correction Encoding for On-Chip Interconnection Links
 
 ## Overview
-This project focuses on developing and analyzing power-efficient error correction techniques for reliable data transfer over on-chip interconnection links. The key objective is to minimize dynamic power consumption while ensuring data integrity.
+This project focuses on developing and analyzing power-efficient error correction techniques for reliable data transfer over on-chip interconnection links. The key objective is to minimize dynamic power consumption while ensuring data integrity. The project implements various encoding and decoding schemes, including M-bit Bus Invert (MbitBI) and Duplicate-Add Parity Bus Invert (DAPBI).
 
 ## Project Structure
 
 | File | Purpose |
 |------|--------|
-| **Comparator.py** | Contains the `Comparator` function to compare input and output data streams to verify correctness. |
-| **Controller.py** | Contains the `Controller` function, likely responsible for managing the system's control flow and data path coordination. |
-| **Decoder.py** | Implements the `Decoder` function, which decodes the received data and corrects potential errors. |
-| **Encoder.py** | Includes `mBitBusInvert` and `Check_Invert` functions, responsible for encoding the data using m-bit bus inversion to minimize transitions and power consumption. |
-| **Generator.py** | Provides the `generate` function, likely used for test data or input pattern generation. |
-| **Transition_Count.py** | Contains `Transition_Count` function to calculate bit transitions, helping evaluate dynamic power consumption. |
+| **coding_schemes/mbit_bi.py** | Implements the M-bit Bus Invert (MbitBI) encoding and decoding scheme to minimize transitions. |
+| **coding_schemes/dapbi.py** | Implements the Duplicate-Add Parity Bus Invert (DAPBI) encoding and decoding scheme for error detection and transition minimization. |
+| **core/Generator.py** | Provides the `generate` function to create test data or input patterns in various modes (random, integer-based, or LFSR). |
+| **core/Transition_Count.py** | Contains the `transition_count` function to calculate bit transitions, helping evaluate dynamic power consumption. |
+| **core/error_generator.py** | Introduces errors into binary vectors based on a specified error probability for testing purposes. |
+| **core/mbit_bi_average.py** | Calculates the average number of bit transitions for M-bit Bus Invert encoding. |
+| **Controller.py** | Manages the simulation flow, allowing users to test encoding schemes with random words, all possible words, or LFSR-generated words. |
+| **Comparator.py** | Compares input and output data streams to verify correctness. |
+| **logging_config.py** | Configures logging for the simulation, including file and console handlers. |
 
 ## Installation
 
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/power-efficient-ecc.git
-cd power-efficient-ecc
+git clone https://github.com/omritriki/PEECC.git
+cd PEECC
 ```
 
-2. (Optional) Install dependencies if any (not specified in the files yet):
+2. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
@@ -32,25 +34,34 @@ pip install -r requirements.txt
 
 ## Usage
 
-Each Python file contains modular functions which can be called individually or integrated into a simulation/testbench setup:
+The project is modular, and each Python file can be used independently or as part of a simulation setup. The main entry point is `controller.py`, which allows users to run simulations with different encoding schemes.
 
+### Running the Controller
 ```bash
-python Encoder.py
-python Decoder.py
-python Comparator.py
-# etc.
+python controller.py
 ```
 
-Example:
-
+### Example Usage
 ```python
-from Encoder import mBitBusInvert
-encoded_word = mBitBusInvert(input_word)
+from coding_schemes.mbit_bi import MbitBI
+from coding_schemes.dapbi import DAPBI
+
+# Example: Using MbitBI encoding
+mbit_bi = MbitBI()
+encoded = mbit_bi.encode(input_sequence, previous_sequence, M=4)
+decoded = mbit_bi.decode(encoded, M=4)
+
+# Example: Using DAPBI encoding
+dapbi = DAPBI()
+encoded = dapbi.encode(input_sequence, previous_sequence)
+decoded = dapbi.decode(encoded)
 ```
 
 ## Key Features
-- **Power-Conscious Encoding:** Implements m-bit bus invert encoding to minimize bit transitions and reduce dynamic power.
-- **Error Detection & Correction:** Decoder module ensures data integrity.
+- **Encoding Schemes:**
+  - **M-bit Bus Invert (MbitBI):** Reduces transitions by segmenting the input and inverting segments when necessary.
+  - **Duplicate-Add Parity Bus Invert (DAPBI):** Minimizes transitions and adds error detection using parity and inversion bits.
+- **Error Injection:** Simulates errors in encoded data for testing decoder robustness.
 - **Power Monitoring:** Transition counter evaluates the system's power profile.
 - **Modular Design:** Separate modules for encoding, decoding, controlling, and testing.
 
