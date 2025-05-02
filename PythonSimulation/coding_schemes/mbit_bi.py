@@ -9,12 +9,21 @@
 """
 
 from coding_schemes.base_coding_scheme import CodingScheme
-from logging_config import configure_logging
 import logging
 
-# Configure logging
-configure_logging()
 
+# Description: Implements the M-bit Bus Invert (MbitBI) encoding and decoding scheme.
+#              The encoding process divides the input binary sequence into segments of length M,
+#              compares the number of transitions in each segment to half its length, and inverts
+#              the segment if doing so reduces the number of transitions. The decoding process
+#              reverses this operation to recover the original binary sequence.
+# Inputs:
+#              s (list[int]): The input binary sequence to be encoded.
+#              c_prev (list[int]): The previous encoded sequence for transition comparison.
+#              M (int): The number of segments for bus inversion.
+# Outputs:
+#              encode(): The encoded binary sequence with minimized transitions.
+#              decode(): The decoded binary sequence, recovering the original input.
 
 class MbitBI(CodingScheme):
     name = "M-bit Bus Invert"
@@ -69,15 +78,14 @@ class MbitBI(CodingScheme):
 
 
     def check_invert(self, s, c_prev):
-        #logging.debug(f"Checking inversion for segment: s={s}, c_prev={c_prev}")
         A = len(s)
 
         curr_transitions = sum(1 for i in range(A) if s[i] != c_prev[i])
 
         if curr_transitions > A // 2 or (curr_transitions == A // 2 and c_prev[-1] == 1):
             # Invert the segment
-            s = [bit ^ 1 for bit in s]  # Flip all bits using list comprehension
-            s.append(1)  # Set INV bit to 1
+            s = [bit ^ 1 for bit in s]  
+            s.append(1)  
         else:
-            s.append(0)  # Set INV bit to 0 (if no inversion)
+            s.append(0)  
         return s
