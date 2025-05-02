@@ -11,33 +11,17 @@
 from abc import ABC, abstractmethod
 
 
+# Description: Defines an abstract base class for coding schemes. 
+#              Subclasses must implement the `encode` and `decode` methods, 
+#              which handle the encoding and decoding of binary sequences.
+
 class CodingScheme(ABC):
     name: str
 
     @abstractmethod
     def encode(self, *args, **kwargs) -> list[int]:
-        """
-        Encodes the input data using the specific coding scheme.
-
-        Args:
-            *args: Positional arguments specific to the coding scheme.
-            **kwargs: Keyword arguments specific to the coding scheme.
-
-        Returns:
-            list[int]: Encoded codeword.
-        """
         pass
 
     @abstractmethod
     def decode(self, *args, **kwargs) -> list[int]:
-        """
-        Decodes the input codeword using the specific coding scheme.
-
-        Args:
-            *args: Positional arguments specific to the coding scheme.
-            **kwargs: Keyword arguments specific to the coding scheme.
-
-        Returns:
-            list[int]: Decoded information word.
-        """
         pass
