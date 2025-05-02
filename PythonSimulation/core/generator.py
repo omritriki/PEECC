@@ -44,5 +44,5 @@ def generate(k, mode = 1, i = 0, seed = 0):
         lfsr_out = seed[1:]  
         s = lfsr_out + [new_bit]  
 
-    logging.debug(f"Generated a {k}-bit word: {s}")
+    logging.debug(f"Generated a {k}-bit word:                {s}")
     return s
