@@ -1,5 +1,23 @@
+"""
+======================================================
+    Power Efficient Error Correction Encoding for
+            On-Chip Interconnection Links
+
+            Shlomit Lenefsky & Omri Triki
+                        06.2025
+======================================================
+"""
+
 import random
 
+
+# Description: Introduces an error into a given binary vector based on a specified error probability
+#              If an error is introduced, a single random bit in the vector is flipped
+# Inputs:
+#              input_vector (list[int]): The binary vector to which the error may be applied
+#              error_probability (float): The probability of introducing an error (default is 0.1)
+# Outputs:
+#              output_vector (list[int]): The binary vector after applying the error (if any)
 
 def error_generator(input_vector, error_probability=0.1):
     n = len(input_vector)
