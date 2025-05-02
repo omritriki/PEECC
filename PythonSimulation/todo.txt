@@ -1,15 +1,17 @@
 TODO: 
 
-- Add requirements file
+- Update requirements.txt file
 - Update README
-- Sync comments
 - Validate different k, M
+- Split Controller.py to files?
+- Show expected avg transitions only for mbit
+- No logs in error_generator at all
 
 Shlomit
 
 Omri
-- Implement DAPBI
-- Max transitions returns a wrong number in dapbi
+
+
 
 
 - Conventions:
@@ -25,3 +27,5 @@ Comments and logs:
     transition_count - V
     mbit_bi_average - V
     generator - V
+    comparator - V
+    error_generator - V
