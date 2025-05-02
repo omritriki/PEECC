@@ -8,11 +8,8 @@
 ======================================================
 """
 
-from logging_config import configure_logging
 import logging
 
-# Configure logging
-# configure_logging()
 
 # Global variables
 avg_transitions = 0
