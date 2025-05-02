@@ -10,7 +10,6 @@ Shlomit
 Omri
 - Implement DAPBI
 - Max transitions returns a wrong number in dapbi
-- Move log dile inside python Simulation
 
 
 - Conventions:
