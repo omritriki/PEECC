@@ -10,7 +10,7 @@ Shlomit
 Omri
 - Implement DAPBI
 - Max transitions returns a wrong number in dapbi
-- Nothing goes to the log file
+- Move log dile inside python Simulation
 
 
 - Conventions:
@@ -23,3 +23,6 @@ Omri
 
 Comments and logs:
     logging_config - V
+    transition_count - V
+    mbit_bi_average - V
+    generator - V
