@@ -26,16 +26,16 @@ import argparse
 #              Logs max and average transitions for random words and all possible words
 
 def controller():
-    k = 16
+    k = 32
     t = 1000
-    M = 3
+    M = 5
 
     controller_logger = logging.getLogger("Controller")
 
     coding_scheme = mbit_bi.MbitBI()
     n = k + M
-    # coding_scheme = dapbi.DAPBI()
-    # n = 2 * k + 3
+    coding_scheme = dapbi.DAPBI()
+    n = 2 * k + 3
 
     global encoder, decoder
     encoder = coding_scheme.encode
@@ -104,8 +104,8 @@ def simulate(k, t, M, n, mode, seed=None):
         # Generate error
         error_probability = 0.5
         c_tilde = error_generator.error_generator(c, error_probability)
-        controller_logger.debug(f"codeword:            {c}")
-        controller_logger.debug(f"Codeword with error: {c_tilde}")
+        #controller_logger.debug(f"codeword:            {c}")
+        #controller_logger.debug(f"Codeword with error: {c_tilde}")
         # Decode the codeword
         s_out = decoder(c, M)
 
