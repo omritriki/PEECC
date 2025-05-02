@@ -9,11 +9,8 @@
 """
 
 from random import randint
-from logging_config import configure_logging
 import logging
 
-# Configure logging
-# configure_logging()
 
 # Description: Generates a k-bit binary number based on the specified mode.
 #              Mode 1 generates a random binary number.
