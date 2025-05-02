@@ -22,7 +22,7 @@ def configure_logging(console_level=logging.WARNING):
         logging.root.removeHandler(handler)
 
     # Create file handler for all logs (DEBUG and above)
-    file_handler = logging.FileHandler("PythonSimulation/simulation_logs.log", mode='w')
+    file_handler = logging.FileHandler("simulation_logs.log", mode='w')
     file_handler.setLevel(logging.DEBUG)  
     file_handler.setFormatter(logging.Formatter(
         "%(asctime)s - %(levelname)s - %(message)s",
