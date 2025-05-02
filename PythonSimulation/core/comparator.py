@@ -8,11 +8,8 @@
 ======================================================
 """
 
-from logging_config import configure_logging
 import logging
 
-# Configure logging
-# configure_logging()
 
 # Description: Checks if the input to the encoder is the same as the output of the decoder
 # Inputs:
@@ -20,6 +17,7 @@ import logging
 #              output (array): Decoded word (length - k)
 # Outputs:
 #              isEqual (bool): True only if info_word == output
+
 def comparator(s_in, s_out):
     
     # Input validation
