@@ -49,8 +49,6 @@ def transition_count(c=0, c_prev=0, RESET=False):
             max_transitions = curr_transitions
 
         logging.debug(f"Curr transitions:       {curr_transitions}")
-        logging.debug(f"Curr max. transitions:  {max_transitions}")
-        logging.debug(f"Curr avg. transitions:  {avg_transitions}")
 
     except IndexError as e:
         logging.error("Index out of range while processing transitions", exc_info=True)
