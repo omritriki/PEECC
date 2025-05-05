@@ -100,10 +100,12 @@ class DAPBI(CodingScheme):
         error = calculated_parity ^ parity
 
         if error == 0:
+            logging.debug(f" No error detected")
             if s_out[-1] == 1:
                 # Invert the bits
                 s_out = [1 - bit for bit in s_out]
         else:
+            logging.debug(f" ERROR DETECTED: Parity mismatch")
             # Take all odd bits
             s_out = c[1::2]
 
