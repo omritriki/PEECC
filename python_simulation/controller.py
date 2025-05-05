@@ -27,37 +27,47 @@ import argparse
 
 def controller():
     k = 32
+    # TODO - choose an informative name for t
     t = 1000
     M = 5
 
     controller_logger = logging.getLogger("Controller")
 
-    coding_scheme = mbit_bi.MbitBI()
-    n = k + M
-    coding_scheme = dapbi.DAPBI()
-    n = 2 * k + 3
+    scheme_choice = input("Choose coding scheme (1 for M-BI, 2 for DAPBI): ")
+    if scheme_choice == '1':
+        controller_logger.debug("Using M-BI coding scheme")
+        coding_scheme = mbit_bi.MbitBI()
+        n = k + M
+    elif scheme_choice == '2':
+        controller_logger.debug("Using DAPBI coding scheme")
+        coding_scheme = dapbi.DAPBI()
+        n = 2 * k + 3
+    else:
+        controller_logger.error("Invalid choice. Please select either 1 or 2.")
+        return
 
     global encoder, decoder
     encoder = coding_scheme.encode
     decoder = coding_scheme.decode
 
     # Ask the user for their choice
-    choice = input(f"Simulate {t} random words (1), Simulate all possible words starting from 0 (2), or Simulate using LFSR (3)? ")
+    simulation_mode = input(f"Simulate {t} random words (1), Simulate all possible words starting from 0 (2), or Simulate using LFSR (3)? ")
     print()  
     controller_logger.info(f"Parameters: k = {k}, M = {M}, n = {n}")
 
-    if choice == '1':
+    # TODO - move to a separate function
+    if simulation_mode == '1':
         controller_logger.debug(f"Simulating {t} random words")
-        simulate(k, t, M, n, mode=1)
+        simulate(k, t, n, M=M, mode=1)
 
-    elif choice == '2':
+    elif simulation_mode == '2':
         controller_logger.debug("Simulating all possible words starting from 0")
-        simulate(k, t, M, n, mode=2)
+        simulate(k, t, n, M=M, mode=2)
 
-    elif choice == '3':
+    elif simulation_mode == '3':
         controller_logger.debug("Simulating using LFSR")
         seed = generate_seed(k)
-        simulate(k, t, M, n, mode=3, seed=seed)
+        simulate(k, t, n, M, seed=seed, mode=3)
 
     else:
         controller_logger.warning("Invalid choice. Please select either 1, 2, or 3.")
@@ -75,7 +85,7 @@ def generate_seed(k):
     return seed
 
 
-def simulate(k, t, M, n, mode, seed=None):
+def simulate(k, t, n, M = 0, seed = None, mode = 1):
     controller_logger = logging.getLogger("Controller")
     
     valid = validate_input(k, M, n, mode)
@@ -107,11 +117,16 @@ def simulate(k, t, M, n, mode, seed=None):
         #controller_logger.debug(f"codeword:            {c}")
         #controller_logger.debug(f"Codeword with error: {c_tilde}")
         # Decode the codeword
-        s_out = decoder(c, M)
+        s_out = decoder(c_tilde, M)
+        #s_out = decoder(c, M)
+
 
         # Compare input and output words
         if not comparator.comparator(s_in, s_out):
             controller_logger.warning(f"Mismatch between input and output for word {i + 1}: {s_in} != {s_out}")
+
+            # Remove before deployment
+            print(f"Mismatch between input and output for word {i + 1}: {s_in} != {s_out}")
             break
 
         # Update the previous codeword
@@ -122,6 +137,7 @@ def simulate(k, t, M, n, mode, seed=None):
     max_transitions, avg_transitions = transition_count.transition_count(c_prev, c_prev)
     controller_logger.info(f"Max transitions: {max_transitions}")
     controller_logger.info(f"Avg transitions: {avg_transitions / (t if mode == 1 or mode == 3 else (2 ** k))}")
+    # if scheme_choice == '1':
     controller_logger.info(f"Expected Avg transitions: {mbit_bi_average.mbit_bi_average(k, M)}")
 
     print()
