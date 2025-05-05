@@ -9,6 +9,7 @@
 """
 
 import logging
+import os
 
 
 # Description: Configures logging for the simulation, including both file and console handlers
@@ -18,12 +19,16 @@ import logging
 #              Logs are written to "simulation_logs.log" and displayed in the console
 
 def configure_logging(console_level=logging.WARNING):
+    # Get the directory containing this module
+    module_dir = os.path.dirname(os.path.abspath(__file__))
+    log_file_path = os.path.join(module_dir, "simulation_logs.log")
+
     # Remove any existing handlers to avoid duplicate logging
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
 
     # Create file handler for all logs (DEBUG and above)
-    file_handler = logging.FileHandler("simulation_logs.log", mode='w')
+    file_handler = logging.FileHandler(log_file_path, mode='w')
     file_handler.setLevel(logging.DEBUG)  
     file_handler.setFormatter(logging.Formatter(
         "%(asctime)s - %(levelname)s - %(message)s",
@@ -43,4 +48,4 @@ def configure_logging(console_level=logging.WARNING):
         handlers=[file_handler, console_handler]
     )
 
-    logging.debug("===== New Simulation Run Started =====") 
+    logging.debug("===== New Simulation Run Started =====")
