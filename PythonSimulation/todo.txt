@@ -6,6 +6,7 @@ TODO:
 - Split Controller.py to files?
 - Show expected avg transitions only for mbit
 - No logs in error_generator at all
+- Decide location of log file...
 
 Shlomit
 
