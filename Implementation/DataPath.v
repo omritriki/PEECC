@@ -333,7 +333,7 @@ module Input_Data_Generator #(parameter k = 32) (
     wire [k-1:0] lfsr_out;
 
     // k is currently constatnt
-    wire [31:0] seed = 32'b11000000000000000000000000000001;
+    wire [(k-1):0] seed = 32'b11000000000000000000000000000001;
 
     LFSR_seeded #(k) lfsr_gen (.clk(clk), .rst(rst), .load(en), .seed(seed), .lfsr_out(lfsr_out));
     
@@ -378,7 +378,7 @@ module DataPath #(parameter M = 5, k = 32, A = 8)(
 	.clk(clk), .rst(rst), .en(en_enc), .in(enc_mux_out), .out(enc_reg_out)
     );
         
-    Encoder enc (
+    Encoder #(M, k, A) enc (
         .clk(clk), .rst(rst), .en(en_enc), .S(enc_reg_out), .X(X), .INV(INV)
     );
 
@@ -404,7 +404,7 @@ module DataPath #(parameter M = 5, k = 32, A = 8)(
 	.clk(clk), .rst(rst), .en(en_dec), .in(dec_mux_out), .out(dec_reg_out)
     );
     
-    Decoder dec (
+    Decoder #(M, k, A) dec(
         .X(dec_reg_out[(k+M)-1:M]), .INV(dec_reg_out[M-1:0]),
         .S_out(S_out)
     );
@@ -429,11 +429,11 @@ module DataPath #(parameter M = 5, k = 32, A = 8)(
 
     //assign registers = trans_cnt_registers;
     
-    FourCycleDelay fcd (
+    FourCycleDelay #(k) fcd (
         .clk(clk), .rst(rst), .data_in(enc_mux_out), .data_out(S_data_2cmp)
     );
 
-    K_Comparator k_comp (
+    K_Comparator #(k) k_comp (
         .clk(clk), .S_in(S_data_2cmp), .S_out(kcomp_mux_out), .isequal(isequal)
     );
 	 

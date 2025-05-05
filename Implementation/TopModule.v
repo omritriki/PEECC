@@ -8,12 +8,12 @@
 ======================================================
 */
 
-module TopModule (
+module TopModule #(parameter M=5, k=32, A=8)(
     input  wire        CLK,
     input  wire        RST,
     input  wire        ValidIn,
     //output wire [10:0] registers [0:18], // Example for 19-element array, each 11 bits
-    output wire [11*18-1:0] registers,
+    output wire [(11*((k+M)/2))-1:0] registers,
     output wire        IsEqual
 );
 
@@ -54,9 +54,9 @@ module TopModule (
     // DataPath instantiation
     //----------------------------------------------
     DataPath #(
-        .M(5),
-        .k(32),
-        .A(8)
+        .M(M), //5
+        .k(k), //32
+        .A(A) //8
     ) U2 (
         .clk            (CLK),
         .rst            (RST),

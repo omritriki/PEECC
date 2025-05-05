@@ -1,15 +1,18 @@
 
 module tb_TopModule();
 
+    localparam k = 16;
+    localparam M = 5;
+
     // Testbench regs and wires
     reg clk;
     reg rst;
     reg ValidIn;
-    wire [11*18-1:0] registers;
+    wire [(11*((k+M)/2))-1:0] registers;
     wire IsEqual;
 
     // Instantiate the TopModule
-    TopModule DUT (
+    TopModule #(.M(M), .k(k), .A(((k+M)/M)+1)) DUT(
         .CLK(clk),
         .RST(rst),
         .ValidIn(ValidIn), 
@@ -38,7 +41,7 @@ module tb_TopModule();
         #10;
 	ValidIn = 1'b0;
          // Let the design run for a while
-         #90000;
+         #300000;
 
          // Stop simulation
          $stop;
