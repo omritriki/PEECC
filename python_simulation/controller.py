@@ -9,14 +9,14 @@
 """
 
 import logging
-from coding_schemes import mbit_bi, dapbi
+from coding_schemes import mbit_bi, dapbi, dap, hamming_x
 from core import generator
 from core import comparator
 from core import transition_count
 from core import mbit_bi_average
 from core import error_generator
 from logging_config import configure_logging
-import argparse
+
 
 # Description: Controls the encoding process, testing both random and all possible
 #              k-bit input words while tracking transition statistics
@@ -26,51 +26,45 @@ import argparse
 #              Logs max and average transitions for random words and all possible words
 
 def controller():
-    k = 32
-    # TODO - choose an informative name for t
-    t = 1000
-    M = 5
-
     controller_logger = logging.getLogger("Controller")
 
-    scheme_choice = input("Choose coding scheme (1 for M-BI, 2 for DAPBI): ")
-    if scheme_choice == '1':
-        controller_logger.debug("Using M-BI coding scheme")
-        coding_scheme = mbit_bi.MbitBI()
-        n = k + M
-    elif scheme_choice == '2':
-        controller_logger.debug("Using DAPBI coding scheme")
-        coding_scheme = dapbi.DAPBI()
-        n = 2 * k + 3
-    else:
-        controller_logger.error("Invalid choice. Please select either 1 or 2.")
+    k = 30
+    t = 5000
+    M = 1
+
+    schemes = {
+        '1': mbit_bi.MbitBI(),
+        '2': dapbi.DAPBI(),
+        '3': dap.DAP(),
+        '4': hamming_x.HAMMINGX()
+    }
+
+    scheme_choice = input("Choose coding scheme (1 for M-BI, 2 for DAPBI, 3 for DAP, 4 for HAMMINGX): ")
+
+    if scheme_choice not in schemes:
+        controller_logger.error("Invalid choice. Please select either 1, 2, 3, or 4.")
         return
+    
+    coding_scheme = schemes[scheme_choice]
+    n = coding_scheme.get_bus_size(k, M)
 
     global encoder, decoder
     encoder = coding_scheme.encode
     decoder = coding_scheme.decode
 
-    # Ask the user for their choice
-    simulation_mode = input(f"Simulate {t} random words (1), Simulate all possible words starting from 0 (2), or Simulate using LFSR (3)? ")
+    generator_choice = input(f"Simulate {t} random words (1), Simulate all possible words starting from 0 (2), or Simulate using LFSR (3)? ")
+
+    if generator_choice not in ['1', '2', '3']:
+        controller_logger.error("Invalid choice. Please select either 1, 2, or 3.")
+        return
+    
     print()  
-    controller_logger.info(f"Parameters: k = {k}, M = {M}, n = {n}")
-
-    # TODO - move to a separate function
-    if simulation_mode == '1':
-        controller_logger.debug(f"Simulating {t} random words")
-        simulate(k, t, n, M=M, mode=1)
-
-    elif simulation_mode == '2':
-        controller_logger.debug("Simulating all possible words starting from 0")
-        simulate(k, t, n, M=M, mode=2)
-
-    elif simulation_mode == '3':
-        controller_logger.debug("Simulating using LFSR")
-        seed = generate_seed(k)
-        simulate(k, t, n, M, seed=seed, mode=3)
-
+    if isinstance(coding_scheme, mbit_bi.MbitBI):
+        controller_logger.info(f"Simulating {coding_scheme.name} with Parameters: k = {k}, M = {M}, n = {n}")
     else:
-        controller_logger.warning("Invalid choice. Please select either 1, 2, or 3.")
+        controller_logger.info(f"Simulating {coding_scheme.name} with Parameters: k = {k}, n = {n}")
+
+    simulate(k, t, n, M=M, seed=generate_seed(k) if generator_choice == '3' else None, mode=int(generator_choice))
 
     controller_logger.debug("Simulation ended")
 
@@ -93,33 +87,35 @@ def simulate(k, t, n, M = 0, seed = None, mode = 1):
         controller_logger.error("Invalid input parameters. Exiting simulation.")
         return
     
-    c_prev = [0] * n  # Initialize the bus
-    transition_count.transition_count(c_prev, c_prev, RESET=True)  # Reset counters
+    modes = {1: f"Simulating {t} random words",
+                2: "Simulating all possible words starting from 0",
+                3: f"Simulating {t} words using LFSR"}
+    
+    controller_logger.debug(modes[mode])
+    
+    # Initalize the bus, reset the counters
+    c_prev = [0] * n  
+    transition_count.transition_count(c_prev, c_prev, RESET=True)  
 
     for i in range(t if mode == 1 or mode == 3 else (2 ** k)):
         # Generate input word based on the mode
         if mode == 1:
-            s_in = generator.generate(k, mode=1)  # Random generation
+            s_in = generator.generate(k, mode=1)  
         elif mode == 2:
-            c_prev = [0] * n  # Initialize the bus
-            s_in = generator.generate(k, mode=2, i=i)  # All possible words
+            c_prev = [0] * n  
+            s_in = generator.generate(k, mode=2, i=i)  
         elif mode == 3:
-            s_in = generator.generate(k, mode=3, seed=seed)  # LFSR
-            seed = s_in  # Update the seed for the next iteration
+            s_in = generator.generate(k, mode=3, seed=seed) 
+            seed = s_in  
 
         c = encoder(s_in, c_prev, M)
-
-        # Count transitions
         transition_count.transition_count(c, c_prev)
-        # Generate error
-        error_probability = 0.5
-        c_tilde = error_generator.error_generator(c, error_probability)
-        #controller_logger.debug(f"codeword:            {c}")
-        #controller_logger.debug(f"Codeword with error: {c_tilde}")
-        # Decode the codeword
-        s_out = decoder(c_tilde, M)
-        #s_out = decoder(c, M)
 
+        # Generate error
+        error_probability = 0
+        c_tilde = error_generator.error_generator(c, error_probability)
+
+        s_out = decoder(c_tilde, M)
 
         # Compare input and output words
         if not comparator.comparator(s_in, s_out):
@@ -132,54 +128,30 @@ def simulate(k, t, n, M = 0, seed = None, mode = 1):
         # Update the previous codeword
         c_prev = c
 
-
     # Log transition statistics
     max_transitions, avg_transitions = transition_count.transition_count(c_prev, c_prev)
     controller_logger.info(f"Max transitions: {max_transitions}")
     controller_logger.info(f"Avg transitions: {avg_transitions / (t if mode == 1 or mode == 3 else (2 ** k))}")
-    # if scheme_choice == '1':
-    controller_logger.info(f"Expected Avg transitions: {mbit_bi_average.mbit_bi_average(k, M)}")
-
+    
+    # Show expected average transitions only for Mbit-BI coding scheme
+    if isinstance(encoder.__self__, mbit_bi.MbitBI):
+        controller_logger.info(f"Expected Avg transitions: {mbit_bi_average.mbit_bi_average(k, M)}")
     print()
 
 
 def validate_input(k, M, n, mode):
     controller_logger = logging.getLogger("Controller")
-    # input validation
+
     if M > (k/2):
         controller_logger.error(f"Invalid input: M={M}. M must be less than or equal to k/2.")
         return False
     if mode > 3 or mode < 1:
         controller_logger.error(f"Invalid input: mode={mode}. Mode must be 1, 2, or 3.")
-        return
+        return False
+    
     return True
 
 
-def parse_arguments():
-    parser = argparse.ArgumentParser(description="Run the simulation controller.")
-    parser.add_argument(
-        "-loglevel", 
-        type=int, 
-        choices=[1, 2, 3, 4, 5],
-        default=2,  # Default to INFO
-        help="Log level: 1=DEBUG, 2=INFO, 3=WARNING, 4=ERROR, 5=CRITICAL"
-    )
-    return parser.parse_args()
-
-
-def map_log_level(level_number):
-    level_map = {
-        1: logging.DEBUG,
-        2: logging.INFO,
-        3: logging.WARNING,
-        4: logging.ERROR,
-        5: logging.CRITICAL,
-    }
-    return level_map.get(level_number, logging.INFO)
-
-
 if __name__ == '__main__': 
-    args = parse_arguments()
-    console_level = map_log_level(args.loglevel)
-    configure_logging(console_level=console_level)  
+    configure_logging(console_level=logging.INFO)  
     controller()
