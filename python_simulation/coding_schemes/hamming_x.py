@@ -114,8 +114,9 @@ class HAMMINGX(CodingScheme):
         
         # If error detected, correct it
         if error_position > 0 and error_position <= len(data_bits):
-            logging.warning(f"ERROR DETECTED: position {error_position}")
+            logging.debug(f"ERROR DETECTED: position {error_position}")
             data_bits[error_position - 1] ^= 1 
         
-        logging.debug(f"HammingX edecoded word:                  {c[:-1]}")
+        logging.debug(f"HammingX decoded word:                  {c[:-1]}")
+
         return data_bits

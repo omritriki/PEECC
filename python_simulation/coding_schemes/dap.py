@@ -63,7 +63,7 @@ class DAP(CodingScheme):
             logging.debug(f"No error detected")
             s_out = c[::2]
         else:
-            logging.warning(f"ERROR DETECTED: Parity mismatch")
+            logging.debug(f"ERROR DETECTED: Parity mismatch")
             # Take all odd bits
             s_out = c[1::2]
 
