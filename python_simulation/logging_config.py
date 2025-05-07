@@ -48,4 +48,4 @@ def configure_logging(console_level=logging.WARNING):
         handlers=[file_handler, console_handler]
     )
 
-    logging.debug("===== New Simulation Run Started =====")
+    logging.debug("========= New Simulation Run Started =========")
