@@ -32,6 +32,10 @@ from functools import reduce
 class DAPBI(CodingScheme):
     name = "DAPBI"
 
+    def get_bus_size(self, k, M=None):
+        n = 2 * k + 3
+        return n
+
     def encode(self, s_in, c_prev, M=None):
         s_copy = s_in[:] 
 

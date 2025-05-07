@@ -28,6 +28,10 @@ import logging
 class MbitBI(CodingScheme):
     name = "M-bit Bus Invert"
 
+    def get_bus_size(self, k, M):
+        n = k + M
+        return n
+
     def encode(self, s, c_prev, M):
         logging.debug(f"Starting M-bit bus inversion with M={M}, s={s}, c_prev={c_prev}")
         n = len(s) + M

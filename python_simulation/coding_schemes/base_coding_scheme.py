@@ -21,6 +21,10 @@ class CodingScheme(ABC):
     @abstractmethod
     def encode(self, *args, **kwargs) -> list[int]:
         pass
+    
+    @abstractmethod
+    def get_bus_size(self, *args, **kwargs) -> int:
+        pass
 
     @abstractmethod
     def decode(self, *args, **kwargs) -> list[int]:
