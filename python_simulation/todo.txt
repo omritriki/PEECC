@@ -4,10 +4,10 @@ TODO:
 - Update README
 - Validate different k, M
 - Split Controller.py to files?
-- Show expected avg transitions only for mbit
-- No logs in error_generator at all
+
 
 Shlomit
+
 
 Omri
 
