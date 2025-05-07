@@ -21,7 +21,7 @@ from functools import reduce
 
 
 class DAP(CodingScheme):
-    name = "DAP"
+    name = "Duplicate-Add-Parity"
 
     def get_bus_size(self, k, M=None):
         n = 2 * k + 1
@@ -43,7 +43,7 @@ class DAP(CodingScheme):
         c.append(parity)
         c.append(parity)
 
-        logging.debug(f"Final encoded word with duplication:    {c}")
+        logging.debug(f"DAP encoded word:                       {c}")
 
         return c
     
@@ -60,13 +60,13 @@ class DAP(CodingScheme):
         error = calculated_parity ^ parity
 
         if error == 0:
-            logging.debug(f" No error detected")
+            logging.debug(f"No error detected")
             s_out = c[::2]
         else:
-            logging.debug(f" ERROR DETECTED: Parity mismatch")
+            logging.warning(f"ERROR DETECTED: Parity mismatch")
             # Take all odd bits
             s_out = c[1::2]
 
-        logging.debug(f"Final decoded word:                     {s_out[:-1]}")
+        logging.debug(f"DAP decoded word:                       {s_out}")
 
         return s_out

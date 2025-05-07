@@ -39,7 +39,7 @@ def controller():
         '4': hamming_x.HAMMINGX()
     }
 
-    scheme_choice = input("Choose coding scheme (1 for M-BI, 2 for DAPBI, 3 for DAP, 4 for HAMMINGX): ")
+    scheme_choice = input("Choose coding scheme (1 for M-BI, 2 for DAP-BI, 3 for DAP, 4 for HammingX): ")
 
     if scheme_choice not in schemes:
         controller_logger.error("Invalid choice. Please select either 1, 2, 3, or 4.")

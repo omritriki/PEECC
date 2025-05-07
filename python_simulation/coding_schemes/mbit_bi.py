@@ -26,14 +26,13 @@ import logging
 #              decode(): The decoded binary sequence, recovering the original input.
 
 class MbitBI(CodingScheme):
-    name = "M-bit Bus Invert"
+    name = "M-bit Bus-Invert"
 
     def get_bus_size(self, k, M):
         n = k + M
         return n
 
     def encode(self, s, c_prev, M):
-        logging.debug(f"Starting M-bit bus inversion with M={M}, s={s}, c_prev={c_prev}")
         n = len(s) + M
         segments = [n // M] * (n % M) + [n // M - 1] * (M - n % M)
 
@@ -54,7 +53,8 @@ class MbitBI(CodingScheme):
             start_s += seg_len
             start_c += seg_len + 1
 
-        logging.debug(f"M-bit BI encoding result: {c}")
+        logging.debug(f"M-bit BI encoded word:                  {c}")
+
         return c
 
 
@@ -76,7 +76,7 @@ class MbitBI(CodingScheme):
             # Move start index for c
             start_c += seg_len + 1
 
-        logging.debug(f"M-bit BI decoding result: {c}")
+        logging.debug(f"M-bit BI encoded word:                  {s}")
 
         return s
 

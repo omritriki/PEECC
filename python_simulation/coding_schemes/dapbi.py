@@ -30,7 +30,7 @@ from functools import reduce
 #                        handling potential errors.
 
 class DAPBI(CodingScheme):
-    name = "DAPBI"
+    name = "Duplicate-Add-Parity Bus-Invert"
 
     def get_bus_size(self, k, M=None):
         n = 2 * k + 3
@@ -82,7 +82,8 @@ class DAPBI(CodingScheme):
 
         # Add parity once
         c.append(parity_bit)
-        logging.debug(f"Final encoded word with duplication:    {c}")
+        logging.debug(f"DAPBI encoded word:                     {c}")
+
 
         # Current word: [s_duplicated, INV_duplicated, parity]
 
@@ -104,12 +105,12 @@ class DAPBI(CodingScheme):
         error = calculated_parity ^ parity
 
         if error == 0:
-            logging.debug(f" No error detected")
+            logging.debug(f"No error detected")
             if s_out[-1] == 1:
                 # Invert the bits
                 s_out = [1 - bit for bit in s_out]
         else:
-            logging.debug(f" ERROR DETECTED: Parity mismatch")
+            logging.warning(f"ERROR DETECTED: Parity mismatch")
             # Take all odd bits
             s_out = c[1::2]
 
@@ -117,6 +118,6 @@ class DAPBI(CodingScheme):
                 # Invert the bits
                 s_out = [1 - bit for bit in s_out]
 
-        logging.debug(f"Final decoded word:                     {s_out[:-1]}")
+        logging.debug(f"DAPBI decoded word:                     {s_out[:-1]}")
 
         return s_out[:-1]
