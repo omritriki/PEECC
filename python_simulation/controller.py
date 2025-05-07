@@ -27,6 +27,7 @@ from logging_config import configure_logging
 
 def controller():
     controller_logger = logging.getLogger("Controller")
+    global encoder, decoder, coding_scheme
 
     k = 30
     t = 5000
@@ -46,11 +47,9 @@ def controller():
         return
     
     coding_scheme = schemes[scheme_choice]
-    n = coding_scheme.get_bus_size(k, M)
-
-    global encoder, decoder
     encoder = coding_scheme.encode
     decoder = coding_scheme.decode
+    n = coding_scheme.get_bus_size(k, M)
 
     generator_choice = input(f"Simulate {t} random words (1), Simulate all possible words starting from 0 (2), or Simulate using LFSR (3)? ")
 
@@ -134,8 +133,8 @@ def simulate(k, t, n, M = 0, seed = None, mode = 1):
     controller_logger.info(f"Avg transitions: {avg_transitions / (t if mode == 1 or mode == 3 else (2 ** k))}")
     
     # Show expected average transitions only for Mbit-BI coding scheme
-    if isinstance(encoder.__self__, mbit_bi.MbitBI):
-        controller_logger.info(f"Expected Avg transitions: {mbit_bi_average.mbit_bi_average(k, M)}")
+    if isinstance(coding_scheme, mbit_bi.MbitBI):
+        controller_logger.info(f"Expected Avg transitions: {coding_scheme.calculate_expected_average(k, M)}")
     print()
 
 

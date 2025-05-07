@@ -9,6 +9,7 @@
 """
 
 from coding_schemes.base_coding_scheme import CodingScheme
+from math import comb
 import logging
 
 
@@ -93,3 +94,17 @@ class MbitBI(CodingScheme):
         else:
             s.append(0)  
         return s
+    
+    
+    def calculate_expected_average(self, k, M):
+        def calc_segment_average(n):
+            if (n - 1) % 2 == 0:
+                return calc_segment_average(n + 1) - 0.5
+            if (n - 1) % 2 == 1:
+                return (n / (2 ** (n + 1))) * (2 ** n - comb(n, n // 2))
+        
+        n = k + M
+        expected_value = (n % M) * calc_segment_average(n // M + 1) + \
+                        (M - n % M) * calc_segment_average(n // M)
+        
+        return round(expected_value, 4)
