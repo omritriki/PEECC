@@ -8,25 +8,26 @@
 ======================================================
 """
 
-# Simulation parameters
+from coding_schemes import mbit_bi, dapbi, dap, hamming_x
+
+
 SIMULATION_PARAMS = {
-    'INPUT_BITS': 32,          # k: Number of input bits
-    'NUM_RANDOM_WORDS': 5000,  # t: Number of random words to simulate
-    'DEFAULT_M': 1,            # M: Default number of segments
-    'ERROR_PROBABILITY': 0.5   # Default error probability
+    'INPUT_BITS': 32,          
+    'NUM_RANDOM_WORDS': 5000,  
+    'DEFAULT_M': 1,            
+    'ERROR_PROBABILITY': 0.5   
 }
 
-# Coding schemes configuration
 SCHEMES = {
-    '1': ('M-BI', 'M-bit Bus Invert encoding'),
-    '2': ('DAP-BI', 'Duplicate-Add Parity Bus Invert encoding'),
-    '3': ('DAP', 'Duplicate-Add Parity encoding'),
-    '4': ('HammingX', 'Extended Hamming code')
+    1: mbit_bi.MbitBI(),
+    2: dapbi.DAPBI(),
+    3: dap.DAP(),
+    4: hamming_x.HAMMINGX()
 }
 
-# Generation modes
-GENERATION_MODES = {
-    '1': 'Random words',
-    '2': 'All possible words',
-    '3': 'LFSR sequence'
+SIMULATION_MODES = {
+    1: "Simulating {t} random words",
+    2: "Simulating all possible words starting from 0",
+    3: "Simulating {t} words using LFSR"
 }
+

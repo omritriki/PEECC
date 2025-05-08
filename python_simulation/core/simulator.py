@@ -12,6 +12,7 @@ import logging
 from typing import List
 from coding_schemes import mbit_bi, dapbi, dap, hamming_x
 from core import generator, comparator, transition_count, error_generator
+from config.simulation_config import SIMULATION_MODES
 
 
 def simulate(coding_scheme, k, t, error_probability, M = 0, seed = None, mode = 1):
@@ -25,13 +26,9 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, seed = None, mode = 
         simulator_logger.error("Invalid input parameters. Exiting simulation.")
         return
     
-    modes = {
-            1: f"Simulating {t} random words",
-            2: "Simulating all possible words starting from 0",
-            3: f"Simulating {t} words using LFSR"
-    }
-    
-    simulator_logger.debug(modes[mode])
+    # Use mode description from config
+    mode_description = SIMULATION_MODES[mode].format(t=t)
+    simulator_logger.debug(mode_description)
     
     # Initalize the bus, reset the counters
     c_prev = [0] * n  
@@ -89,10 +86,12 @@ def _validate_input(k, M, n, mode):
     controller_logger = logging.getLogger("Controller")
 
     if M > (k/2):
-        controller_logger.error(f"Invalid input: M={M}. M must be less than or equal to k/2.")
+        controller_logger.error(f"Invalid input: M={M}. M must be less than or equal to k/2")
         return False
+    
+    ######### This is already checked in the controller
     if mode > 3 or mode < 1:
-        controller_logger.error(f"Invalid input: mode={mode}. Mode must be 1, 2, or 3.")
+        controller_logger.error(f"Invalid input: mode={mode}. Mode must be 1, 2, or 3")
         return False
     
     return True

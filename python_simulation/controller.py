@@ -9,10 +9,9 @@
 """
 
 import logging
-from coding_schemes import mbit_bi, dapbi, dap, hamming_x
 from core import simulator
 from config.logging_config import configure_logging
-from config.simulation_config import SIMULATION_PARAMS, SCHEMES, GENERATION_MODES
+from config.simulation_config import SIMULATION_PARAMS, SCHEMES, SIMULATION_MODES
 
 
 # Description: Controls the encoding process, testing both random and all possible
@@ -31,29 +30,23 @@ def controller():
     M: int = SIMULATION_PARAMS['DEFAULT_M']
     error_p: float = SIMULATION_PARAMS['ERROR_PROBABILITY']
 
-    schemes = {
-        '1': mbit_bi.MbitBI(),
-        '2': dapbi.DAPBI(),
-        '3': dap.DAP(),
-        '4': hamming_x.HAMMINGX()
-    }
-
-    scheme_choice = input("Choose coding scheme (1 for M-BI, 2 for DAP-BI, 3 for DAP, 4 for HammingX): ")
+    scheme_choice = int(input("Choose coding scheme (1 for M-BI, 2 for DAP-BI, 3 for DAP, 4 for HammingX): "))
 
     if scheme_choice not in SCHEMES:
         controller_logger.error("Invalid choice. Please select either 1, 2, 3, or 4.")
         return
     
-    coding_scheme = schemes[scheme_choice]
+    coding_scheme = SCHEMES[scheme_choice]
 
-    generator_choice = input("Choose simulation mode (1 for random words, 2 for all possible words, 3 for LFSR): ")
+    generator_choice = int(input("Choose simulation mode (1 for random words, 2 for all possible words, 3 for LFSR): "))
 
-    if generator_choice not in GENERATION_MODES:
+    if generator_choice not in SIMULATION_MODES:
         controller_logger.error("Invalid choice. Please select either 1, 2, or 3.")
         return
     
     print()  
-    if isinstance(coding_scheme, mbit_bi.MbitBI):
+
+    if (scheme_choice == '1'):
         controller_logger.info(f"Simulating {coding_scheme.name} with Parameters: k = {k}, M = {M}")
     else:
         controller_logger.info(f"Simulating {coding_scheme.name} with Parameters: k = {k}")
