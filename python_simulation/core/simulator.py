@@ -49,9 +49,10 @@ def simulate(coding_scheme, k, t, M = 0, seed = None, mode = 1):
         transition_count.transition_count(c, c_prev)
 
         # Generate error
-        c_tilde = error_generator.error_generator(c, error_probability)
+        error = error_generator.error_generator(n, error_probability)
+        c_with_error = coding_scheme.apply_error(c, error)
 
-        s_out = decoder(c_tilde, M)
+        s_out = decoder(c_with_error, M)
 
         # Compare input and output words
         if not comparator.comparator(s_in, s_out):

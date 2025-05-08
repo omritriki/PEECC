@@ -22,6 +22,7 @@ from functools import reduce
 
 class HAMMINGX(CodingScheme):
     name = "HammingX"
+    supports_errors = True
 
     def get_bus_size(self, k, M=None):
         r = 1

@@ -21,7 +21,7 @@ import os
 def configure_logging(console_level=logging.WARNING):
     # Get the directory containing this module
     module_dir = os.path.dirname(os.path.abspath(__file__))
-    log_file_path = os.path.join(module_dir, "simulation_logs.log")
+    log_file_path = os.path.join(os.path.dirname(module_dir), "simulation_logs.log")
 
     # Remove any existing handlers to avoid duplicate logging
     for handler in logging.root.handlers[:]:

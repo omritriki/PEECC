@@ -17,6 +17,8 @@ from abc import ABC, abstractmethod
 
 class CodingScheme(ABC):
     name: str
+    supports_errors: bool = False  # Default to not supporting errors
+
 
     @abstractmethod
     def encode(self, *args, **kwargs) -> list[int]:
@@ -29,3 +31,12 @@ class CodingScheme(ABC):
     @abstractmethod
     def decode(self, *args, **kwargs) -> list[int]:
         pass
+    
+    def apply_error(self, codeword, error_vector):
+        if not self.supports_errors:
+            return codeword
+            
+        if len(codeword) != len(error_vector):
+            raise ValueError("Codeword and error vector must have the same length")
+            
+        return [c ^ e for c, e in zip(codeword, error_vector)]

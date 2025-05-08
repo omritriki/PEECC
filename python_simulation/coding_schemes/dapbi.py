@@ -31,6 +31,7 @@ from functools import reduce
 
 class DAPBI(CodingScheme):
     name = "Duplicate-Add-Parity Bus-Invert"
+    supports_errors = True
 
     def get_bus_size(self, k, M=None):
         n = 2 * k + 3

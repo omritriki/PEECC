@@ -10,7 +10,7 @@
 
 # Simulation parameters
 SIMULATION_PARAMS = {
-    'INPUT_BITS': 16,          # k: Number of input bits
+    'INPUT_BITS': 32,          # k: Number of input bits
     'NUM_RANDOM_WORDS': 5000,  # t: Number of random words to simulate
     'DEFAULT_M': 1,            # M: Default number of segments
     'ERROR_PROBABILITY': 0.0   # Default error probability

@@ -22,6 +22,7 @@ from functools import reduce
 
 class DAP(CodingScheme):
     name = "Duplicate-Add-Parity"
+    supports_errors = True  
 
     def get_bus_size(self, k, M=None):
         n = 2 * k + 1
