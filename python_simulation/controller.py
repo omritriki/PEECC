@@ -10,8 +10,9 @@
 
 import logging
 from coding_schemes import mbit_bi, dapbi, dap, hamming_x
-from core import generator, comparator, transition_count, error_generator, simulator
-from logging_config import configure_logging
+from core import simulator
+from config.logging_config import configure_logging
+from config.simulation_config import SIMULATION_PARAMS, SCHEMES, GENERATION_MODES
 
 
 # Description: Controls the encoding process, testing both random and all possible
@@ -23,11 +24,11 @@ from logging_config import configure_logging
 
 def controller():
     controller_logger = logging.getLogger("Controller")
-    global encoder, decoder, coding_scheme
-
-    k = 32
-    t = 5000
-    M = 1
+    
+    # Configuration parameters from config
+    k: int = SIMULATION_PARAMS['INPUT_BITS']
+    t: int = SIMULATION_PARAMS['NUM_RANDOM_WORDS']
+    M: int = SIMULATION_PARAMS['DEFAULT_M']
 
     schemes = {
         '1': mbit_bi.MbitBI(),
@@ -43,9 +44,6 @@ def controller():
         return
     
     coding_scheme = schemes[scheme_choice]
-    encoder = coding_scheme.encode
-    decoder = coding_scheme.decode
-    n = coding_scheme.get_bus_size(k, M)
 
     generator_choice = input("Choose simulation mode (1 for random words, 2 for all possible words, 3 for LFSR): ")
 
@@ -55,21 +53,24 @@ def controller():
     
     print()  
     if isinstance(coding_scheme, mbit_bi.MbitBI):
-        controller_logger.info(f"Simulating {coding_scheme.name} with Parameters: k = {k}, M = {M}, n = {n}")
+        controller_logger.info(f"Simulating {coding_scheme.name} with Parameters: k = {k}, M = {M}")
     else:
-        controller_logger.info(f"Simulating {coding_scheme.name} with Parameters: k = {k}, n = {n}")
+        controller_logger.info(f"Simulating {coding_scheme.name} with Parameters: k = {k}")
 
-    simulator.simulate(encoder, decoder, coding_scheme, k, t, n, M=M, seed=generate_seed(k) if generator_choice == '3' else None, mode=int(generator_choice))
+    simulator.simulate(coding_scheme, k, t, M=M, seed=_generate_seed(k) if generator_choice == '3' else None, mode=int(generator_choice))
 
     controller_logger.debug("Simulation ended")
 
 
-def generate_seed(k):
-    # The seed is x^n + x^(n-1) +x^0
-    seed = [0] * k
+def _generate_seed(k):
+    # The seed is x^n + x^(n-1) + x^0
 
-    for i in [0, 1, -1]:
-        seed[i] = 1
+    if k < 2:
+        raise ValueError("Seed length must be at least 2 bits")
+
+    seed = [0] * k
+    for pos in [0, 1, -1]:
+        seed[pos] = 1
 
     return seed
 

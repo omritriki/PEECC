@@ -9,54 +9,57 @@
 """
 
 import logging
+from typing import List
 from coding_schemes import mbit_bi, dapbi, dap, hamming_x
 from core import generator, comparator, transition_count, error_generator
 
 
-def simulate(encoder, decoder, coding_scheme, k, t, n, M = 0, seed = None, mode = 1):
-    controller_logger = logging.getLogger("Controller")
-    
-    valid = validate_input(k, M, n, mode)
+def simulate(coding_scheme, k, t, M = 0, seed = None, mode = 1):
+    simulator_logger = logging.getLogger("Simulator")
+    encoder = coding_scheme.encode
+    decoder = coding_scheme.decode
+    n = coding_scheme.get_bus_size(k, M)
+
+    valid = _validate_input(k, M, n, mode)
     if not valid:
-        controller_logger.error("Invalid input parameters. Exiting simulation.")
+        simulator_logger.error("Invalid input parameters. Exiting simulation.")
         return
     
-    modes = {1: f"Simulating {t} random words",
-                2: "Simulating all possible words starting from 0",
-                3: f"Simulating {t} words using LFSR"}
+    modes = {
+            1: f"Simulating {t} random words",
+            2: "Simulating all possible words starting from 0",
+            3: f"Simulating {t} words using LFSR"
+    }
     
-    controller_logger.debug(modes[mode])
+    simulator_logger.debug(modes[mode])
     
     # Initalize the bus, reset the counters
     c_prev = [0] * n  
     transition_count.transition_count(c_prev, c_prev, RESET=True)  
+    error_probability = 0
 
     for i in range(t if mode == 1 or mode == 3 else (2 ** k)):
-        # Generate input word based on the mode
-        if mode == 1:
-            s_in = generator.generate(k, mode=1)  
-        elif mode == 2:
-            c_prev = [0] * n  
-            s_in = generator.generate(k, mode=2, i=i)  
-        elif mode == 3:
-            s_in = generator.generate(k, mode=3, seed=seed) 
-            seed = s_in  
+        s_in = _generate_input_word(k, mode, i, seed)
+        if mode == 3:
+            seed = s_in
+        if mode == 2:
+            c_prev = [0] * n
 
         c = encoder(s_in, c_prev, M)
         transition_count.transition_count(c, c_prev)
 
         # Generate error
-        error_probability = 0
         c_tilde = error_generator.error_generator(c, error_probability)
 
         s_out = decoder(c_tilde, M)
 
         # Compare input and output words
         if not comparator.comparator(s_in, s_out):
-            controller_logger.warning(f"Mismatch between input and output for word {i + 1}: {s_in} != {s_out}")
-
-            # Remove before deployment
-            print(f"Mismatch between input and output for word {i + 1}: {s_in} != {s_out}")
+            simulator_logger.warning(
+                f"Encoding/decoding mismatch at word {i + 1}:\n"
+                f"  Input:                                {s_in}\n"
+                f"  Output:                               {s_out}"
+            )
             break
 
         # Update the previous codeword
@@ -64,16 +67,25 @@ def simulate(encoder, decoder, coding_scheme, k, t, n, M = 0, seed = None, mode 
 
     # Log transition statistics
     max_transitions, avg_transitions = transition_count.transition_count(c_prev, c_prev)
-    controller_logger.info(f"Max transitions: {max_transitions}")
-    controller_logger.info(f"Avg transitions: {avg_transitions / (t if mode == 1 or mode == 3 else (2 ** k))}")
+    simulator_logger.info(f"Max transitions: {max_transitions}")
+    simulator_logger.info(f"Avg transitions: {avg_transitions / (t if mode == 1 or mode == 3 else (2 ** k))}")
     
     # Show expected average transitions only for Mbit-BI coding scheme
     if isinstance(coding_scheme, mbit_bi.MbitBI):
-        controller_logger.info(f"Expected Avg transitions: {coding_scheme.calculate_expected_average(k, M)}")
+        simulator_logger.info(f"Expected Avg transitions: {coding_scheme.calculate_expected_average(k, M)}")
     print()
 
 
-def validate_input(k, M, n, mode):
+def _generate_input_word(k, mode, i, seed = None):
+    if mode == 1:
+        return generator.generate(k, mode=1)
+    elif mode == 2:
+        return generator.generate(k, mode=2, i=i)
+    else:  # mode == 3
+        return generator.generate(k, mode=3, seed=seed)
+    
+
+def _validate_input(k, M, n, mode):
     controller_logger = logging.getLogger("Controller")
 
     if M > (k/2):

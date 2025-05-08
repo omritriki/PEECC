@@ -47,7 +47,7 @@ class MbitBI(CodingScheme):
             seg_c = c_prev[start_c:start_c + seg_len + 1]
 
             # Call Check_Invert and append the modified segment to output
-            new_segment = self.check_invert(seg_s, seg_c)
+            new_segment = self._check_invert(seg_s, seg_c)
             c.extend(new_segment)
 
             # Move start index for s and c
@@ -82,7 +82,7 @@ class MbitBI(CodingScheme):
         return s
 
 
-    def check_invert(self, s, c_prev):
+    def _check_invert(self, s, c_prev):
         A = len(s)
 
         curr_transitions = sum(1 for i in range(A) if s[i] != c_prev[i])
