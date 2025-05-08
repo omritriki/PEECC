@@ -29,6 +29,7 @@ def controller():
     k: int = SIMULATION_PARAMS['INPUT_BITS']
     t: int = SIMULATION_PARAMS['NUM_RANDOM_WORDS']
     M: int = SIMULATION_PARAMS['DEFAULT_M']
+    error_p: float = SIMULATION_PARAMS['ERROR_PROBABILITY']
 
     schemes = {
         '1': mbit_bi.MbitBI(),
@@ -39,7 +40,7 @@ def controller():
 
     scheme_choice = input("Choose coding scheme (1 for M-BI, 2 for DAP-BI, 3 for DAP, 4 for HammingX): ")
 
-    if scheme_choice not in schemes:
+    if scheme_choice not in SCHEMES:
         controller_logger.error("Invalid choice. Please select either 1, 2, 3, or 4.")
         return
     
@@ -47,7 +48,7 @@ def controller():
 
     generator_choice = input("Choose simulation mode (1 for random words, 2 for all possible words, 3 for LFSR): ")
 
-    if generator_choice not in ['1', '2', '3']:
+    if generator_choice not in GENERATION_MODES:
         controller_logger.error("Invalid choice. Please select either 1, 2, or 3.")
         return
     
@@ -57,7 +58,7 @@ def controller():
     else:
         controller_logger.info(f"Simulating {coding_scheme.name} with Parameters: k = {k}")
 
-    simulator.simulate(coding_scheme, k, t, M=M, seed=_generate_seed(k) if generator_choice == '3' else None, mode=int(generator_choice))
+    simulator.simulate(coding_scheme, k, t, error_p, M=M, seed=_generate_seed(k) if generator_choice == '3' else None, mode=int(generator_choice))
 
     controller_logger.debug("Simulation ended")
 

@@ -14,7 +14,7 @@ from coding_schemes import mbit_bi, dapbi, dap, hamming_x
 from core import generator, comparator, transition_count, error_generator
 
 
-def simulate(coding_scheme, k, t, M = 0, seed = None, mode = 1):
+def simulate(coding_scheme, k, t, error_probability, M = 0, seed = None, mode = 1):
     simulator_logger = logging.getLogger("Simulator")
     encoder = coding_scheme.encode
     decoder = coding_scheme.decode
@@ -36,7 +36,6 @@ def simulate(coding_scheme, k, t, M = 0, seed = None, mode = 1):
     # Initalize the bus, reset the counters
     c_prev = [0] * n  
     transition_count.transition_count(c_prev, c_prev, RESET=True)  
-    error_probability = 0
 
     for i in range(t if mode == 1 or mode == 3 else (2 ** k)):
         s_in = _generate_input_word(k, mode, i, seed)
