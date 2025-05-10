@@ -42,7 +42,6 @@ class DAP(CodingScheme):
 
         # Append the parity bit to the codeword
         c.append(parity)
-        c.append(parity)
 
         logging.debug(f"DAP encoded word:                       {c}")
 
@@ -52,10 +51,13 @@ class DAP(CodingScheme):
     def decode(self, c, M=None):
         # Extract the parity bit and remove it from the codeword
         parity = c[-1]  
-        c = c[:-2]
+        logging.debug(f"Received parity:                        {parity}")
+        c = c[:-1]
 
-        # XOR all bits to calculate parity
-        calculated_parity = reduce(lambda x, y: x ^ y, c)
+        # XOR all even bits to calculate parity
+        calculated_parity = reduce(lambda x, y: x ^ y, c[::2])
+        logging.debug(f"calculated parity:                      {calculated_parity}")
+
 
         # XOR the calculated parity with the received parity
         error = calculated_parity ^ parity
