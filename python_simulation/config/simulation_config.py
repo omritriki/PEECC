@@ -10,19 +10,34 @@
 
 from coding_schemes import mbit_bi, dapbi, dap, hamming_x
 
-
 SIMULATION_PARAMS = {
-    'INPUT_BITS': 16,          
-    'NUM_RANDOM_WORDS': 5000,  
-    'DEFAULT_M': 1,            
-    'ERROR_PROBABILITY': 0.5   
+    'INPUT_BITS': {
+        'value': 7,
+        'range': (4, 32),
+        'description': 'Number of input bits (k). Must be at least 4 for error correction.'
+    },
+    'NUM_RANDOM_WORDS': {
+        'value': 5000,
+        'range': (100, 10000),
+        'description': 'Number of random test vectors. Higher values give better statistical results.'
+    },
+    'DEFAULT_M': {
+        'value': 1,
+        'range': (1, 16),
+        'description': 'Number of segments for M-bit Bus Invert encoding.'
+    },
+    'ERROR_PROBABILITY': {
+        'value': 0.5,
+        'range': (0.0, 1.0),
+        'description': 'Probability of bit errors in transmission.'
+    }
 }
 
 SCHEMES = {
     1: mbit_bi.MbitBI(),
     2: dapbi.DAPBI(),
     3: dap.DAP(),
-    4: hamming_x.HAMMINGX()
+    4: hamming_x.HammingX()
 }
 
 SIMULATION_MODES = {
