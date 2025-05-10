@@ -35,14 +35,14 @@ def generate(k, mode = 1, i = 0, seed = 0):
         s = [int(bit) for bit in format(random_num, f'0{k}b')]  
 
     elif mode == 2:
-        # Generate i as a k-bit binary number
-        s = [int(bit) for bit in format(i, f'0{k}b')]
-
-    elif mode == 3:
         # Generate i using LFSR
         new_bit = seed[0] ^ seed[1]  
         lfsr_out = seed[1:]  
         s = lfsr_out + [new_bit]  
+
+    elif mode == 3:
+        # Generate i as a k-bit binary number
+        s = [int(bit) for bit in format(i, f'0{k}b')]
 
     logging.debug(f"Generated a {k}-bit word:                {s}")
     return s

@@ -3,9 +3,7 @@ TODO:
 - Update requirements.txt file
 - Update README
 - Validate different k, M
-- Change LFSR to be mode 2
 - Fix DAP
-- Add error field in every scheme
 
 
 Shlomit

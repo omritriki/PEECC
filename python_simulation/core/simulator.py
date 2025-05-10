@@ -34,11 +34,12 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, seed = None, mode = 
     c_prev = [0] * n  
     transition_count.transition_count(c_prev, c_prev, RESET=True)  
 
-    for i in range(t if mode == 1 or mode == 3 else (2 ** k)):
+    num_words = t if mode in [1, 2] else (2 ** k)  
+    for i in range(num_words):
         s_in = _generate_input_word(k, mode, i, seed)
-        if mode == 3:
+        if mode == 2:  
             seed = s_in
-        if mode == 2:
+        if mode == 3:  
             c_prev = [0] * n
 
         c = encoder(s_in, c_prev, M)
@@ -65,10 +66,10 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, seed = None, mode = 
     # Log transition statistics
     max_transitions, avg_transitions = transition_count.transition_count(c_prev, c_prev)
     simulator_logger.info(f"Max transitions: {max_transitions}")
-    simulator_logger.info(f"Avg transitions: {avg_transitions / (t if mode == 1 or mode == 3 else (2 ** k))}")
+    simulator_logger.info(f"Avg transitions: {avg_transitions / (t if mode == 1 or mode == 2 else (2 ** k)):.4f}")
     
     # Show expected average transitions only for Mbit-BI coding scheme
-    if isinstance(coding_scheme, mbit_bi.MbitBI):
+    if isinstance(coding_scheme, mbit_bi.MbitBI): 
         simulator_logger.info(f"Expected Avg transitions: {coding_scheme.calculate_expected_average(k, M)}")
     print()
 
@@ -77,9 +78,9 @@ def _generate_input_word(k, mode, i, seed = None):
     if mode == 1:
         return generator.generate(k, mode=1)
     elif mode == 2:
-        return generator.generate(k, mode=2, i=i)
+        return generator.generate(k, mode=2, seed=seed)
     else:  # mode == 3
-        return generator.generate(k, mode=3, seed=seed)
+        return generator.generate(k, mode=3, i=i)
     
 
 def _validate_input(k, M, n, mode):

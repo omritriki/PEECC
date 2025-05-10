@@ -38,7 +38,7 @@ def controller():
     
     coding_scheme = SCHEMES[scheme_choice]
 
-    generator_choice = int(input("Choose simulation mode (1 for random words, 2 for all possible words, 3 for LFSR): "))
+    generator_choice = int(input("Choose simulation mode (1 for random words, 2 for LFSR, 3 for all possible words): "))
 
     if generator_choice not in SIMULATION_MODES:
         controller_logger.error("Invalid choice. Please select either 1, 2, or 3.")
@@ -51,7 +51,15 @@ def controller():
     else:
         controller_logger.info(f"Simulating {coding_scheme.name} with Parameters: k = {k}")
 
-    simulator.simulate(coding_scheme, k, t, error_p, M=M, seed=_generate_seed(k) if generator_choice == '3' else None, mode=int(generator_choice))
+    simulator.simulate(
+        coding_scheme, 
+        k, 
+        t, 
+        error_p, 
+        M=M, 
+        seed=_generate_seed(k) if generator_choice == 2 else None,  
+        mode=int(generator_choice)
+    )
 
     controller_logger.debug("Simulation ended")
 
