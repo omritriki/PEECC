@@ -18,7 +18,7 @@ import logging
 # Outputs:
 #              isEqual (bool): True only if info_word == output
 
-def comparator(s_in, s_out):
+def comparator(s_in, s_out) -> bool:
     
     # Input validation
     if not isinstance(s_in, list) or not isinstance(s_out, list):

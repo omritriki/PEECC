@@ -16,7 +16,7 @@ import random
 
 # Outputs:
 
-def error_generator(n, error_probability=0.1):
+def error_generator(n, error_probability=0.1) -> list[int]:
     error_vector = [0] * n
 
     # Decide whether to introduce an error based on the probability
