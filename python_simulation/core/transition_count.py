@@ -26,7 +26,9 @@ max_transitions = -1
 #               max_transitions (int): Highest recorded transitions
 #               avg_transitions (int): Cumulative transition count
 
-def transition_count(c=0, c_prev=0, RESET=False):
+from typing import Tuple
+
+def transition_count(c=0, c_prev=0, RESET=False) -> Tuple[int, int]:
     global avg_transitions
     global max_transitions
     curr_transitions = 0

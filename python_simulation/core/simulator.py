@@ -55,8 +55,8 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, seed = None, mode = 
         if not comparator.comparator(s_in, s_out):
             simulator_logger.warning(
                 f"Encoding/decoding mismatch at word {i + 1}:\n"
-                f"  Input:                                {s_in}\n"
-                f"  Output:                               {s_out}"
+                f"                      Input:                                          {s_in}\n"
+                f"                      Output:                                         {s_out}"
             )
             break
 
@@ -74,7 +74,7 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, seed = None, mode = 
     print()
 
 
-def _generate_input_word(k, mode, i, seed = None):
+def _generate_input_word(k, mode, i, seed = None) -> List[int]:
     if mode == 1:
         return generator.generate(k, mode=1)
     elif mode == 2:
@@ -83,7 +83,7 @@ def _generate_input_word(k, mode, i, seed = None):
         return generator.generate(k, mode=3, i=i)
     
 
-def _validate_input(k, M, n, mode):
+def _validate_input(k, M, n, mode) -> bool:
     controller_logger = logging.getLogger("Controller")
 
     if M > (k/2):
