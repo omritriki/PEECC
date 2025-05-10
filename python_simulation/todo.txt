@@ -2,8 +2,7 @@ TODO:
 
 - Update requirements.txt file
 - Update README
-- Validate different k, M
-- Fix DAP
+- Fix HammingX
 
 
 Shlomit
