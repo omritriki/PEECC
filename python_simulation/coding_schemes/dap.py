@@ -24,11 +24,11 @@ class DAP(CodingScheme):
     name = "Duplicate-Add-Parity"
     supports_errors = True  
 
-    def get_bus_size(self, k, M=None):
+    def get_bus_size(self, k, M=None) -> int:
         n = 2 * k + 1
         return n
 
-    def encode(self, s_in, c_prev, M=None):
+    def encode(self, s_in, c_prev, M=None) -> list[int]:
         s_copy = s_in[:] 
 
         # Duplicate every bit in the input
@@ -48,7 +48,7 @@ class DAP(CodingScheme):
         return c
     
 
-    def decode(self, c, M=None):
+    def decode(self, c, M=None) -> list[int]:
         # Extract the parity bit and remove it from the codeword
         parity = c[-1]  
         logging.debug(f"Received parity:                        {parity}")

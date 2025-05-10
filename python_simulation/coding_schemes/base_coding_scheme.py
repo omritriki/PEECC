@@ -21,17 +21,20 @@ class CodingScheme(ABC):
 
 
     @abstractmethod
+    def get_bus_size(self, *args, **kwargs) -> int:
+        pass
+    
+
+    @abstractmethod
     def encode(self, *args, **kwargs) -> list[int]:
         pass
     
-    @abstractmethod
-    def get_bus_size(self, *args, **kwargs) -> int:
-        pass
 
     @abstractmethod
     def decode(self, *args, **kwargs) -> list[int]:
         pass
     
+
     def apply_error(self, codeword, error_vector):
         if not self.supports_errors:
             return codeword

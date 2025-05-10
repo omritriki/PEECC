@@ -29,11 +29,11 @@ import logging
 class MbitBI(CodingScheme):
     name = "M-bit Bus-Invert"
 
-    def get_bus_size(self, k, M):
+    def get_bus_size(self, k, M) -> int:
         n = k + M
         return n
 
-    def encode(self, s, c_prev, M):
+    def encode(self, s, c_prev, M) -> list[int]:
         n = len(s) + M
         segments = [n // M] * (n % M) + [n // M - 1] * (M - n % M)
 
@@ -59,7 +59,7 @@ class MbitBI(CodingScheme):
         return c
 
 
-    def decode(self, c, M):
+    def decode(self, c, M) -> list[int]:
         k = len(c) - M
         segments = [k // M + 1] * (k % M) + [k // M] * (M - k % M)
         s = []

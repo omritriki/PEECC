@@ -33,11 +33,11 @@ class DAPBI(CodingScheme):
     name = "Duplicate-Add-Parity Bus-Invert"
     supports_errors = True
 
-    def get_bus_size(self, k, M=None):
+    def get_bus_size(self, k, M=None) -> int:
         n = 2 * k + 3
         return n
 
-    def encode(self, s_in, c_prev, M=None):
+    def encode(self, s_in, c_prev, M=None) -> list[int]:
         s_copy = s_in[:] 
 
         c_notdup = c_prev[:-3:2]  # Take all even bits
@@ -91,7 +91,7 @@ class DAPBI(CodingScheme):
         return c
     
 
-    def decode(self, c, M=None):
+    def decode(self, c, M=None) -> list[int]:
         # Extract the parity bit and remove it from the codeword
         parity = c[-1]  
         c = c[:-1]
