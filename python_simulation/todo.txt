@@ -18,13 +18,3 @@ Omri
     Classes - Capital letters
     functions - small letters
     variables with underscore
-
-
-
-Comments and logs:
-    logging_config - V
-    transition_count - V
-    mbit_bi_average - V
-    generator - V
-    comparator - V
-    error_generator - V
