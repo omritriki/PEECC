@@ -24,9 +24,11 @@ class DAP(CodingScheme):
     name = "Duplicate-Add-Parity"
     supports_errors = True  
 
+
     def get_bus_size(self, k, M=None) -> int:
         n = 2 * k + 1
         return n
+
 
     def encode(self, s_in, c_prev, M=None) -> list[int]:
         s_copy = s_in[:] 
@@ -44,20 +46,16 @@ class DAP(CodingScheme):
         c.append(parity)
 
         logging.debug(f"DAP encoded word:                       {c}")
-
         return c
     
 
     def decode(self, c, M=None) -> list[int]:
         # Extract the parity bit and remove it from the codeword
         parity = c[-1]  
-        logging.debug(f"Received parity:                        {parity}")
         c = c[:-1]
 
         # XOR all even bits to calculate parity
         calculated_parity = reduce(lambda x, y: x ^ y, c[::2])
-        logging.debug(f"calculated parity:                      {calculated_parity}")
-
 
         # XOR the calculated parity with the received parity
         error = calculated_parity ^ parity
@@ -71,5 +69,4 @@ class DAP(CodingScheme):
             s_out = c[1::2]
 
         logging.debug(f"DAP decoded word:                       {s_out}")
-
         return s_out

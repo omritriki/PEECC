@@ -33,17 +33,18 @@ class DAPBI(CodingScheme):
     name = "Duplicate-Add-Parity Bus-Invert"
     supports_errors = True
 
+
     def get_bus_size(self, k, M=None) -> int:
         n = 2 * k + 3
         return n
 
+
     def encode(self, s_in, c_prev, M=None) -> list[int]:
         s_copy = s_in[:] 
 
-        c_notdup = c_prev[:-3:2]  # Take all even bits
+        c_notdup = c_prev[:-3:2]  
 
         # 1. Calculate bus invert codeword
-
         A = len(s_copy)
         curr_transitions = sum(1 for i in range(A) if s_copy[i] != c_notdup[i])
 
@@ -58,13 +59,11 @@ class DAPBI(CodingScheme):
 
         # 2. Calculate parity bit using XOR of the input, and invert it if INV bit is set
         data_bits = s_copy[:-1]
-        parity = reduce(lambda x, y: x ^ y, data_bits)  # XOR all bits to calculate parity
+        parity = reduce(lambda x, y: x ^ y, data_bits)  
 
-        # Invert the parity if the last bit (INV bit) is 1
         if s_copy[-1] == 1:  
             parity = 1 - parity  
 
-        # Append the parity bit to the codeword
         s_copy.append(parity)
 
         # Current word: [s_copy, INV, parity]
@@ -77,17 +76,14 @@ class DAPBI(CodingScheme):
         inv_bit = s_copy[-2]
         parity_bit = s_copy[-1]
 
-        # Duplicate the INV bit 
         c.append(inv_bit)
         c.append(inv_bit)
 
-        # Add parity once
         c.append(parity_bit)
-        logging.debug(f"DAPBI encoded word:                     {c}")
-
 
         # Current word: [s_duplicated, INV_duplicated, parity]
 
+        logging.debug(f"DAPBI encoded word:                     {c}")
         return c
     
 
@@ -99,10 +95,8 @@ class DAPBI(CodingScheme):
         # Take all even bits
         s_out = c[::2]
 
-        # XOR all even bits to calculate parity
-        calculated_parity = reduce(lambda x, y: x ^ y, s_out)
-
         # XOR the calculated parity with the received parity
+        calculated_parity = reduce(lambda x, y: x ^ y, s_out)
         error = calculated_parity ^ parity
 
         if error == 0:
@@ -120,5 +114,4 @@ class DAPBI(CodingScheme):
                 s_out = [1 - bit for bit in s_out]
 
         logging.debug(f"DAPBI decoded word:                     {s_out[:-1]}")
-
         return s_out[:-1]
