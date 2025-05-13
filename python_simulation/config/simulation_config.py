@@ -8,7 +8,9 @@
 ======================================================
 """
 
-from coding_schemes import mbit_bi, dapbi, dap, hamming_x, transition_signaling, offset
+from coding_schemes.paper1 import transition_signaling, offset
+from coding_schemes.paper2 import dapbi, dap, hamming_x
+from coding_schemes import mbit_bi
 
 
 SIMULATION_PARAMS = {

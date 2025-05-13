@@ -10,7 +10,7 @@
 
 import logging
 from typing import List
-from coding_schemes import mbit_bi, dapbi, dap, hamming_x
+from coding_schemes import mbit_bi
 from core import generator, comparator, transition_count, error_generator
 from config.simulation_config import SIMULATION_MODES
 
