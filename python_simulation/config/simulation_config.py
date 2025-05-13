@@ -8,11 +8,12 @@
 ======================================================
 """
 
-from coding_schemes import mbit_bi, dapbi, dap, hamming_x
+from coding_schemes import mbit_bi, dapbi, dap, hamming_x, transition_signaling
+
 
 SIMULATION_PARAMS = {
     'INPUT_BITS': {
-        'value': 7,
+        'value': 16,
         'range': (4, 32),
         'description': 'Number of input bits (k). Must be at least 4 for error correction.'
     },
@@ -37,7 +38,8 @@ SCHEMES = {
     1: mbit_bi.MbitBI(),
     2: dapbi.DAPBI(),
     3: dap.DAP(),
-    4: hamming_x.HammingX()
+    4: hamming_x.HammingX(),
+    5: transition_signaling.Transition_Signaling()
 }
 
 SIMULATION_MODES = {

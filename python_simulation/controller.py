@@ -25,15 +25,17 @@ def controller():
     controller_logger = logging.getLogger("Controller")
     
     # Configuration parameters from config
-    k: int = SIMULATION_PARAMS['INPUT_BITS']
-    t: int = SIMULATION_PARAMS['NUM_RANDOM_WORDS']
-    M: int = SIMULATION_PARAMS['DEFAULT_M']
-    error_p: float = SIMULATION_PARAMS['ERROR_PROBABILITY']
+    k: int = SIMULATION_PARAMS['INPUT_BITS']['value']
+    t: int = SIMULATION_PARAMS['NUM_RANDOM_WORDS']['value']
+    M: int = SIMULATION_PARAMS['DEFAULT_M']['value']
+    error_p: float = SIMULATION_PARAMS['ERROR_PROBABILITY']['value']
 
-    scheme_choice = int(input("Choose coding scheme (1 for M-BI, 2 for DAP-BI, 3 for DAP, 4 for HammingX): "))
+    scheme_choice = int(input(
+        "Choose coding scheme (1 for M-BI, 2 for DAP-BI, 3 for DAP, 4 for HammingX, 5 for Transition Signaling): "
+    ))
 
     if scheme_choice not in SCHEMES:
-        controller_logger.error("Invalid choice. Please select either 1, 2, 3, or 4.")
+        controller_logger.error("Invalid choice. Please select either 1, 2, 3, 4, or 5.")
         return
     
     coding_scheme = SCHEMES[scheme_choice]
@@ -46,7 +48,7 @@ def controller():
     
     print()  
 
-    if (scheme_choice == '1'):
+    if scheme_choice == 1:  # Changed from string to int comparison
         controller_logger.info(f"Simulating {coding_scheme.name} with Parameters: k = {k}, M = {M}")
     else:
         controller_logger.info(f"Simulating {coding_scheme.name} with Parameters: k = {k}")
@@ -64,9 +66,8 @@ def controller():
     controller_logger.debug("Simulation ended")
 
 
-def _generate_seed(k):
-    # The seed is x^n + x^(n-1) + x^0
-
+# The seed is x^n + x^(n-1) + x^0
+def _generate_seed(k) -> list[int]:
     if k < 2:
         raise ValueError("Seed length must be at least 2 bits")
 
