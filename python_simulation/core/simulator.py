@@ -66,7 +66,7 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, seed = None, mode = 
     # Log transition statistics
     max_transitions, avg_transitions = transition_count.transition_count(c_prev, c_prev)
     simulator_logger.info(f"Max transitions: {max_transitions}")
-    simulator_logger.info(f"Avg transitions: {avg_transitions / (t if mode == 1 or mode == 2 else (2 ** k)):.4f}")
+    simulator_logger.info(f"Avg transitions: {avg_transitions / num_words:.4f}")
     
     # Show expected average transitions only for Mbit-BI coding scheme
     if isinstance(coding_scheme, mbit_bi.MbitBI): 
