@@ -31,11 +31,11 @@ def controller():
     error_p: float = SIMULATION_PARAMS['ERROR_PROBABILITY']['value']
 
     scheme_choice = int(input(
-        "Choose coding scheme (1 for M-BI, 2 for DAP-BI, 3 for DAP, 4 for HammingX, 5 for Transition Signaling): "
+        "Choose coding scheme (1 for M-BI, 2 for DAP-BI, 3 for DAP, 4 for HammingX, 5 for Transition Signaling, 6 for Offset): "
     ))
 
     if scheme_choice not in SCHEMES:
-        controller_logger.error("Invalid choice. Please select either 1, 2, 3, 4, or 5.")
+        controller_logger.error("Invalid choice. Please select either 1, 2, 3, 4, 5 or 6.")
         return
     
     coding_scheme = SCHEMES[scheme_choice]

@@ -8,17 +8,17 @@
 ======================================================
 """
 
-from coding_schemes import mbit_bi, dapbi, dap, hamming_x, transition_signaling
+from coding_schemes import mbit_bi, dapbi, dap, hamming_x, transition_signaling, offset
 
 
 SIMULATION_PARAMS = {
     'INPUT_BITS': {
-        'value': 16,
+        'value': 32,
         'range': (4, 32),
         'description': 'Number of input bits (k). Must be at least 4 for error correction.'
     },
     'NUM_RANDOM_WORDS': {
-        'value': 5000,
+        'value': 9000,
         'range': (100, 10000),
         'description': 'Number of random test vectors. Higher values give better statistical results.'
     },
@@ -39,7 +39,8 @@ SCHEMES = {
     2: dapbi.DAPBI(),
     3: dap.DAP(),
     4: hamming_x.HammingX(),
-    5: transition_signaling.Transition_Signaling()
+    5: transition_signaling.Transition_Signaling(),
+    6: offset.Offset()
 }
 
 SIMULATION_MODES = {
