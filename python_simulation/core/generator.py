@@ -9,18 +9,19 @@
 """
 
 from random import randint
+from core import lfsr
 import logging
 
 
 # Description: Generates a k-bit binary number based on the specified mode.
 #              Mode 1 generates a random binary number.
-#              Mode 2 generates a binary number from the integer i.
-#              Mode 3 generates a binary number using an LFSR with the given seed.
+#              Mode 2 generates a binary number using an LFSR with the given seed.
+#              Mode 3 generates a binary number from the integer i. 
 # Inputs:
 #              k (int): Number of bits in the generated binary number.
-#              mode (int): Mode of generation (1=random, 2=from integer, 3=LFSR).
-#              i (int): Integer to convert to binary (used in mode 2).
-#              seed (list[int]): Seed for LFSR (used in mode 3).
+#              mode (int): Mode of generation (1=random, 2=LFSR, 3=from integer).
+#              i (int): Integer to convert to binary (used in mode 3).
+#              seed (list[int]): Seed for LFSR (used in mode 2).
 # Outputs:
 #              s (list[int]): A list of k binary digits.
 
@@ -35,10 +36,15 @@ def generate(k, mode = 1, i = 0, seed = 0) -> list[int]:
         s = [int(bit) for bit in format(random_num, f'0{k}b')]  
 
     elif mode == 2:
-        # Generate i using LFSR
+        # Generate an LFSR with the given polynomial ###### not SEED!!!
+
+        # Old LFSR code
         new_bit = seed[0] ^ seed[1]  
         lfsr_out = seed[1:]  
         s = lfsr_out + [new_bit]  
+
+        # New LFSR code
+        #s = lfsr.lfsr(k)
 
     elif mode == 3:
         # Generate i as a k-bit binary number
