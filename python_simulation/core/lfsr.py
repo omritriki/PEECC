@@ -36,6 +36,10 @@ def lfsr(k, polynomial = 0b10000000011011) -> list[int]:
     # Initialize or get LFSR states
     if not hasattr(lfsr, 'registers'):
         lfsr.registers = [[randint(0, 1) for _ in range(14)] for _ in range(k)]
+        for i in range(k):
+            # Ensure the LFSR is not initialized to zero
+            while sum(lfsr.registers[i]) == 0:
+                lfsr.registers[i] = [randint(0, 1) for _ in range(14)]
         logging.debug(f"Initialized {k} LFSRs with random seeds")
 
     # Update each LFSR
