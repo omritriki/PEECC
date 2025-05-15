@@ -12,12 +12,14 @@ from coding_schemes.base_coding_scheme import CodingScheme
 import logging
 
 
-# Description: 
-
-# Inputs:
-
-# Outputs:
-
+# Description: Transition-based encoding where each bit represents a change (1) or 
+#             no change (0) from previous state.
+#
+# Inputs:     s_in: list[int] - Input word to encode
+#             c_prev: list[int] - Previous code word
+#             M: Optional[int] - Not used
+#
+# Outputs:    list[int] - Encoded/decoded k-bit word
 
 class Transition_Signaling(CodingScheme):
     name = "Transition Signaling"

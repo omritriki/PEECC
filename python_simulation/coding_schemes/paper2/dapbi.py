@@ -13,21 +13,16 @@ import logging
 from functools import reduce
 
 
-# Description: Implements the Duplicate-Add Parity Bus Invert (DAPBI) encoding and decoding scheme.
-#              The encoding process minimizes transitions by comparing the input binary sequence
-#              with the previous sequence, inverting the input if necessary, and appending an
-#              inversion (INV) bit. A parity bit is then calculated and appended to ensure error
-#              detection. The decoding process reverses this operation to recover the original
-#              binary sequence while handling potential errors.
-# Inputs:
-#              s_in (list[int]): The input binary sequence to be encoded.
-#              c_prev (list[int]): The previous encoded sequence for transition comparison.
-#              M (int, optional): Parameter for compatibility with other schemes (not used here).
-# Outputs:
-#              encode(): The encoded binary sequence with minimized transitions, including
-#                        duplicated bits, an INV bit, and a parity bit.
-#              decode(): The decoded binary sequence, recovering the original input and
-#                        handling potential errors.
+# Description: Combines DAP with Bus-Invert coding for both error detection and 
+#             transition reduction. Duplicates bits, adds inversion flag and parity.
+#
+# Inputs:     s_in: list[int] - Input word to encode
+#             c_prev: list[int] - Previous code word
+#             M: Optional[int] - Not used
+#
+# Outputs:    list[int] - Encoded/decoded word
+#             encode(): [s_duplicated, INV_duplicated, parity]
+#             decode(): Uses parity check and duplication for error detection
 
 class DAPBI(CodingScheme):
     name = "Duplicate-Add-Parity Bus-Invert"

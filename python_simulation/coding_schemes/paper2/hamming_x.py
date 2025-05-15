@@ -10,16 +10,20 @@
 
 from coding_schemes.base_coding_scheme import CodingScheme
 import logging
-from functools import reduce
 import math
 
 
-# Description: 
-
-# Inputs:
-
-# Outputs:
-
+# Description: Extended Hamming code implementation with added shielding bits.
+#             Supports single error correction through parity bits. Adds extra
+#             shielding zeros between parity bits for transition reduction.
+#
+# Inputs:     s_in: list[int] - Input word to encode
+#             c_prev: list[int] - Previous code word (not used)
+#             M: Optional[int] - Not used
+#
+# Outputs:    list[int] - Encoded/decoded word where:
+#             encode(): [data_bits, parity_bits with shielding]
+#             decode(): Corrects single bit errors using parity check matrix
 
 class HammingX(CodingScheme):
     name = "HammingX"
@@ -62,7 +66,7 @@ class HammingX(CodingScheme):
         # Create the final codeword   
         c = s_copy
         for i in parity_bits:
-            c.append(parity_bits[i])  # Append parity bits to the end of the data bits
+            c.append(parity_bits[i])  
             c.append(0)
 
         logging.debug(f"HammingX encoded word:                  {c[:-1]}")
@@ -76,7 +80,7 @@ class HammingX(CodingScheme):
         m = n
         
         # Extract data and parity bits
-        data_bits = c[:-2*self.r + 1]  # Original data is at the start
+        data_bits = c[:-2*self.r + 1] 
         received_parity = {}
         
         # Get received parity bits (they come in pairs with zeros between them)

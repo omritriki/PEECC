@@ -12,12 +12,17 @@ from coding_schemes.base_coding_scheme import CodingScheme
 import logging
 
 
-# Description: 
-
-# Inputs:
-
-# Outputs:
-
+# Description: Implements Offset encoding that transmits differences between consecutive
+#             words using two's complement arithmetic. Reduces transitions for sequential
+#             data by sending only changes between words.
+#
+# Inputs:     s_in: list[int] - Input word to encode
+#             c_prev: list[int] - Previous code word (not used in this scheme)
+#             M: Optional[int] - Not used in this scheme
+#
+# Outputs:    list[int] - Encoded/decoded k-bit word where:
+#             encode(): c = s - s_prev (in two's complement)
+#             decode(): s = c + s_prev (in two's complement)
 
 class Offset(CodingScheme):
     name = "Offset"

@@ -13,12 +13,16 @@ import logging
 from functools import reduce
 
 
-# Description: 
-
-# Inputs:
-
-# Outputs:
-
+# Description: Simple error detection through bit duplication and parity.
+#             Duplicates each input bit and adds parity bit of original word.
+#
+# Inputs:     s_in: list[int] - Input word to encode
+#             c_prev: list[int] - Previous code word (not used)
+#             M: Optional[int] - Not used
+#
+# Outputs:    list[int] - Encoded/decoded word
+#             encode(): [s0,s0,s1,s1,...,sk,sk,p]
+#             decode(): even/odd bits based on parity check
 
 class DAP(CodingScheme):
     name = "Duplicate-Add-Parity"

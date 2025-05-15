@@ -13,18 +13,16 @@ from math import comb
 import logging
 
 
-# Description: Implements the M-bit Bus Invert (MbitBI) encoding and decoding scheme.
-#              The encoding process divides the input binary sequence into segments of length M,
-#              compares the number of transitions in each segment to half its length, and inverts
-#              the segment if doing so reduces the number of transitions. The decoding process
-#              reverses this operation to recover the original binary sequence.
-# Inputs:
-#              s (list[int]): The input binary sequence to be encoded.
-#              c_prev (list[int]): The previous encoded sequence for transition comparison.
-#              M (int): The number of segments for bus inversion.
-# Outputs:
-#              encode(): The encoded binary sequence with minimized transitions.
-#              decode(): The decoded binary sequence, recovering the original input.
+# Description: M-bit Bus Invert (MbitBI) scheme that divides input into M segments
+#             and selectively inverts segments to reduce transitions.
+#
+# Inputs:     s_in: list[int] - Input word to encode
+#             c_prev: list[int] - Previous code word
+#             M: int - Number of segments for bus inversion
+#
+# Outputs:    list[int] - Encoded/decoded word
+#             encode(): Original bits with inversion flags
+#             decode(): Original word recovered using inversion flags
 
 class MbitBI(CodingScheme):
     name = "M-bit Bus-Invert"

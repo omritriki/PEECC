@@ -11,13 +11,23 @@
 from abc import ABC, abstractmethod
 
 
-# Description: Defines an abstract base class for coding schemes. 
-#              Subclasses must implement the `encode` and `decode` methods, 
-#              which handle the encoding and decoding of binary sequences.
+# Description: Abstract base class for all coding schemes. Defines interface and
+#             common functionality for encoding/decoding binary sequences.
+#             Handles error injection for supported schemes.
+#
+# Inputs:     s_in: list[int] - Input word to encode
+#             c_prev: list[int] - Previous code word
+#             codeword: list[int] - Word to apply errors to
+#             error_vector: list[int] - Error pattern to apply
+#
+# Outputs:    get_bus_size(): int - Required bus width
+#             encode(): list[int] - Encoded word
+#             decode(): list[int] - Decoded word
+#             apply_error(): list[int] - Word with errors applied
 
 class CodingScheme(ABC):
     name: str
-    supports_errors: bool = False  # Default to not supporting errors
+    supports_errors: bool = False  
 
     def __init__(self):
         self.s_prev = None  
