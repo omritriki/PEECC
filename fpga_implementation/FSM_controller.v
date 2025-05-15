@@ -16,6 +16,7 @@ module FSM_controller (
     input  wire         clk,
     input  wire         reset,
     input  wire         valid_in,
+    input  wire         txFinish,
     output reg          en_gen_data,
     output reg          en_gen_err,     // Not found in your code, you can remove if not used
     output reg          en_enc,
@@ -26,7 +27,8 @@ module FSM_controller (
     output reg          en_bf2,
     output reg          en_k_comp,
     output reg          trigger,
-    output reg          done
+    output reg          done,
+    output reg         start_tx
     //output reg          load_seed
 );
 
@@ -37,13 +39,14 @@ module FSM_controller (
     localparam [2:0] S2   = 3'd3;
     localparam [2:0] S3   = 3'd4;
     localparam [2:0] S4   = 3'd5;
+    localparam [2:0] S5   = 3'd6;
 
     reg [2:0] state, nextstate;
 
     // Counter signals
     reg  enable_cnt;
     reg  done_cnt;
-    reg [10:0] cnt; ///////////////////////need to change back to [10:0]
+    reg [10:0] cnt;
 
     // Synchronous state register
     always @(posedge clk or posedge reset) begin
@@ -53,6 +56,7 @@ module FSM_controller (
             cnt         <= 11'b1;
             done_cnt    <= 1'b0;
             trigger     <= 1'b0;
+	    start_tx    <= 1'b0;
         end
         else begin
             state <= nextstate;
@@ -96,8 +100,9 @@ module FSM_controller (
         case (state)
             IDLE: begin
                 if (valid_in == 1'b1) begin
-                    nextstate  = S0;
+                    nextstate  = S4; ///////////////////////////return to state s0
                     enable_cnt = 1'b1;
+	  	    start_tx = 1'b0;
                     //load_seed  = 1'b1;
                 end
             end
@@ -129,11 +134,18 @@ module FSM_controller (
 
             S4: begin
                 if (done_cnt == 1'b1) begin
-                    nextstate = IDLE;
+                    nextstate = S5;
 		    done = 1'b1;
 		    enable_cnt = 1'b0;
                 end
             end
+
+	    S5: begin
+                if (txFinish == 1'b1) begin
+                    nextstate = IDLE;
+                end
+            end
+
 
             default: begin
                 nextstate  = IDLE;
@@ -192,6 +204,10 @@ module FSM_controller (
                 en_bf2         = 1'b1;
                 en_k_comp      = 1'b1;
             end
+
+	    S5: begin
+		start_tx = 1'b1;
+	    end
 
             default: begin
                 // Everything stays 0

@@ -162,9 +162,7 @@ module Encoder #(parameter M = 5, k = 32, A = 8)(
     generate
         for (j = 0; j < (M - ((k + M) % M)); j = j + 1) begin : check_invert_gen2
 	    localparam integer start = ((k+M)%M)*(A-1) + j*(A-2);
-	    initial begin
-	        $display("start: ", start);
-	    end
+	    
             wire [A-3:0] S_part2 = S[start +: (A-2)];
             wire [A-3:0] X_part2;
             CheckInvert #(A-2) ci2(
@@ -244,9 +242,10 @@ module Transition_Counter #(parameter n = 37) (
     integer i, j, transition_count;
 
     initial begin
-        for (i = 0; i <= (n/2); i = i + 1) begin //the limit was changed from 11*(n/2)-1
+        for (i = 0; i <= (n/2); i = i + 1) begin
             registers_cnt[i] = 11'b0;
         end
+	registers <= 0;
     end
     
     
@@ -256,7 +255,7 @@ module Transition_Counter #(parameter n = 37) (
             prev_data <= {n{1'b0}};
             // Reset all counters
             for (i = 0; i <= (n/2); i = i + 1) begin    //I added this in the rst. not tested but it seems more right
-                registers[i] <= 11'b0; 
+                registers_cnt[i] <= 11'b0; 
             end
 	    registers <= 0;  //change the reset assignment from a for loop to just assigning 0
         end 

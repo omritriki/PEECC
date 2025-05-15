@@ -1,56 +1,67 @@
-
+`timescale 1 ns / 1 ps
 module tb_TopModule();
 
-    localparam k = 16;
-    localparam M = 5;
+    localparam k = 17;
+    localparam M = 4;
+
+    parameter symbol_time = 17361.1;
 
     // Testbench regs and wires
     reg clk;
-    reg rst;
-    reg ValidIn;
-    wire [(11*((k+M)/2))-1:0] registers;
-    wire IsEqual;
+    reg rst_n;
+    reg rx;
+    wire tx;
+    //wire M_HEADER;	
 
     // Instantiate the TopModule
     TopModule #(.M(M), .k(k), .A(((k+M)/M)+1)) DUT(
-        .CLK(clk),
-        .RST(rst),
-        .ValidIn(ValidIn), 
-        .registers(registers),
-        .IsEqual(IsEqual)
+        .M_CLK_OSC(clk),
+        .M_RESET_B(rst_n),
+        .FTDI_BDBUS_0(rx), 
+        .FTDI_BDBUS_1(tx)
+        //.M_HEADER(IsEqual)
     );
 
-    // Generate a clock: 10 ns period => 100 MHz
-    // set initial value
-    initial begin
-        clk = 1'b0;
-        ValidIn = 1'b0;  
+    task send_uart_byte; // TASK THAT RECEIVES A BYTE AND SENDS IT SERIALLY VIA UART
+	input [7:0] in_byte;
+    begin 
+	//$display("sending byte %0h", in_byte);
+	repeat (4) @(posedge clk);
+	#(symbol_time) rx = 1'b0; // start bit
+	#(symbol_time) rx = in_byte[0];
+	#(symbol_time) rx = in_byte[1];
+	#(symbol_time) rx = in_byte[2];
+	#(symbol_time) rx = in_byte[3];
+	#(symbol_time) rx = in_byte[4];
+	#(symbol_time) rx = in_byte[5];
+	#(symbol_time) rx = in_byte[6];
+	#(symbol_time) rx = in_byte[7];
+	#(symbol_time) rx = 1'b1; // stop bit
+	repeat (4) @(posedge clk);
+	repeat (40) @(posedge clk);
+
     end
-	 
-	 always #5 clk = ~clk;
+    endtask
 
-    // Main stimulus
+    //always #(20.8333/2) clk = ~clk; //48MHZ clock (IF USING PLL)
+    always #125 clk = ~clk;     //4MHZ clock (IF NOT USING PLL)
+
     initial begin
-        // Apply reset
-      	#1
-        rst = 1'b1;
-	#2
-	rst = 1'b0;
-	#4
-	ValidIn = 1'b1;
-        #10;
-	ValidIn = 1'b0;
-         // Let the design run for a while
-         #300000;
+	clk = 0;
+	rst_n = 0;
+	rx = 1;
+	repeat (4) @(posedge clk);
 
-         // Stop simulation
-         $stop;
+	rst_n = 1;
+	
+	send_uart_byte(8'h00);
+	send_uart_byte(8'h00);
+		
+
+	repeat (300000) @(posedge clk);
+
+	$stop;
+
+
     end
-
-    // Optional: For debugging or waveforms, you can dump file
-    //initial begin
-     //   $dumpfile("tb_TopModule.vcd");
-     //   $dumpvars;
-    //end
-
 endmodule
