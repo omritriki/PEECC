@@ -12,12 +12,14 @@ from coding_schemes.base_coding_scheme import CodingScheme
 import logging
 
 
-# Description: 
-
-# Inputs:
-
-# Outputs:
-
+# Description: Combines offset coding with XOR operations to reduce transitions.
+#             Uses difference between consecutive words XORed with previous code word.
+#
+# Inputs:     s_in: list[int] - Input word to encode
+#             c_prev: list[int] - Previous code word
+#             M: Optional[int] - Not used
+#
+# Outputs:    list[int] - Encoded/decoded k-bit word
 
 class Offset_XOR(CodingScheme):
     name = "Offset-XOR"
