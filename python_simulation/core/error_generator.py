@@ -11,10 +11,16 @@
 import random
 
 
-# Description: Introduces 
-# Inputs:
-
-# Outputs:
+# Description: Generates error vectors for simulating transmission errors.
+#             Creates n-bit vectors with single bit errors based on given probability.
+#             Used to test error detection and correction capabilities of coding schemes.
+#
+# Inputs:     n: int - Length of error vector to generate
+#             error_probability: float - Probability of introducing an error (default: 0.1)
+#
+# Outputs:    list[int] - n-bit error vector where:
+#             - All zeros if no error
+#             - Single 1 at random position if error occurs
 
 def error_generator(n, error_probability=0.1) -> list[int]:
     error_vector = [0] * n

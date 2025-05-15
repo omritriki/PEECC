@@ -20,11 +20,6 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, mode = 1):
     encoder = coding_scheme.encode
     decoder = coding_scheme.decode
     n = coding_scheme.get_bus_size(k, M)
-
-    valid = _validate_input(k, M, n, mode)
-    if not valid:
-        simulator_logger.error("Invalid input parameters. Exiting simulation.")
-        return
     
     # Use mode description from config
     mode_description = SIMULATION_MODES[mode].format(t=t)
@@ -51,14 +46,7 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, mode = 1):
         s_out = decoder(c_with_error, M)
 
         # Compare input and output words
-
-        # move the log to the comparator################
         if not comparator.comparator(s_in, s_out):
-            simulator_logger.warning(
-                f"Encoding/decoding mismatch at word {i + 1}:\n"
-                f"                      Input:                                          {s_in}\n"
-                f"                      Output:                                         {s_out}"
-            )
             break
 
         # Update the previous codeword
@@ -71,20 +59,5 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, mode = 1):
     
     # Show expected average transitions only for Mbit-BI coding scheme
     if isinstance(coding_scheme, mbit_bi.MbitBI): 
-        simulator_logger.info(f"Expected Avg transitions: {coding_scheme.calculate_expected_average(k, M)}")
-    print()
+        simulator_logger.info(f"Expected Avg transitions: {coding_scheme.calculate_expected_average(k, M)}\n")
     
-
-def _validate_input(k, M, n, mode) -> bool:
-    controller_logger = logging.getLogger("Controller")
-
-    if M > (k/2):
-        controller_logger.error(f"Invalid input: M={M}. M must be less than or equal to k/2")
-        return False
-    
-    ######### This is already checked in the controller
-    if mode > 3 or mode < 1:
-        controller_logger.error(f"Invalid input: mode={mode}. Mode must be 1, 2, or 3")
-        return False
-    
-    return True

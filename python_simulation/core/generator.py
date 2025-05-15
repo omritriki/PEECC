@@ -25,9 +25,6 @@ import logging
 #              s (list[int]): A list of k binary digits.
 
 def generate(k, mode = 1, i = 0) -> list[int]:
-    if k <= 0:
-        logging.error(f"Invalid input: n={k}. Number of bits must be positive")
-        return []
 
     if mode == 1:
         # Generate a random n-bit binary number

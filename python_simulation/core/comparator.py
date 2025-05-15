@@ -30,7 +30,10 @@ def comparator(s_in, s_out) -> bool:
 
     # Comparison logic
     if s_in != s_out:
-        logging.info("Words do not match.")
+        logging.warning("Words do not match."
+                f"                      Input:                                          {s_in}\n"
+                f"                      Output:                                         {s_out}"
+            )
         return False
 
     logging.debug("Input and output words match.")

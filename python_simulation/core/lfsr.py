@@ -26,9 +26,6 @@ import logging
 #                        Returns empty list if input validation fails
 
 def lfsr(k, polynomial = 0b10000000011011) -> list[int]:
-    if k <= 0:
-        logging.error(f"Invalid input: n={k}. Number of bits must be positive")
-        return []
 
     # Get polynomial positions (where bits are 1)
     pol_positions = [i for i in range(14) if polynomial & (1 << i)]

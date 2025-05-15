@@ -24,14 +24,13 @@ from config.simulation_config import SIMULATION_PARAMS, SCHEMES, SIMULATION_MODE
 def controller():
     controller_logger = logging.getLogger("Controller")
     
-    # Configuration parameters from config
-    k: int = SIMULATION_PARAMS['INPUT_BITS']['value']
-    t: int = SIMULATION_PARAMS['NUM_RANDOM_WORDS']['value']
-    M: int = SIMULATION_PARAMS['DEFAULT_M']['value']
-    error_p: float = SIMULATION_PARAMS['ERROR_PROBABILITY']['value']
+    # Validate configuration parameters
+    params = _validate_simulation_params()
+    if params is None:
+        return
+    k, t, M, error_p = params
 
     scheme_choice = int(input(_get_scheme_prompt()))
-
     if scheme_choice not in SCHEMES:
         controller_logger.error("Invalid choice. Please select either 1, 2, 3, 4, 5 or 6.")
         return
@@ -39,26 +38,16 @@ def controller():
     coding_scheme = SCHEMES[scheme_choice]
 
     generator_choice = int(input("Choose simulation mode (1 for random words, 2 for LFSR, 3 for all possible words): "))
-
     if generator_choice not in SIMULATION_MODES:
-        controller_logger.error("Invalid choice. Please select either 1, 2, or 3.")
+        controller_logger.error("Invalid choice. Please select either 1, 2, or 3\n")
         return
     
-    print()  
-
     if scheme_choice == 1:  
         controller_logger.info(f"Simulating {coding_scheme.name} with Parameters: k = {k}, M = {M}")
     else:
         controller_logger.info(f"Simulating {coding_scheme.name} with Parameters: k = {k}")
 
-    simulator.simulate(
-        coding_scheme, 
-        k, 
-        t, 
-        error_p, 
-        M=M,   
-        mode=generator_choice
-    )
+    simulator.simulate(coding_scheme, k, t, error_p, M=M, mode=generator_choice)
 
     controller_logger.debug("Simulation ended")
 
@@ -79,6 +68,44 @@ def _get_scheme_prompt() -> str:
         prompt += f"    {num}. {scheme.name}\n"
     
     return prompt
+
+def _validate_simulation_params() -> tuple[int, int, int, float]:
+    try:
+        # Validate input bits (k)
+        k = SIMULATION_PARAMS['INPUT_BITS']['value']
+        k_range = SIMULATION_PARAMS['INPUT_BITS']['range']
+        if not (k_range[0] <= k <= k_range[1]):
+            logging.error(f"Invalid input bits in config: {k}. Must be between {k_range[0]} and {k_range[1]}")
+            return None
+
+        # Validate number of test vectors (t)
+        t = SIMULATION_PARAMS['NUM_RANDOM_WORDS']['value']
+        t_range = SIMULATION_PARAMS['NUM_RANDOM_WORDS']['range']
+        if not (t_range[0] <= t <= t_range[1]):
+            logging.error(f"Invalid test vectors in config: {t}. Must be between {t_range[0]} and {t_range[1]}")
+            return None
+
+        # Validate M parameter
+        M = SIMULATION_PARAMS['DEFAULT_M']['value']
+        M_range = SIMULATION_PARAMS['DEFAULT_M']['range']
+        if not (M_range[0] <= M <= M_range[1]):
+            logging.error(f"Invalid M value in config: {M}. Must be between {M_range[0]} and {M_range[1]}")
+            return None
+        if not (M < k < 2):
+            logging.error(f"Invalid M and k values: Require M < k < 2, got M={M}, k={k}")
+            return None
+
+        # Validate error probability
+        error_p = SIMULATION_PARAMS['ERROR_PROBABILITY']['value']
+        error_range = SIMULATION_PARAMS['ERROR_PROBABILITY']['range']
+        if not (error_range[0] <= error_p <= error_range[1]):
+            logging.error(f"Invalid error probability in config: {error_p}. Must be between {error_range[0]} and {error_range[1]}")
+            return None
+
+        return k, t, M, error_p
+    except KeyError as e:
+        logging.error(f"Missing parameter in config file: {e}")
+        return None
 
 
 if __name__ == '__main__': 
