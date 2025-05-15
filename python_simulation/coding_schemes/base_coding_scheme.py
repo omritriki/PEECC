@@ -19,6 +19,10 @@ class CodingScheme(ABC):
     name: str
     supports_errors: bool = False  # Default to not supporting errors
 
+    def __init__(self):
+        self.s_prev = None  
+        self.c_prev = None
+    
 
     @abstractmethod
     def get_bus_size(self, *args, **kwargs) -> int:

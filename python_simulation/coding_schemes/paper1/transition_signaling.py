@@ -22,10 +22,6 @@ import logging
 class Transition_Signaling(CodingScheme):
     name = "Transition Signaling"
     supports_errors = False
-
-    # Store previous decoded word
-    def __init__(self):
-        self.s_prev = None  
     
 
     def get_bus_size(self, k, M=None) -> int:
