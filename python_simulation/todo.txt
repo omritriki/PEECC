@@ -4,7 +4,7 @@ TODO:
 - Update README
 - Fix HammingX
 - Is the seed relevant?
-
+- remove unnecessary redundant checks
 
 Shlomit
 

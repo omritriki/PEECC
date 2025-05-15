@@ -15,7 +15,7 @@ from core import generator, comparator, transition_count, error_generator
 from config.simulation_config import SIMULATION_MODES
 
 
-def simulate(coding_scheme, k, t, error_probability, M = 0, seed = None, mode = 1):
+def simulate(coding_scheme, k, t, error_probability, M = 0, mode = 1):
     simulator_logger = logging.getLogger("Simulator")
     encoder = coding_scheme.encode
     decoder = coding_scheme.decode
@@ -36,12 +36,11 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, seed = None, mode = 
 
     num_words = t if mode in [1, 2] else (2 ** k)  
     for i in range(num_words):
-        s_in = _generate_input_word(k, mode, i, seed)
-        if mode == 2:  
-            seed = s_in
         if mode == 3:  
             c_prev = [0] * n
 
+        s_in = generator.generate(k, mode=mode, i=i)
+       
         c = encoder(s_in, c_prev, M)
         transition_count.transition_count(c, c_prev)
 
@@ -52,6 +51,8 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, seed = None, mode = 
         s_out = decoder(c_with_error, M)
 
         # Compare input and output words
+
+        # move the log to the comparator################
         if not comparator.comparator(s_in, s_out):
             simulator_logger.warning(
                 f"Encoding/decoding mismatch at word {i + 1}:\n"
@@ -72,15 +73,6 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, seed = None, mode = 
     if isinstance(coding_scheme, mbit_bi.MbitBI): 
         simulator_logger.info(f"Expected Avg transitions: {coding_scheme.calculate_expected_average(k, M)}")
     print()
-
-
-def _generate_input_word(k, mode, i, seed = None) -> List[int]:
-    if mode == 1:
-        return generator.generate(k, mode=1)
-    elif mode == 2:
-        return generator.generate(k, mode=2, seed=seed)
-    else:  # mode == 3
-        return generator.generate(k, mode=3, i=i)
     
 
 def _validate_input(k, M, n, mode) -> bool:
