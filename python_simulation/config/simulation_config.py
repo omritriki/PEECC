@@ -8,7 +8,7 @@
 ======================================================
 """
 
-from coding_schemes.paper1 import transition_signaling, offset
+from coding_schemes.paper1 import transition_signaling, offset, offset_xor
 from coding_schemes.paper2 import dapbi, dap, hamming_x
 from coding_schemes import mbit_bi
 
@@ -36,14 +36,23 @@ SIMULATION_PARAMS = {
     }
 }
 
-SCHEMES = {
-    1: mbit_bi.MbitBI(),
-    2: dapbi.DAPBI(),
-    3: dap.DAP(),
-    4: hamming_x.HammingX(),
-    5: transition_signaling.Transition_Signaling(),
-    6: offset.Offset()
+# Schemes from Paper 1: "Memory Bus Encoding for Low Power: A Tutorial"
+PAPER1_SCHEMES = {
+    1: transition_signaling.Transition_Signaling(),
+    2: offset.Offset(),
+    3: offset_xor.Offset_XOR()
 }
+
+# Schemes from Paper 2: "Coding for System-on-Chip Networks: A Unified Framework"
+PAPER2_SCHEMES = {
+    4: mbit_bi.MbitBI(),
+    5: dapbi.DAPBI(),
+    6: dap.DAP(),
+    7: hamming_x.HammingX()
+}
+
+# Combined schemes dictionary
+SCHEMES = {**PAPER1_SCHEMES, **PAPER2_SCHEMES}
 
 SIMULATION_MODES = {
     1: "Simulating {t} random words",

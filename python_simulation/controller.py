@@ -30,9 +30,7 @@ def controller():
     M: int = SIMULATION_PARAMS['DEFAULT_M']['value']
     error_p: float = SIMULATION_PARAMS['ERROR_PROBABILITY']['value']
 
-    scheme_choice = int(input(
-        "Choose coding scheme (1 for M-BI, 2 for DAP-BI, 3 for DAP, 4 for HammingX, 5 for Transition Signaling, 6 for Offset): "
-    ))
+    scheme_choice = int(input(_get_scheme_prompt()))
 
     if scheme_choice not in SCHEMES:
         controller_logger.error("Invalid choice. Please select either 1, 2, 3, 4, 5 or 6.")
@@ -66,6 +64,26 @@ def controller():
     controller_logger.debug("Simulation ended")
 
 
+def _get_scheme_prompt() -> str:
+    prompt = "Choose coding scheme:\n\n"
+    
+    # Group schemes by paper
+    paper1_schemes = {k:v for k,v in SCHEMES.items() if k < 4}
+    paper2_schemes = {k:v for k,v in SCHEMES.items() if k >= 4}
+    
+    # Add Paper 2 schemes
+    prompt += " Paper 1 - Memory Bus Encoding for Low Power: A Tutorial:\n"
+    for num, scheme in paper1_schemes.items():
+        prompt += f"    {num}. {scheme.name}\n"
+    
+    # Add Paper 1 schemes
+    prompt += "\n Paper 2 - Coding for System-on-Chip Networks: A Unified Framework:\n"
+    for num, scheme in paper2_schemes.items():
+        prompt += f"    {num}. {scheme.name}\n"
+    
+    return prompt
+
+
 # The seed is x^n + x^(n-1) + x^0
 def _generate_seed(k) -> list[int]:
     if k < 2:
@@ -76,6 +94,7 @@ def _generate_seed(k) -> list[int]:
         seed[pos] = 1
 
     return seed
+
 
 
 if __name__ == '__main__': 
