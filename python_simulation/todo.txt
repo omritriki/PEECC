@@ -3,7 +3,7 @@ TODO:
 - Update requirements.txt file
 - Update README
 - Fix HammingX
-- Change LFSR
+- Is the seed relevant?
 
 
 Shlomit
