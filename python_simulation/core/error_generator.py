@@ -22,7 +22,7 @@ import random
 #             - All zeros if no error
 #             - Single 1 at random position if error occurs
 
-def error_generator(n, error_probability=0.1) -> list[int]:
+def generate_error(n, error_probability=0.1) -> list[int]:
     error_vector = [0] * n
 
     # Decide whether to introduce an error based on the probability

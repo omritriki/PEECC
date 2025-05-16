@@ -40,7 +40,7 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, mode = 1):
         transition_count.transition_count(c, c_prev)
 
         # Generate error
-        error = error_generator.error_generator(n, error_probability)
+        error = error_generator.generate_error(n, error_probability)
         c_with_error = coding_scheme.apply_error(c, error)
 
         s_out = decoder(c_with_error, M)
