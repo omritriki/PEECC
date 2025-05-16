@@ -66,7 +66,7 @@ class HammingX(CodingScheme):
         # Create the final codeword   
         c = s_copy
         for i in parity_bits:
-            c.append(parity_bits[i])  
+            c.append(parity_bits[i])  # Append parity bits to the end of the data bits
             c.append(0)
 
         logging.debug(f"HammingX encoded word:                  {c[:-1]}")
@@ -80,7 +80,7 @@ class HammingX(CodingScheme):
         m = n
         
         # Extract data and parity bits
-        data_bits = c[:-2*self.r + 1] 
+        data_bits = c[:-2*self.r + 1]  # Original data is at the start
         received_parity = {}
         
         # Get received parity bits (they come in pairs with zeros between them)
