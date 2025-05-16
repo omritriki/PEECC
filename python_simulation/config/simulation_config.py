@@ -15,7 +15,7 @@ from coding_schemes import mbit_bi
 
 SIMULATION_PARAMS = {
     'INPUT_BITS': {
-        'value': 32,
+        'value': 16,
         'range': (4, 32),
         'description': 'Number of input bits (k). Must be at least 4 for error correction.'
     },

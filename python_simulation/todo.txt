@@ -3,7 +3,6 @@ TODO:
 - Update requirements.txt file
 - Update README
 - Fix HammingX
-- Is the seed relevant?
 
 Shlomit
 

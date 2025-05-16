@@ -20,6 +20,8 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, mode = 1):
     encoder = coding_scheme.encode
     decoder = coding_scheme.decode
     n = coding_scheme.get_bus_size(k, M)
+
+    match = True
     
     # Use mode description from config
     mode_description = SIMULATION_MODES[mode].format(t=t)
@@ -46,18 +48,20 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, mode = 1):
         s_out = decoder(c_with_error, M)
 
         # Compare input and output words
-        if not comparator.comparator(s_in, s_out):
+        match = comparator.comparator(s_in, s_out)
+        if not match:
             break
 
         # Update the previous codeword
         c_prev = c
 
-    # Log transition statistics
-    max_transitions, avg_transitions = transition_count.transition_count(c_prev, c_prev)
-    simulator_logger.info(f"Max transitions: {max_transitions}")
-    simulator_logger.info(f"Avg transitions: {avg_transitions / num_words:.4f}")
+    # Log the result of the simulation
+    if match:
+        max_transitions, avg_transitions = transition_count.transition_count(c_prev, c_prev)
+        simulator_logger.info(f"Max transitions: {max_transitions}")
+        simulator_logger.info(f"Avg transitions: {avg_transitions / num_words:.4f}\n")
     
     # Show expected average transitions only for Mbit-BI coding scheme
-    if isinstance(coding_scheme, mbit_bi.MbitBI): 
+    if isinstance(coding_scheme, mbit_bi.MbitBI) and match: 
         simulator_logger.info(f"Expected Avg transitions: {coding_scheme.calculate_expected_average(k, M)}\n")
     
