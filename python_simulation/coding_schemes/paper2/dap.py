@@ -25,7 +25,7 @@ from functools import reduce
 #             decode(): even/odd bits based on parity check
 
 class DAP(CodingScheme):
-    name = "Duplicate-Add-Parity"
+    name = "Duplicate Add-Parity"
     supports_errors = True  
 
 

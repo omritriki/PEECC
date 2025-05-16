@@ -25,7 +25,7 @@ from functools import reduce
 #             decode(): Uses parity check and duplication for error detection
 
 class DAPBI(CodingScheme):
-    name = "Duplicate-Add-Parity Bus-Invert"
+    name = "Duplicate Add-Parity Bus-Invert"
     supports_errors = True
 
 
