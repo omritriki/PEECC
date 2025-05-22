@@ -28,93 +28,100 @@ import math
 class HammingX(CodingScheme):
     name = "HammingX"
     supports_errors = True
-    r = None
+    r = 0
+
 
     def get_bus_size(self, k, M=None) -> int:
-        self.r = math.ceil(math.log2(k))  
-        n = k + 2 * self.r - 1
+        for i in range(k):
+            if(2**i >= k + i + 1):
+                self.r = i
+                break
+        #n = k + self.r + (self.r - 1)
+        n = k + self.r
         return n
 
-    def encode(self, s_in, c_prev, M=None) -> list[int]:
+
+    def encode(self, s_in: list[int], c_prev: list[int], M: int = None) -> list[int]:
         
-        s_copy = s_in[:]  
-        k = len(s_in)
-        
-        parity_bits = {}
-        
-        # Calculate each parity bit
-        for i in range(self.r):
-            position = 1 << i  
-            parity = 0
+        # Get positions with redundant bits
+        pos = self._posRedundantBits(s_in)
+
+        # Calculate parity bits
+        c = self._calcParityBits(pos)
             
-            for j in range(1,         n = k + 2 * self.r - 1
-):
-                # If this bit position should be checked by current parity bit
-                if j & position:
-                    # Map the position in complete codeword to original data position
-                    data_index = j
-                    # Subtract number of parity bits before this position
-                    for w in range(self.r):
-                        if j > (1 << w):
-                            data_index -= 1
-                    # If within data range, XOR with the data bit
-                    if data_index <= k:
-                        parity ^= s_copy[data_index - 1]
-            
-            parity_bits[position] = parity
+        logging.debug(f"HammingX encoded word:                  {c}")
 
-        # Create the final codeword   
-        c = s_copy
-        for i in parity_bits:
-            c.append(parity_bits[i])  # Append parity bits to the end of the data bits
-            c.append(0)
+        return c
 
-        logging.debug(f"HammingX encoded word:                  {c[:-1]}")
 
-        return c[:-1]
-    
-
-    def decode(self, c, M=None):
-        # Calculate number of parity bits from received codeword
+    def decode(self, c: list[int], M: int = None) -> list[int]:
         n = len(c)
-        m = n
-        
-        # Extract data and parity bits
-        data_bits = c[:-2*self.r + 1]  # Original data is at the start
-        received_parity = {}
-        
-        # Get received parity bits (they come in pairs with zeros between them)
-        parity_index = len(data_bits)
-        for i in range(self.r):
-            received_parity[1 << i] = c[parity_index]
-            parity_index += 2
-        
-        # Recalculate parity bits from received data
-        calculated_parity = {}
-        for i in range(self.r):
-            position = 1 << i
-            parity = 0
-            for j in range(1, len(data_bits) + self.r + 1):
-                if j & position:
-                    data_index = j
-                    for k in range(self.r):
-                        if j > (1 << k):
-                            data_index -= 1
-                    if data_index <= len(data_bits):
-                        parity ^= data_bits[data_index - 1]
-            calculated_parity[position] = parity
-        
-        # Check for errors by comparing received and calculated parity
-        error_position = 0
-        for pos in received_parity:
-            if received_parity[pos] != calculated_parity[pos]:
-                error_position += pos
-        
-        # If error detected, correct it
-        if error_position > 0 and error_position <= len(data_bits):
-            logging.debug(f"ERROR DETECTED: position {error_position}")
-            data_bits[error_position - 1] ^= 1 
-        
-        logging.debug(f"HammingX decoded word:                  {c[:-1]}")
+        res = 0
 
-        return data_bits
+        # Calculate parity bits again
+        for i in range(self.r):
+            val = 0
+            for j in range(1, n + 1):
+                if(j & (2**i) == (2**i)):
+                    val = val ^ int(c[-1 * j])
+
+            res = res + val*(10**i)
+            err = int(str(res), 2)
+
+        if err != 0:
+            # If error is detected, correct the bit
+            c[-1 * err] = 1 - c[-1 * err]
+
+        # Remove redundant bits and convert to list of integers
+        s_out = []
+        for i in range(1, n + 1):
+            if(i != 2**int(math.log2(i))):
+                s_out.append(int(c[-1 * i]))
+
+        # Reverse the list to get the original order
+        s_out = s_out[::-1]
+        
+        logging.debug(f"HammingX decoded word:                  {s_out}")
+        return s_out
+
+
+    def _posRedundantBits(self, data) -> list[int]:
+        j = 0
+        k = 1
+        m = len(data)
+        res = []
+
+        # If position is power of 2 then insert 0, else append the data
+        for i in range(1, m + self.r + 1):
+            if(i == 2**j):
+                res.append(0)
+                j += 1
+            else:
+                res.append(data[-1 * k])
+                k += 1
+
+        # The result is reversed since positions are counted backwards
+        return res[::-1]
+
+
+    def _calcParityBits(self, arr) -> list[int]:
+        n = len(arr)
+
+        # For finding rth parity bit, iterate over
+        # 0 to r - 1
+        for i in range(self.r):
+            val = 0
+            for j in range(1, n + 1):
+
+                # If position has 1 in ith significant
+                # position then Bitwise OR the array value
+                # to find parity bit value.
+                if (j & (2**i) == (2**i)):
+                    val = val ^ int(arr[-1 * j])
+                    # -1 * j is given since array is reversed
+
+            # String Concatenation
+            # (0 to n - 2^r) + parity bit + (n - 2^r + 1 to n)
+            arr[n - (2**i)] = val
+
+        return arr
