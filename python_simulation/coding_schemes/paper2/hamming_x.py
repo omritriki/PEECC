@@ -36,8 +36,7 @@ class HammingX(CodingScheme):
             if(2**i >= k + i + 1):
                 self.r = i
                 break
-        #n = k + self.r + (self.r - 1)
-        n = k + self.r
+        n = k + self.r + (self.r - 1)
         return n
 
 
@@ -48,6 +47,10 @@ class HammingX(CodingScheme):
 
         # Calculate parity bits
         c = self._calcParityBits(pos)
+
+        # Add shielding bits (in the end for convenience)
+        for i in range(self.r - 1):
+            c.append(0)
             
         logging.debug(f"HammingX encoded word:                  {c}")
 
@@ -55,8 +58,11 @@ class HammingX(CodingScheme):
 
 
     def decode(self, c: list[int], M: int = None) -> list[int]:
-        n = len(c)
         res = 0
+
+        # Remove r - 1 shielding bits
+        c = c[:-1 * (self.r - 1)]
+        n = len(c)
 
         # Calculate parity bits again
         for i in range(self.r):
@@ -85,43 +91,38 @@ class HammingX(CodingScheme):
         return s_out
 
 
-    def _posRedundantBits(self, data) -> list[int]:
+    def _posRedundantBits(self, s) -> list[int]:
         j = 0
-        k = 1
-        m = len(data)
+        t = 1
+        k = len(s)
         res = []
 
         # If position is power of 2 then insert 0, else append the data
-        for i in range(1, m + self.r + 1):
+        for i in range(1, k + self.r + 1):
             if(i == 2**j):
                 res.append(0)
                 j += 1
             else:
-                res.append(data[-1 * k])
-                k += 1
+                res.append(s[-1 * t])
+                t += 1
 
         # The result is reversed since positions are counted backwards
         return res[::-1]
 
 
-    def _calcParityBits(self, arr) -> list[int]:
-        n = len(arr)
+    def _calcParityBits(self, s) -> list[int]:
+        k = len(s)
 
-        # For finding rth parity bit, iterate over
-        # 0 to r - 1
+        # For finding r-th parity bit, iterate [0,r-1]
         for i in range(self.r):
             val = 0
-            for j in range(1, n + 1):
+            for j in range(1, k + 1):
 
-                # If position has 1 in ith significant
-                # position then Bitwise OR the array value
-                # to find parity bit value.
+                # If position has 1 in i-th significant pos - Bitwise OR the value
                 if (j & (2**i) == (2**i)):
-                    val = val ^ int(arr[-1 * j])
+                    val = val ^ int(s[-1 * j])
                     # -1 * j is given since array is reversed
 
-            # String Concatenation
-            # (0 to n - 2^r) + parity bit + (n - 2^r + 1 to n)
-            arr[n - (2**i)] = val
+            s[k - (2**i)] = val
 
-        return arr
+        return s
