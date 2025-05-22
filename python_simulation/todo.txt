@@ -2,7 +2,7 @@ TODO:
 
 - Update requirements.txt file
 - Update README
-- Fix HammingX
+
 
 Shlomit
 
