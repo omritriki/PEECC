@@ -12,6 +12,7 @@ import logging
 from core import simulator
 from config.logging_config import configure_logging
 from config.simulation_config import SIMULATION_PARAMS, SCHEMES, SIMULATION_MODES
+import time
 
 
 # Description: Controls the encoding process, testing both random and all possible
@@ -37,37 +38,67 @@ def controller():
     
     coding_scheme = SCHEMES[scheme_choice]
 
-    generator_choice = int(input("Choose simulation mode (1 for random words, 2 for LFSR, 3 for all possible words): \n"))
+    generator_choice = int(input(_get_mode_prompt()))
     if generator_choice not in SIMULATION_MODES:
         controller_logger.error("Invalid choice. Please select either 1, 2, or 3\n")
         return
     
-    if scheme_choice == 1:  
-        controller_logger.info(f"Simulating {coding_scheme.name} with Parameters: k = {k}, M = {M}")
-    else:
-        controller_logger.info(f"Simulating {coding_scheme.name} with Parameters: k = {k}")
+    if generator_choice == 3:
+        t = 2 ** k
 
-    simulator.simulate(coding_scheme, k, t, error_p, M=M, mode=generator_choice)
+    start = time.perf_counter()   
+    max_transitions, avg_transitions = simulator.simulate(coding_scheme, k, t, error_p, M=M, mode=generator_choice)
+    elapsed = time.perf_counter() - start
+
+    print("\n============= SIMULATION RESULTS =============\n")
+
+    print("Coding Method: ", coding_scheme.name)
+    print("Parameters: ")
+    print(f"    - Input word length (k): {k} bits")
+    print(f"    - Data generation: {SIMULATION_MODES[generator_choice]}")
+    print(f"    - Total words processes: {t}")
+    print(f"    - Error probability: {error_p}")
+    if scheme_choice == 1:  
+        print(f"    - M = {M}")
+
+    print("\nResults: ")
+
+    print(f"    - Maximum transitions: {max_transitions}")
+    print(f"    - Average transitions: {avg_transitions / t:.4f}")
+    print(f"    - Area overhead: {coding_scheme.get_bus_size(k, M) - k} bits ({(coding_scheme.get_bus_size(k, M) - k) / k:.2%})")
+    print(f"    - Simulation Duration: {elapsed:.4f} seconds\n")
 
     controller_logger.debug("Simulation ended")
 
 
 def _get_scheme_prompt() -> str:
-    prompt = "Choose coding scheme:\n\n"
+    prompt = "\n========== ENCODING SCHEME SELECTION ==========\n\n"
     
     # Group schemes by paper
     paper1_schemes = {k:v for k,v in SCHEMES.items() if k < 4}
     paper2_schemes = {k:v for k,v in SCHEMES.items() if k >= 4}
     
-    prompt += " Paper 1 - Memory Bus Encoding for Low Power: A Tutorial:\n"
+    prompt += " [Paper 1] Memory Bus Encoding for Low Power: A Tutorial:\n"
     for num, scheme in paper1_schemes.items():
         prompt += f"    {num}. {scheme.name}\n"
     
-    prompt += "\n Paper 2 - Coding for System-on-Chip Networks: A Unified Framework:\n"
+    prompt += "\n [Paper 2] Coding for System-on-Chip Networks: A Unified Framework:\n"
     for num, scheme in paper2_schemes.items():
         prompt += f"    {num}. {scheme.name}\n"
     
     return prompt
+
+
+def _get_mode_prompt() -> str:
+    prompt = "\n========== SIMULATION CONFIGURATION ==========\n\n"
+    
+    prompt += "Please select data simulation mode:\n"
+    prompt += "    1. Random word sequence\n"
+    prompt += "    2. Linear Feedback Shift Register (LFSR)\n"
+    prompt += "    3. Exhaustive (all possible words)\n"
+    
+    return prompt
+
 
 def _validate_simulation_params() -> tuple[int, int, int, float]:
     try:

@@ -22,20 +22,20 @@ def comparator(s_in, s_out) -> bool:
     
     # Input validation
     if not isinstance(s_in, list) or not isinstance(s_out, list):
-        logging.error("Invalid input: Both info_word and output must be lists.")
-        raise ValueError("Both info_word and output must be lists.")
+        logging.error("Invalid input: Both info_word and output must be lists")
+        raise ValueError("Both info_word and output must be lists")
     if len(s_in) != len(s_out):
         logging.error(f"Length mismatch: s_in length={len(s_in)}, s_out length={len(s_out)}")
-        raise ValueError("info_word and output must have the same length.")
+        raise ValueError("info_word and output must have the same length")
 
     # Comparison logic
     if s_in != s_out:
-        logging.warning("Words do not match.\n"
+        logging.warning("Words do not match\n"
                 f"          Input:                                          {s_in}\n"
                 f"          Output:                                         {s_out}\n"
             )
         return False
 
-    logging.debug("Input and output words match.")
+    logging.debug("Input and output words match")
     return True
 

@@ -55,8 +55,8 @@ PAPER2_SCHEMES = {
 SCHEMES = {**PAPER1_SCHEMES, **PAPER2_SCHEMES}
 
 SIMULATION_MODES = {
-    1: "Simulating {t} random words",
-    2: "Simulating {t} words using LFSR",
-    3: "Simulating all possible words starting from 0"
+    1: "Random word sequence",
+    2: "Linear Feedback Shift Register (LFSR)",
+    3: "Exhaustive (all possible words)"
 }
 

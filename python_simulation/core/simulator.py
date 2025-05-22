@@ -55,9 +55,9 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, mode = 1):
         # Update the previous codeword
         c_prev = c
 
-    # Log the result of the simulation
+    # Log the result of the simulation ##### These need to be in the controller
     if match:
-        max_transitions, avg_transitions = transition_count.transition_count(c_prev, c_prev)
+        return transition_count.transition_count(c_prev, c_prev)
         simulator_logger.info(f"Max transitions: {max_transitions}")
         simulator_logger.info(f"Avg transitions: {avg_transitions / num_words:.4f}\n")
     
