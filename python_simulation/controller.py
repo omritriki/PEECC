@@ -122,8 +122,8 @@ def _validate_simulation_params() -> tuple[int, int, int, float]:
         if not (M_range[0] <= M <= M_range[1]):
             logging.error(f"Invalid M value in config: {M}. Must be between {M_range[0]} and {M_range[1]}")
             return None
-        if not (M < k / 2):
-            logging.error(f"Invalid M and k values: Require M < k / 2, got M={M}, k={k}")
+        if not (M <= k / 2):
+            logging.error(f"Invalid M and k values: Require M <= k / 2, got M={M}, k={k}")
             return None
 
         # Validate error probability
