@@ -16,6 +16,21 @@ from config.simulation_config import SIMULATION_MODES
 
 
 def simulate(coding_scheme, k, t, error_probability, M = 0, mode = 1):
+    """
+    Implements: The main simulation loop that encodes, transmits, and decodes words
+                while tracking transition statistics and error correction performance.
+
+    Args:
+        coding_scheme: The coding scheme object to test (MbitBI, DAPBI, etc.)
+        k (int): Number of input bits per word
+        t (int): Number of test words to process
+        error_probability (float): Probability of introducing bit errors during transmission
+        M (int): Number of segments for M-bit schemes (default: 0)
+        mode (int): Word generation mode (1=random, 2=LFSR, 3=exhaustive)
+
+    Returns:
+        tuple[int, int]: Maximum transitions and total average transitions recorded during simulation.
+    """
     simulator_logger = logging.getLogger("Simulator")
     encoder = coding_scheme.encode
     decoder = coding_scheme.decode

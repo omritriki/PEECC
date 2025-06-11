@@ -13,27 +13,49 @@ from math import comb
 import logging
 
 
-# Description: M-bit Bus Invert (MbitBI) scheme that divides input into M segments
-#             and selectively inverts segments to reduce transitions.
-#
-# Inputs:     s_in: list[int] - Input word to encode
-#             c_prev: list[int] - Previous code word
-#             M: int - Number of segments for bus inversion
-#
-# Outputs:    list[int] - Encoded/decoded word
-#             encode(): Original bits with inversion flags
-#             decode(): Original word recovered using inversion flags
-
 class MbitBI(CodingScheme):
+    """
+    Implements: M-bit Bus Invert coding scheme that divides input words into M segments
+                and selectively inverts segments to minimize bus transitions and reduce power consumption.
+
+    Args:
+        None (inherits from CodingScheme base class)
+
+    Returns:
+        None (class definition)
+    """
     name = "M-bit Bus-Invert"
 
 
     def get_bus_size(self, k, M) -> int:
+        """
+        Implements: Bus width calculation for M-bit Bus Invert scheme, accounting for
+                    original data bits plus inversion control bits.
+
+        Args:
+            k (int): Number of input data bits
+            M (int): Number of segments for bus inversion
+
+        Returns:
+            int: Total bus width required (k + M bits).
+        """
         n = k + M
         return n
 
 
     def encode(self, s, c_prev, M) -> list[int]:
+        """
+        Implements: M-bit Bus Invert encoding algorithm that segments input words and
+                    selectively inverts segments to minimize transitions from previous codeword.
+
+        Args:
+            s (list[int]): Input binary word to encode
+            c_prev (list[int]): Previous encoded codeword for transition comparison
+            M (int): Number of segments for bus inversion
+
+        Returns:
+            list[int]: Encoded codeword with original data and inversion control bits.
+        """
         n = len(s) + M
         segments = [n // M] * (n % M) + [n // M - 1] * (M - n % M)
 
@@ -59,6 +81,17 @@ class MbitBI(CodingScheme):
 
 
     def decode(self, c, M) -> list[int]:
+        """
+        Implements: M-bit Bus Invert decoding algorithm that reconstructs original words
+                    by checking inversion flags and selectively inverting segments.
+
+        Args:
+            c (list[int]): Received encoded codeword to decode
+            M (int): Number of segments used in encoding
+
+        Returns:
+            list[int]: Decoded binary word matching the original input.
+        """
         k = len(c) - M
         segments = [k // M + 1] * (k % M) + [k // M] * (M - k % M)
         s = []
@@ -81,6 +114,17 @@ class MbitBI(CodingScheme):
 
 
     def _check_invert(self, s, c_prev):
+        """
+        Implements: Segment inversion decision logic that compares transition count with
+                    and without inversion to minimize power consumption.
+
+        Args:
+            s (list[int]): Current segment to analyze
+            c_prev (list[int]): Previous segment for transition comparison
+
+        Returns:
+            list[int]: Segment with inversion flag appended (1=inverted, 0=not inverted).
+        """
         A = len(s)
 
         curr_transitions = sum(1 for i in range(A) if s[i] != c_prev[i])
@@ -95,6 +139,17 @@ class MbitBI(CodingScheme):
     
     
     def calculate_expected_average(self, k, M):
+        """
+        Implements: Theoretical calculation of expected average transitions for M-bit Bus Invert
+                    scheme using combinatorial analysis and probability theory.
+
+        Args:
+            k (int): Number of input data bits
+            M (int): Number of segments for bus inversion
+
+        Returns:
+            float: Expected average number of transitions per codeword transmission.
+        """
         def calc_segment_average(n):
             if (n - 1) % 2 == 0:
                 return calc_segment_average(n + 1) - 0.5

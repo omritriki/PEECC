@@ -12,28 +12,49 @@ from coding_schemes.base_coding_scheme import CodingScheme
 import logging
 
 
-# Description: Implements Offset encoding that transmits differences between consecutive
-#             words using two's complement arithmetic. Reduces transitions for sequential
-#             data by sending only changes between words.
-#
-# Inputs:     s_in: list[int] - Input word to encode
-#             c_prev: list[int] - Previous code word (not used in this scheme)
-#             M: Optional[int] - Not used in this scheme
-#
-# Outputs:    list[int] - Encoded/decoded k-bit word where:
-#             encode(): c = s - s_prev (in two's complement)
-#             decode(): s = c + s_prev (in two's complement)
-
 class Offset(CodingScheme):
+    """
+    Implements: Offset encoding scheme that transmits differences between consecutive words
+                using two's complement arithmetic to reduce transitions for sequential data patterns.
+
+    Args:
+        None (inherits from CodingScheme base class)
+
+    Returns:
+        None (class definition)
+    """
     name = "Offset"
     supports_errors = False
     
 
     def get_bus_size(self, k, M=None) -> int:
+        """
+        Implements: Bus width calculation for Offset scheme, which maintains the same width
+                    as the input since only differences are transmitted.
+
+        Args:
+            k (int): Number of input data bits
+            M (int): Unused parameter for compatibility (default: None)
+
+        Returns:
+            int: Bus width equal to input width (k bits).
+        """
         return k
 
 
     def encode(self, s_in, c_prev, M=None) -> list[int]:
+        """
+        Implements: Offset encoding algorithm that calculates the difference between current
+                    and previous words using two's complement arithmetic.
+
+        Args:
+            s_in (list[int]): Current input binary word to encode
+            c_prev (list[int]): Previous encoded codeword (unused in this scheme)
+            M (int): Unused parameter for compatibility (default: None)
+
+        Returns:
+            list[int]: Encoded difference word (s_current - s_previous) in two's complement.
+        """
         # Initialize with zeros on first decode
         if self.s_prev is None:
             self.s_prev = [0] * len(s_in)  
@@ -54,6 +75,17 @@ class Offset(CodingScheme):
     
 
     def decode(self, c, M=None) -> list[int]:
+        """
+        Implements: Offset decoding algorithm that reconstructs original words by adding
+                    received differences to previous words using two's complement arithmetic.
+
+        Args:
+            c (list[int]): Received encoded difference word to decode
+            M (int): Unused parameter for compatibility (default: None)
+
+        Returns:
+            list[int]: Decoded original word (c_current + s_previous) in two's complement.
+        """
         # Initialize with zeros on first decode
         if self.s_prev is None:
             self.s_prev = [0] * len(c)  

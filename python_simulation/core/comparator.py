@@ -11,14 +11,18 @@
 import logging
 
 
-# Description: Checks if the input to the encoder is the same as the output of the decoder
-# Inputs:
-#              info_word (array): Initial information word (length - k)
-#              output (array): Decoded word (length - k)
-# Outputs:
-#              isEqual (bool): True only if info_word == output
-
 def comparator(s_in, s_out) -> bool:
+    """
+    Implements: Validation of encoding/decoding fidelity by comparing the original input
+                word with the decoded output word to detect any data corruption.
+
+    Args:
+        s_in (list[int]): Original input word before encoding
+        s_out (list[int]): Decoded output word after transmission and decoding
+
+    Returns:
+        bool: True if words match exactly, False if any bit differs indicating error.
+    """
     
     # Input validation
     if not isinstance(s_in, list) or not isinstance(s_out, list):

@@ -13,25 +13,34 @@ import logging
 import math
 
 
-# Description: Extended Hamming code implementation with added shielding bits.
-#             Supports single error correction through parity bits. Adds extra
-#             shielding zeros between parity bits for transition reduction.
-#
-# Inputs:     s_in: list[int] - Input word to encode
-#             c_prev: list[int] - Previous code word (not used)
-#             M: Optional[int] - Not used
-#
-# Outputs:    list[int] - Encoded/decoded word where:
-#             encode(): [data_bits, parity_bits with shielding]
-#             decode(): Corrects single bit errors using parity check matrix
-
 class HammingX(CodingScheme):
+    """
+    Implements: Extended Hamming code with added shielding bits for single error correction
+                and transition reduction through strategic placement of zeros between parity bits.
+
+    Args:
+        None (inherits from CodingScheme base class)
+
+    Returns:
+        None (class definition)
+    """
     name = "HammingX"
     supports_errors = True
     r = 0
 
 
     def get_bus_size(self, k, M=None) -> int:
+        """
+        Implements: Bus width calculation for HammingX scheme, accounting for data bits,
+                    parity bits, and shielding bits for transition reduction.
+
+        Args:
+            k (int): Number of input data bits
+            M (int): Unused parameter for compatibility (default: None)
+
+        Returns:
+            int: Total bus width required (k + r + (r-1) bits where r is number of parity bits).
+        """
         for i in range(k):
             if(2**i >= k + i + 1):
                 self.r = i
@@ -41,6 +50,18 @@ class HammingX(CodingScheme):
 
 
     def encode(self, s_in: list[int], c_prev: list[int], M: int = None) -> list[int]:
+        """
+        Implements: HammingX encoding algorithm that positions data and parity bits according
+                    to Hamming code structure and adds shielding bits for transition reduction.
+
+        Args:
+            s_in (list[int]): Input binary word to encode
+            c_prev (list[int]): Previous encoded codeword (unused in this scheme)
+            M (int): Unused parameter for compatibility (default: None)
+
+        Returns:
+            list[int]: Encoded codeword with data bits, calculated parity bits, and shielding bits.
+        """
         
         # Get positions with redundant bits
         pos = self._posRedundantBits(s_in)
@@ -58,6 +79,17 @@ class HammingX(CodingScheme):
 
 
     def decode(self, c: list[int], M: int = None) -> list[int]:
+        """
+        Implements: HammingX decoding algorithm that detects and corrects single bit errors
+                    using parity check matrix and removes redundant bits to recover original data.
+
+        Args:
+            c (list[int]): Received encoded codeword to decode
+            M (int): Unused parameter for compatibility (default: None)
+
+        Returns:
+            list[int]: Decoded binary word with single error correction applied.
+        """
         res = 0
 
         # Remove r - 1 shielding bits
@@ -92,6 +124,16 @@ class HammingX(CodingScheme):
 
 
     def _posRedundantBits(self, s) -> list[int]:
+        """
+        Implements: Positioning of data bits and parity bit placeholders according to Hamming code
+                    structure where parity bits occupy positions that are powers of 2.
+
+        Args:
+            s (list[int]): Input data bits to position
+
+        Returns:
+            list[int]: Data bits positioned with parity bit placeholders in correct locations.
+        """
         j = 0
         t = 1
         k = len(s)
@@ -111,6 +153,16 @@ class HammingX(CodingScheme):
 
 
     def _calcParityBits(self, s) -> list[int]:
+        """
+        Implements: Calculation of parity bits using XOR operations on specific bit positions
+                    according to Hamming code parity check matrix.
+
+        Args:
+            s (list[int]): Data bits with parity bit placeholders
+
+        Returns:
+            list[int]: Complete codeword with calculated parity bits in correct positions.
+        """
         k = len(s)
 
         # For finding r-th parity bit, iterate [0,r-1]
