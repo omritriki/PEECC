@@ -13,28 +13,50 @@ import logging
 from functools import reduce
 
 
-# Description: Combines DAP with Bus-Invert coding for both error detection and 
-#             transition reduction. Duplicates bits, adds inversion flag and parity.
-#
-# Inputs:     s_in: list[int] - Input word to encode
-#             c_prev: list[int] - Previous code word
-#             M: Optional[int] - Not used
-#
-# Outputs:    list[int] - Encoded/decoded word
-#             encode(): [s_duplicated, INV_duplicated, parity]
-#             decode(): Uses parity check and duplication for error detection
-
 class DAPBI(CodingScheme):
+    """
+    Implements: Duplicate-Add-Parity Bus-Invert coding scheme that combines bit duplication,
+                parity checking, and bus inversion for both error detection and transition reduction.
+
+    Args:
+        None (inherits from CodingScheme base class)
+
+    Returns:
+        None (class definition)
+    """
     name = "Duplicate Add-Parity Bus-Invert"
     supports_errors = True
 
 
     def get_bus_size(self, k, M=None) -> int:
+        """
+        Implements: Bus width calculation for DAPBI scheme, accounting for duplicated data bits,
+                    duplicated inversion flag, and single parity bit.
+
+        Args:
+            k (int): Number of input data bits
+            M (int): Unused parameter for compatibility (default: None)
+
+        Returns:
+            int: Total bus width required (2k + 3 bits).
+        """
         n = 2 * k + 3
         return n
 
 
     def encode(self, s_in, c_prev, M=None) -> list[int]:
+        """
+        Implements: DAPBI encoding algorithm that applies bus inversion, calculates parity,
+                    and duplicates all bits except the final parity bit for error detection.
+
+        Args:
+            s_in (list[int]): Input binary word to encode
+            c_prev (list[int]): Previous encoded codeword for transition comparison
+            M (int): Unused parameter for compatibility (default: None)
+
+        Returns:
+            list[int]: Encoded codeword with duplicated data, duplicated inversion flag, and parity bit.
+        """
         s_copy = s_in[:] 
 
         c_notdup = c_prev[:-3:2]  
@@ -83,6 +105,17 @@ class DAPBI(CodingScheme):
     
 
     def decode(self, c, M=None) -> list[int]:
+        """
+        Implements: DAPBI decoding algorithm that uses parity checking and bit duplication
+                    for error detection, selecting between even and odd positioned bits based on error status.
+
+        Args:
+            c (list[int]): Received encoded codeword to decode
+            M (int): Unused parameter for compatibility (default: None)
+
+        Returns:
+            list[int]: Decoded binary word with error correction applied and inversion reversed.
+        """
         # Extract the parity bit and remove it from the codeword
         parity = c[-1]  
         c = c[:-1]

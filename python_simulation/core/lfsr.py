@@ -12,20 +12,18 @@ from random import randint
 import logging
 
 
-# Description: Linear Feedback Shift Register implementation that generates k-bit words
-#             using k parallel LFSRs with the same polynomial but different random seeds.
-#             Each LFSR maintains its state between calls and uses polynomial feedback
-#             to generate the next bit. The k-bit word is formed by taking one bit from
-#             each LFSR.
-#
-# Inputs:     k: int - Number of bits to generate (number of parallel LFSRs)
-#             polynomial: int - Feedback polynomial in binary form (default: x^13 + x^4 + x^3 + x + 1)
-#                             represented as 0b10000000011011
-#
-# Outputs:    list[int] - Generated k-bit word, where each bit comes from a different LFSR
-#                        Returns empty list if input validation fails
-
 def lfsr(k, polynomial = 0b10000000011011) -> list[int]:
+    """
+    Implements: Linear Feedback Shift Register using k parallel LFSRs with identical polynomial
+                but different random seeds, generating pseudo-random k-bit words for simulation.
+
+    Args:
+        k (int): Number of bits to generate and number of parallel LFSRs to maintain
+        polynomial (int): Feedback polynomial in binary form (default: x^13 + x^4 + x^3 + x + 1)
+
+    Returns:
+        list[int]: Generated k-bit pseudo-random word where each bit comes from a different LFSR.
+    """
 
     # Get polynomial positions (where bits are 1)
     pol_positions = [i for i in range(14) if polynomial & (1 << i)]

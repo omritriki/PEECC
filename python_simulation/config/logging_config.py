@@ -12,13 +12,17 @@ import logging
 import os
 
 
-# Description: Configures logging for the simulation, including both file and console handlers
-# Inputs:
-#              console_level (int): The logging level for the console output (e.g., DEBUG, INFO, WARNING)
-# Outputs:
-#              Logs are written to "simulation_logs.log" and displayed in the console
-
 def configure_logging(console_level=logging.WARNING):
+    """
+    Implements: Comprehensive logging configuration with dual output streams for simulation
+                monitoring, supporting both detailed file logging and configurable console output.
+
+    Args:
+        console_level (int): Logging level for console output (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+
+    Returns:
+        None: Configures global logging handlers for file and console output.
+    """
     # Get the directory containing this module
     module_dir = os.path.dirname(os.path.abspath(__file__))
     log_file_path = os.path.join(os.path.dirname(module_dir), "simulation_logs.log")

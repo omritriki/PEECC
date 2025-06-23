@@ -29,6 +29,19 @@ max_transitions = -1
 from typing import Tuple
 
 def transition_count(c=0, c_prev=0, RESET=False) -> Tuple[int, int]:
+    """
+    Implements: Bit transition counting between consecutive codewords to measure power
+                consumption, maintaining running statistics of maximum and average transitions.
+
+    Args:
+        c (list[int]): Current codeword for transition analysis
+        c_prev (list[int]): Previous codeword for comparison
+        RESET (bool): Flag to reset global counters to initial state (default: False)
+
+    Returns:
+        tuple[int, int]: Maximum transitions recorded and cumulative transition count
+                         across all processed codeword pairs.
+    """
     global avg_transitions
     global max_transitions
     curr_transitions = 0

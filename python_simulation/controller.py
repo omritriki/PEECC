@@ -15,14 +15,17 @@ from config.simulation_config import SIMULATION_PARAMS, SCHEMES, SIMULATION_MODE
 import time
 
 
-# Description: Controls the encoding process, testing both random and all possible
-#              k-bit input words while tracking transition statistics
-# Inputs:
-#              None
-# Outputs:
-#              Logs max and average transitions for random words and all possible words
-
 def controller():
+    """
+    Implements: The main controller for the encoding simulation, testing various coding schemes
+                with different word generation modes while tracking transition statistics.
+
+    Args:
+        None
+
+    Returns:
+        None: Logs simulation results and performance metrics to console and log file.
+    """
     controller_logger = logging.getLogger("Controller")
     
     # Validate configuration parameters
@@ -72,6 +75,15 @@ def controller():
 
 
 def _get_scheme_prompt() -> str:
+    """
+    Implements: A user interface prompt for selecting encoding schemes, organized by research paper.
+
+    Args:
+        None
+
+    Returns:
+        str: Formatted prompt string displaying available coding schemes grouped by paper.
+    """
     prompt = "\n========== ENCODING SCHEME SELECTION ==========\n\n"
     
     # Group schemes by paper
@@ -90,6 +102,15 @@ def _get_scheme_prompt() -> str:
 
 
 def _get_mode_prompt() -> str:
+    """
+    Implements: A user interface prompt for selecting simulation mode for word generation.
+
+    Args:
+        None
+
+    Returns:
+        str: Formatted prompt string displaying available simulation modes.
+    """
     prompt = "\n========== SIMULATION CONFIGURATION ==========\n\n"
     
     prompt += "Please select data simulation mode:\n"
@@ -101,6 +122,16 @@ def _get_mode_prompt() -> str:
 
 
 def _validate_simulation_params() -> tuple[int, int, int, float]:
+    """
+    Implements: Validation of all simulation parameters from configuration file,
+                ensuring they fall within acceptable ranges and satisfy constraints.
+
+    Args:
+        None
+
+    Returns:
+        tuple[int, int, int, float]: Validated parameters (k, t, M, error_p) or None if validation fails.
+    """
     try:
         # Validate input bits (k)
         k = SIMULATION_PARAMS['INPUT_BITS']['value']

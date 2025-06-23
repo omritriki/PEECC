@@ -13,18 +13,19 @@ from core import lfsr
 import logging
 
 
-# Description: Generates a k-bit binary number based on the specified mode.
-#              Mode 1 generates a random binary number.
-#              Mode 2 generates a binary number using an LFSR.
-#              Mode 3 generates a binary number from the integer i. 
-# Inputs:
-#              k (int): Number of bits in the generated binary number.
-#              mode (int): Mode of generation (1=random, 2=LFSR, 3=from integer).
-#              i (int): Integer to convert to binary (used in mode 3).
-# Outputs:
-#              s (list[int]): A list of k binary digits.
-
 def generate(k, mode = 1, i = 0) -> list[int]:
+    """
+    Implements: Binary word generation using multiple methods: random generation,
+                LFSR-based pseudo-random sequences, or exhaustive enumeration.
+
+    Args:
+        k (int): Number of bits in the generated binary word
+        mode (int): Generation mode (1=random, 2=LFSR, 3=exhaustive enumeration)
+        i (int): Integer value to convert to binary (used in mode 3)
+
+    Returns:
+        list[int]: A k-bit binary word as a list of integers (0s and 1s).
+    """
 
     if mode == 1:
         # Generate a random n-bit binary number
