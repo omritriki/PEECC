@@ -1,5 +1,12 @@
-// If we decide buffer doesn't need an enable signal, we can remove it from the module and
-// remove it from check_invert modules
+/*
+======================================================
+   Power Efficient Error Correction Encoding for
+           On-Chip Interconnection Links
+
+           Shlomit Lenefsky & Omri Triki
+                   06.2025
+======================================================
+*/
 
 module MUX2x1 #(parameter A = 8)(
     input wire sel,
@@ -14,11 +21,11 @@ endmodule
 module Buffer #(parameter A = 1)(  
     input wire clk,
     input wire rst, 
-    input wire en,  //is it needed?
+    input wire en, 
     input wire [A-1:0] in,
     output reg [A-1:0] out
 );
-    always @(posedge clk or posedge rst) begin // check posedge/negedge
+    always @(posedge clk or posedge rst) begin
         if (rst)
             out <= 0;
         else if (en)
@@ -26,7 +33,7 @@ module Buffer #(parameter A = 1)(
     end
 endmodule
 
-
+/*
 module FourCycleDelay #(parameter k = 32)(
     input wire clk,
     input wire rst,
@@ -49,7 +56,7 @@ module FourCycleDelay #(parameter k = 32)(
         end
     end
 endmodule
-
+*/
 
 module BitwiseXOR #(parameter A = 8)(
     input wire [A-1:0] a,   
@@ -84,22 +91,11 @@ module Comparator #(parameter A = 8)(
 endmodule
 
 
-/*
-Module:     CheckInvert
-Description:
-            This parameterized module checks whether inversion should be applied to an input data word
-Notations:
-            S_i   - Input data word (original data)
-            X_i   - Encoded data word (possibly inverted version of S_i)
-            INV_i - Inversion flag indicating whether inversion was applied
-Parameters:
-            A - Width of the input and output data words. Adjustable to support various bus sizes.
-*/
-module CheckInvert #(parameter A = 8)( // verify different A's
+module CheckInvert #(parameter A = 8)(
     input wire clk,
     input wire rst, 
-    input wire en,  //is it needed?
-    input wire [A-1:0] S_i,  //7
+    input wire en,
+    input wire [A-1:0] S_i,
     output wire [A-1:0] X_i,
     output wire INV_i
 );
@@ -134,14 +130,14 @@ Parameters:
             A - Segment width
 */
 
-//////Maybe A should be calculated inside and not given as a parameter???
+
 module Encoder #(parameter M = 5, k = 32, A = 8)( 
     input wire clk,
     input wire rst,
     input wire en,
     input wire [k-1:0] S,
     output wire [k-1:0] X,
-    output wire [M-1:0] INV
+    output wire [M-1:0] INV1
 );
     genvar i;
     generate
@@ -151,14 +147,14 @@ module Encoder #(parameter M = 5, k = 32, A = 8)(
             CheckInvert #(A-1) ci1 (
                 .clk(clk), .rst(rst), .en(en),
                 .S_i(S_part1),
-                .X_i(X_part1),  // X_part1 is assigned here
-                .INV_i(INV[i])
+                .X_i(X_part1), 
+                .INV_i(INV1[i])
             );
-            assign X[i*(A-1) +: (A-1)] = X_part1;  // X_part1 is assigned to part-select of X
+            assign X[i*(A-1) +: (A-1)] = X_part1;
         end
     endgenerate
     
-    genvar j; //k=32, M=5, A=8
+    genvar j;
     generate
         for (j = 0; j < (M - ((k + M) % M)); j = j + 1) begin : check_invert_gen2
 	    localparam integer start = ((k+M)%M)*(A-1) + j*(A-2);
@@ -168,10 +164,10 @@ module Encoder #(parameter M = 5, k = 32, A = 8)(
             CheckInvert #(A-2) ci2(
                 .clk(clk), .rst(rst), .en(en),
                 .S_i(S_part2),
-                .X_i(X_part2),  // X_part2 is assigned here
-                .INV_i(INV[((k+M)%M)+j])
+                .X_i(X_part2), 
+                .INV_i(INV1[((k+M)%M)+j])
             );
-            assign X[start +: (A-2)] = X_part2;  // X_part2 is assigned to part-select of X
+            assign X[start +: (A-2)] = X_part2; 
         end
     endgenerate
 endmodule
@@ -192,7 +188,7 @@ Parameters:
 */
 module Decoder #(parameter M = 5, k = 32, A = 8)( 
     input wire [k-1:0] X,
-    input wire [M-1:0] INV,
+    input wire [M-1:0] INV1,
     output wire [k-1:0] S_out
 );
     genvar i;
@@ -200,7 +196,7 @@ module Decoder #(parameter M = 5, k = 32, A = 8)(
         for (i = 0; i < (k + M) % M; i = i + 1) begin : mux_gen1
             wire [A-2:0] mux_out1;
             MUX2x1 #(A-1) mux_inst1 (
-                .sel(INV[i]),
+                .sel(INV1[i]),
                 .a(X[i*(A-1) +: (A-1)]),
                 .b(~X[i*(A-1) +: (A-1)]),
                 .out(mux_out1)
@@ -215,7 +211,7 @@ module Decoder #(parameter M = 5, k = 32, A = 8)(
 	    localparam integer start = ((k+M)%M)*(A-1) +(j*(A-2));
             wire [A-3:0] mux_out2;
             MUX2x1 #(A-2) mux_inst2 (
-                .sel(INV[j+((k+M)%M)]),
+                .sel(INV1[j+((k+M)%M)]),
                 .a(X[start +: (A-2)]),
                 .b(~X[start +: (A-2)]),
                 .out(mux_out2)
@@ -248,102 +244,161 @@ module Transition_Counter #(parameter n = 37) (
 	registers <= 0;
     end
     
-    
-     
     always @(posedge clk or posedge rst) begin
         if (rst) begin
             prev_data <= {n{1'b0}};
-            // Reset all counters
-            for (i = 0; i <= (n/2); i = i + 1) begin    //I added this in the rst. not tested but it seems more right
+            // Reset all registers
+            for (i = 0; i <= (n/2); i = i + 1) begin
                 registers_cnt[i] <= 11'b0; 
             end
-	    registers <= 0;  //change the reset assignment from a for loop to just assigning 0
+				registers <= 0; 
         end 
-	else if (en) begin
-	    xor_result = data_in ^ prev_data;
-            transition_count = 0;
-            // Count the number of transitions
-            for (i = 0; i < n; i = i + 1) begin
-                transition_count = transition_count + xor_result[i];
-            end
-	    prev_data <= data_in;
-            // Increment the corresponding register0
-            registers_cnt[transition_count] <= registers_cnt[transition_count] + 1;            
-        end
-        // Store the final count in the output register after 2000 cycles
-        if (done) begin
-            for (j = 0; j <= (n/2); j = j + 1) begin  ////the limit was changed from 11*(n/2)-1
-                registers[j*11 +: 11] <= registers_cnt[j]; //registers is not an array but a bit vector so I needed to change from registers[j] to registers[j*11 +: 11]
-		$display("register", j, ": ", registers_cnt[j]);
-            end
-        end
+	     else begin
+				if (en) begin
+					xor_result = data_in ^ prev_data;
+					transition_count = 0;
+					// Count the number of transitions
+					for (i = 0; i < n; i = i + 1) begin
+						transition_count = transition_count + xor_result[i];
+					end
+					prev_data <= data_in;
+					// Increment the corresponding register
+					registers_cnt[transition_count] <= registers_cnt[transition_count] + 1'b1;  
+				end
+
+				// Store the final count in the output register after 2000 cycles
+				if (done) begin
+					for (j = 0; j < (n/2); j = j + 1) begin 
+						registers[j*11 +: 11] <= registers_cnt[j];
+						//$display("register", j, ": ", registers_cnt[j]);
+					end
+				end
+		  end
     end
 endmodule
 
 
+/*
 module K_Comparator #(parameter k = 32)(
     input wire clk,
     input wire [k-1:0] S_in,
     input wire [k-1:0] S_out,
 	output wire isequal
 );
-	//wire [k-1:0] xored;
-	//BitwiseXOR bxor (.a(S_out), .b(S_in), .out(xored));
-	//HammingWeight hw (.in(xored), .weight(cnt));
+	
 	assign isequal = (S_in == S_out);
 endmodule
+*/
 
-
-// Check double loading of seed
-module LFSR_seeded #(parameter k = 32) (
-    input wire clk,
-    input wire rst,
-    input wire load,
-    input wire [k-1:0] seed,
-    output reg [k-1:0] lfsr_out
+module LFSR_14bit (
+    input  wire        clk,
+    input  wire        rst,
+    input  wire [13:0] seed,       // Initial seed
+    output wire        msb_out
 );
-    reg load_d = 0; 
 
+    reg [13:0] lfsr_reg;
+    reg feedback;
+    integer i;
+
+   initial begin 
+		for (i = 0; i < 14; i = i + 1) begin
+			 lfsr_reg <= 1'b0;
+		end
+		feedback <= seed;
+   end
+    // On reset, load the seed. Otherwise, shift and feedback.
     always @(posedge clk or posedge rst) begin
-        if (rst) begin
-            lfsr_out <= seed; 
-            load_d <= 0;
-        end 
+        if (rst)
+            lfsr_reg <= seed;
         else begin
-            load_d <= load; 
-            if (load && !load_d) begin
-                lfsr_out <= seed; // Rising edge detected
-            end 
-            else begin
-                lfsr_out <= {lfsr_out[k-2:0], lfsr_out[k-1] ^ lfsr_out[k-2]};
-            end
+            // feedback: XOR of registers at 13, 4, 3, 1, 0
+            feedback <= lfsr_reg[13] ^ lfsr_reg[4] ^ lfsr_reg[3] ^ lfsr_reg[1] ^ lfsr_reg[0];
+            lfsr_reg <= {lfsr_reg[12:0], feedback};
         end
     end
+
+    assign msb_out = lfsr_reg[0];
+
 endmodule
 
-
-// add seed and load
-module Input_Data_Generator #(parameter k = 32) (
+module Input_Data_Generator #(parameter k = 32)(
     input wire clk,
     input wire rst,
     input wire en,
     output reg [k-1:0] S_data
 );
+
+    // Example: k different seeds (could be parameterized or randomized)
+    wire [13:0] seeds [k-1:0];
+    genvar i;
+    generate
+        for (i = 0; i < k; i = i + 1) begin
+            // For demonstration, each seed is a shifted version of a base seed
+            assign seeds[i] = 14'b11000000000001 ^ i;
+        end
+    endgenerate
+
     wire [k-1:0] lfsr_out;
 
-    // k is currently constatnt
-    wire [(k-1):0] seed = 32'b11000000000000000000000000000001;
+    // Instantiate k LFSRs
+    generate
+        for (i = 0; i < k; i = i + 1) begin
+            LFSR_14bit lfsr (
+                .clk(clk),
+                .rst(rst),
+                .seed(seeds[i]),
+                .msb_out(lfsr_out[i])
+            );
+        end
+    endgenerate
 
-    LFSR_seeded #(k) lfsr_gen (.clk(clk), .rst(rst), .load(en), .seed(seed), .lfsr_out(lfsr_out));
-    
+    // Output logic
     always @(posedge clk or posedge rst) begin
         if (rst) begin
             S_data <= 0;
+		  end
+        else begin 
+				if (en) begin
+					S_data <= lfsr_out;
+				end
+		  end
+    end
+endmodule
+
+module FourCycleDelay #(parameter k = 32)(
+    input wire clk,
+    input wire rst,
+    input wire [k-1:0] data_in,
+    output reg [k-1:0] data_out
+);
+    reg [k-1:0] buf0, buf1, buf2;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            buf0 <= 0;
+            buf1 <= 0;
+            buf2 <= 0;
         end 
-        else if (en) begin
-            S_data <= lfsr_out;
+        else begin
+            buf2 <= buf1;
+            buf1 <= buf0;
+            buf0 <= data_in;
+            data_out <= buf2;
         end
     end
+endmodule
+
+module K_Comparator #(parameter k = 32)(
+    //input wire clk,
+    input wire [k-1:0] S_in,
+    input wire [k-1:0] S_out,
+	 output wire isequal
+);
+	//wire [k-1:0] xored;
+	//BitwiseXOR bxor (.a(S_out), .b(S_in), .out(xored));
+	//HammingWeight hw (.in(xored), .weight(cnt));
+		assign isequal = (S_in == S_out);
 endmodule
 
 
@@ -351,13 +406,14 @@ module DataPath #(parameter M = 5, k = 32, A = 8)(
     input wire clk,
     input wire rst,
     input wire done, 
-    input wire en_gen_data, en_gen_err, en_enc, en_bus, en_dec, en_trans_count, en_bf1, en_bf2, en_k_comp,
+    input wire en_gen_data, en_enc, en_bus, en_dec, en_trans_count, en_k_comp,
+	 //input wire en_gen_err,
     output wire isequal,
     output reg [11*((k+M)/2)-1:0] registers
 );
     wire [k-1:0] X, enc_mux_out, kcomp_mux_out, enc_reg_out, kcomp_reg_out;
     wire [(k+M)-1:0] bus_reg_out, bus_mux_out, dec_reg_out, dec_mux_out;
-    wire [M-1:0] INV;
+    wire [M-1:0] INV1;
     wire [k-1:0] S_data, S_data_2cmp, S_out;
     wire [k-1:0] k_zero_input = {k{1'b0}};
     wire [(k+M)-1:0] n_zero_input = {(k+M){1'b0}};
@@ -378,11 +434,11 @@ module DataPath #(parameter M = 5, k = 32, A = 8)(
     );
         
     Encoder #(M, k, A) enc (
-        .clk(clk), .rst(rst), .en(en_enc), .S(enc_reg_out), .X(X), .INV(INV)
+        .clk(clk), .rst(rst), .en(en_enc), .S(enc_reg_out), .X(X), .INV1(INV1)
     );
 
     Buffer #(k+M) bus_reg (
-	.clk(clk), .rst(rst), .en(en_bus), .in({X, INV}), .out(bus_reg_out)
+		  .clk(clk), .rst(rst), .en(en_bus), .in({X, INV1}), .out(bus_reg_out)
     );
 
     MUX2x1 #(k+M) bus_mux (
@@ -404,7 +460,7 @@ module DataPath #(parameter M = 5, k = 32, A = 8)(
     );
     
     Decoder #(M, k, A) dec(
-        .X(dec_reg_out[(k+M)-1:M]), .INV(dec_reg_out[M-1:0]),
+        .X(dec_reg_out[(k+M)-1:M]), .INV1(dec_reg_out[M-1:0]),
         .S_out(S_out)
     );
 
@@ -426,14 +482,13 @@ module DataPath #(parameter M = 5, k = 32, A = 8)(
         .data_in(bus_mux_out), .registers(trans_cnt_registers)
     );
 
-    //assign registers = trans_cnt_registers;
     
     FourCycleDelay #(k) fcd (
         .clk(clk), .rst(rst), .data_in(enc_mux_out), .data_out(S_data_2cmp)
     );
 
     K_Comparator #(k) k_comp (
-        .clk(clk), .S_in(S_data_2cmp), .S_out(kcomp_mux_out), .isequal(isequal)
+        .S_in(S_data_2cmp), .S_out(kcomp_mux_out), .isequal(isequal)
     );
 	 
 	 always @(*) begin
@@ -442,34 +497,7 @@ module DataPath #(parameter M = 5, k = 32, A = 8)(
 endmodule
 
 
-/* Currently unused
-module HammingWeight #(parameter k = 8) ( 
-    input wire [k-1:0] in,
-    output reg [$clog2(k+1)-1:0] weight
-);
-    integer i;
-    always @(*) begin
-        weight = 0;
-        for (i = 0; i < k; i = i + 1) begin
-            weight = weight + in[i];
-        end
-    end
-endmodule
-
-
-module LFSR #(parameter n = 8) ( // may need to change according to our implementation
-    input wire clk,
-    input wire rst,                                                                                     
-    output reg [n-1:0] lfsr_out
-);
-    always @(posedge clk or posedge rst) begin
-        if (rst)
-            lfsr_out <= 1;
-        else
-            lfsr_out <= {lfsr_out[n-2:0], lfsr_out[n-1] ^ lfsr_out[n-2]};
-    end
-endmodule
-
+/*
 
 module Input_Data_Generator_seeded #(parameter n = 8) ( //to be used as Error_Generator
     input wire clk,
