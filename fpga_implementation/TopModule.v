@@ -20,7 +20,7 @@ module TopModule #(parameter M=5, k=32, A=8)(
 );
 
     // Calculate the number of padding bits needed
-    localparam integer PADDING_BITS = ((((11*((k+M)/2))+8-1)/8)*8) - ((11*((k+M)/2))+1);
+    localparam integer PADDING_BITS = ((((11*((k+M)/2))+8-1)/8)*8) - (11*((k+M)/2));
 
     // Internal signals
     wire en_gen_data;
@@ -51,7 +51,7 @@ module TopModule #(parameter M=5, k=32, A=8)(
 	.ser_in(FTDI_BDBUS_0),  // uart RXD input
 	.ser_out(FTDI_BDBUS_1), // uart TXD output
 	.bus_SERDES(), // parallel input 16 bytes from uart
-	.ciphertext({{PADDING_BITS{1'b0}}, data_bus_tx_out, isequal}), // parallel output 16 bytes to uart
+	.ciphertext({{(PADDING_BITS-1){1'b0}}, isequal, data_bus_tx_out}), // parallel output 16 bytes to uart
 	.valid_in(rx_valid_in), // valid input from uart - '1' when data is valid
 	.start_tx(start_tx), // start transmission signal to uart - '1' when data is ready to be sent
 	.txFinish(txFinish), // transmission finished signal from uart - '1' when data is sent
@@ -63,9 +63,9 @@ module TopModule #(parameter M=5, k=32, A=8)(
     //----------------------------------------------
     FSM_controller U1 (
         .clk             (M_CLK_OSC),
-        .reset           (~M_RESET_B),
+        .rst_n           (M_RESET_B),
         .valid_in        (rx_valid_in),
-	.txFinish	 (txFinish),
+		  .txFinish	       (txFinish),
         .en_gen_data     (en_gen_data),
         //.en_gen_err      (en_gen_err),
         .en_enc          (en_enc),
@@ -87,7 +87,7 @@ module TopModule #(parameter M=5, k=32, A=8)(
         .A(A) //8
     ) U2 (
         .clk            (M_CLK_OSC),
-        .rst            (~M_RESET_B),
+        .rst_n          (M_RESET_B),
         .done           (done),
         .en_gen_data    (en_gen_data),
         //.en_gen_err     (en_gen_err),

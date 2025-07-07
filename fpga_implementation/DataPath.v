@@ -8,7 +8,7 @@
 ======================================================
 */
 
-module MUX2x1 #(parameter A = 8)(
+module my_mux2x1 #(parameter A = 8)(
     input wire sel,
     input wire [A-1:0] a,
     input wire [A-1:0] b,
@@ -18,15 +18,15 @@ module MUX2x1 #(parameter A = 8)(
 endmodule
 
 
-module Buffer #(parameter A = 1)(  
+module my_buffer #(parameter A = 1)(  
     input wire clk,
-    input wire rst, 
+    input wire rst_n, 
     input wire en, 
     input wire [A-1:0] in,
     output reg [A-1:0] out
 );
-    always @(posedge clk or posedge rst) begin
-        if (rst)
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n)
             out <= 0;
         else if (en)
             out <= in;
@@ -58,7 +58,7 @@ module FourCycleDelay #(parameter k = 32)(
 endmodule
 */
 
-module BitwiseXOR #(parameter A = 8)(
+module my_bitwiseXOR #(parameter A = 8)(
     input wire [A-1:0] a,   
     input wire [A-1:0] b,
     output wire [A-1:0] out
@@ -67,7 +67,7 @@ module BitwiseXOR #(parameter A = 8)(
 endmodule
 
 
-module Adder #(parameter A = 8)(
+module my_adder #(parameter A = 8)(
     input wire [A-1:0] a,
     output reg [$clog2(A+1)-1:0] sum 
 );
@@ -81,7 +81,7 @@ module Adder #(parameter A = 8)(
 endmodule
 
 
-module Comparator #(parameter A = 8)(
+module my_comparator #(parameter A = 8)(
     input wire [$clog2(A+1)-1:0] sum,
     output wire equal,
     output wire greater
@@ -91,9 +91,9 @@ module Comparator #(parameter A = 8)(
 endmodule
 
 
-module CheckInvert #(parameter A = 8)(
+module my_check_invert #(parameter A = 8)(
     input wire clk,
-    input wire rst, 
+    input wire rst_n, 
     input wire en,
     input wire [A-1:0] S_i,
     output wire [A-1:0] X_i,
@@ -104,11 +104,11 @@ module CheckInvert #(parameter A = 8)(
     wire [$clog2(A+1)-1:0] sum;
     wire equal, greater, inv_prev;
 
-    Buffer #(1) buf_inv (.clk(clk), .rst(rst), .en(en), .in(INV_i), .out(inv_prev));
-    Buffer #(A) buf_s_x (.clk(clk), .rst(rst), .en(en), .in(X_i), .out(X_i_prev)); 
-	BitwiseXOR #(A) bxor (.a(S_i), .b(X_i_prev), .out(xor_out)); 
-	Adder #(A) add (.a(xor_out), .sum(sum));
-    Comparator #(A) cmp (.sum(sum), .equal(equal), .greater(greater));
+    my_buffer #(1) buf_inv (.clk(clk), .rst_n(rst_n), .en(en), .in(INV_i), .out(inv_prev));
+    my_buffer #(A) buf_s_x (.clk(clk), .rst_n(rst_n), .en(en), .in(X_i), .out(X_i_prev)); 
+	 my_bitwiseXOR #(A) bxor (.a(S_i), .b(X_i_prev), .out(xor_out)); 
+	 my_adder #(A) add (.a(xor_out), .sum(sum));
+    my_comparator #(A) cmp (.sum(sum), .equal(equal), .greater(greater));
 
     assign INV_i = (equal & inv_prev) | greater;
     assign X_i = INV_i ? ~S_i : S_i;
@@ -131,9 +131,9 @@ Parameters:
 */
 
 
-module Encoder #(parameter M = 5, k = 32, A = 8)( 
+module my_encoder #(parameter M = 5, k = 32, A = 8)( 
     input wire clk,
-    input wire rst,
+    input wire rst_n,
     input wire en,
     input wire [k-1:0] S,
     output wire [k-1:0] X,
@@ -144,8 +144,8 @@ module Encoder #(parameter M = 5, k = 32, A = 8)(
         for (i = 0; i < (k + M) % M; i = i + 1) begin : check_invert_gen1
             wire [A-2:0] S_part1 = S[i*(A-1) +: (A-1)];
             wire [A-2:0] X_part1;
-            CheckInvert #(A-1) ci1 (
-                .clk(clk), .rst(rst), .en(en),
+            my_check_invert #(A-1) ci1 (
+                .clk(clk), .rst_n(rst_n), .en(en),
                 .S_i(S_part1),
                 .X_i(X_part1), 
                 .INV_i(INV1[i])
@@ -161,8 +161,8 @@ module Encoder #(parameter M = 5, k = 32, A = 8)(
 	    
             wire [A-3:0] S_part2 = S[start +: (A-2)];
             wire [A-3:0] X_part2;
-            CheckInvert #(A-2) ci2(
-                .clk(clk), .rst(rst), .en(en),
+            my_check_invert #(A-2) ci2(
+                .clk(clk), .rst_n(rst_n), .en(en),
                 .S_i(S_part2),
                 .X_i(X_part2), 
                 .INV_i(INV1[((k+M)%M)+j])
@@ -186,7 +186,7 @@ Parameters:
             k - Total input/output word width
             A - Segment width
 */
-module Decoder #(parameter M = 5, k = 32, A = 8)( 
+module my_decoder #(parameter M = 5, k = 32, A = 8)( 
     input wire [k-1:0] X,
     input wire [M-1:0] INV1,
     output wire [k-1:0] S_out
@@ -195,7 +195,7 @@ module Decoder #(parameter M = 5, k = 32, A = 8)(
     generate
         for (i = 0; i < (k + M) % M; i = i + 1) begin : mux_gen1
             wire [A-2:0] mux_out1;
-            MUX2x1 #(A-1) mux_inst1 (
+            my_mux2x1 #(A-1) mux_inst1 (
                 .sel(INV1[i]),
                 .a(X[i*(A-1) +: (A-1)]),
                 .b(~X[i*(A-1) +: (A-1)]),
@@ -210,7 +210,7 @@ module Decoder #(parameter M = 5, k = 32, A = 8)(
         for (j = 0; j < M-((k+M)%M); j = j + 1) begin : mux_gen2
 	    localparam integer start = ((k+M)%M)*(A-1) +(j*(A-2));
             wire [A-3:0] mux_out2;
-            MUX2x1 #(A-2) mux_inst2 (
+            my_mux2x1 #(A-2) mux_inst2 (
                 .sel(INV1[j+((k+M)%M)]),
                 .a(X[start +: (A-2)]),
                 .b(~X[start +: (A-2)]),
@@ -221,10 +221,10 @@ module Decoder #(parameter M = 5, k = 32, A = 8)(
     endgenerate
 endmodule
 
-
-module Transition_Counter #(parameter n = 37) (
+(* S = "TRUE"*) (* dont_touch = "TRUE" *)
+module my_transition_counter #(parameter n = 37) (
     input wire clk,
-    input wire rst,
+    input wire rst_n,
     input wire en,
     input wire done,
     input wire [n-1:0] data_in,
@@ -244,8 +244,8 @@ module Transition_Counter #(parameter n = 37) (
 	registers <= 0;
     end
     
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin
             prev_data <= {n{1'b0}};
             // Reset all registers
             for (i = 0; i <= (n/2); i = i + 1) begin
@@ -270,8 +270,9 @@ module Transition_Counter #(parameter n = 37) (
 				if (done) begin
 					for (j = 0; j < (n/2); j = j + 1) begin 
 						registers[j*11 +: 11] <= registers_cnt[j];
-						//$display("register", j, ": ", registers_cnt[j]);
+						$display("register", j, ": ", registers_cnt[j]);
 					end
+					//$display("registers: ", registers_cnt);
 				end
 		  end
     end
@@ -290,9 +291,9 @@ module K_Comparator #(parameter k = 32)(
 endmodule
 */
 
-module LFSR_14bit (
+module lfsr_14bit (
     input  wire        clk,
-    input  wire        rst,
+    input  wire        rst_n,
     input  wire [13:0] seed,       // Initial seed
     output wire        msb_out
 );
@@ -301,16 +302,19 @@ module LFSR_14bit (
     reg feedback;
     integer i;
 
-   initial begin 
-		for (i = 0; i < 14; i = i + 1) begin
-			 lfsr_reg <= 1'b0;
-		end
-		feedback <= seed;
-   end
+  // initial begin 
+//		for (i = 0; i < 14; i = i + 1) begin
+//			 lfsr_reg <= 1'b0;
+//		end
+//		feedback <= seed;
+ //  end
+ 
     // On reset, load the seed. Otherwise, shift and feedback.
-    always @(posedge clk or posedge rst) begin
-        if (rst)
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin 
             lfsr_reg <= seed;
+				feedback <= 1'b0;
+		  end
         else begin
             // feedback: XOR of registers at 13, 4, 3, 1, 0
             feedback <= lfsr_reg[13] ^ lfsr_reg[4] ^ lfsr_reg[3] ^ lfsr_reg[1] ^ lfsr_reg[0];
@@ -322,40 +326,41 @@ module LFSR_14bit (
 
 endmodule
 
-module Input_Data_Generator #(parameter k = 32)(
+module input_data_generator #(parameter k = 32)(
     input wire clk,
-    input wire rst,
+    input wire rst_n,
     input wire en,
     output reg [k-1:0] S_data
 );
 
     // Example: k different seeds (could be parameterized or randomized)
-    wire [13:0] seeds [k-1:0];
-    genvar i;
-    generate
-        for (i = 0; i < k; i = i + 1) begin
-            // For demonstration, each seed is a shifted version of a base seed
-            assign seeds[i] = 14'b11000000000001 ^ i;
-        end
-    endgenerate
+    //genvar i;
+    //generate
+    //    for (i = 0; i < k; i = i + 1) begin : Gen_seeds
+	//			wire [13:0] seeds;// [k-1:0];
+           // For demonstration, each seed is a shifted version of a base seed
+   //         assign seeds = 14'b11000000000001 ^ i;
+   //     end
+    //endgenerate
 
     wire [k-1:0] lfsr_out;
 
     // Instantiate k LFSRs
+    genvar j;
     generate
-        for (i = 0; i < k; i = i + 1) begin
-            LFSR_14bit lfsr (
+        for (j = 0; j < k; j = j + 1) begin: Gen_lfsrs
+            lfsr_14bit lfsr (
                 .clk(clk),
-                .rst(rst),
-                .seed(seeds[i]),
-                .msb_out(lfsr_out[i])
+                .rst_n(rst_n),
+                .seed(14'b11000000000001 ^ j),
+                .msb_out(lfsr_out[j])
             );
         end
     endgenerate
 
     // Output logic
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin
             S_data <= 0;
 		  end
         else begin 
@@ -366,19 +371,20 @@ module Input_Data_Generator #(parameter k = 32)(
     end
 endmodule
 
-module FourCycleDelay #(parameter k = 32)(
+module my_fcd #(parameter k = 32)(
     input wire clk,
-    input wire rst,
+    input wire rst_n,
     input wire [k-1:0] data_in,
     output reg [k-1:0] data_out
 );
     reg [k-1:0] buf0, buf1, buf2;
 
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
-            buf0 <= 0;
-            buf1 <= 0;
-            buf2 <= 0;
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin
+            buf0 <= 1'b0;
+            buf1 <= 1'b0;
+            buf2 <= 1'b0;
+				data_out <= 1'b0;
         end 
         else begin
             buf2 <= buf1;
@@ -389,7 +395,7 @@ module FourCycleDelay #(parameter k = 32)(
     end
 endmodule
 
-module K_Comparator #(parameter k = 32)(
+module my_k_comparator #(parameter k = 32)(
     //input wire clk,
     input wire [k-1:0] S_in,
     input wire [k-1:0] S_out,
@@ -404,96 +410,98 @@ endmodule
 
 module DataPath #(parameter M = 5, k = 32, A = 8)(
     input wire clk,
-    input wire rst,
+    input wire rst_n,
     input wire done, 
     input wire en_gen_data, en_enc, en_bus, en_dec, en_trans_count, en_k_comp,
 	 //input wire en_gen_err,
     output wire isequal,
-    output reg [11*((k+M)/2)-1:0] registers
+    output wire [11*((k+M)/2)-1:0] registers
+	 //output [(k+M)-1:0] dec_reg_out
 );
     wire [k-1:0] X, enc_mux_out, kcomp_mux_out, enc_reg_out, kcomp_reg_out;
     wire [(k+M)-1:0] bus_reg_out, bus_mux_out, dec_reg_out, dec_mux_out;
     wire [M-1:0] INV1;
     wire [k-1:0] S_data, S_data_2cmp, S_out;
+	 //wire [k-1:0] S_data, enc_mux_out, enc_reg_out, X, S_data_2cmp;
     wire [k-1:0] k_zero_input = {k{1'b0}};
     wire [(k+M)-1:0] n_zero_input = {(k+M){1'b0}};
 
-    Input_Data_Generator #(k) data_gen( 
-        .clk(clk), .rst(rst), .en(en_gen_data), .S_data(S_data)
+    input_data_generator #(k) data_gen( 
+        .clk(clk), .rst_n(rst_n), .en(en_gen_data), .S_data(S_data)
     );
 
-    MUX2x1 #(k) enc_mux (
-        .sel(en_enc & ~rst),
+    my_mux2x1 #(k) enc_mux (
+        .sel(en_enc),
         .a(k_zero_input), 
         .b(S_data),
         .out(enc_mux_out)
     );
 
-    Buffer #(k) enc_reg (
-	.clk(clk), .rst(rst), .en(en_enc), .in(enc_mux_out), .out(enc_reg_out)
+    my_buffer #(k) enc_reg (
+	.clk(clk), .rst_n(rst_n), .en(en_enc), .in(enc_mux_out), .out(enc_reg_out)
     );
         
-    Encoder #(M, k, A) enc (
-        .clk(clk), .rst(rst), .en(en_enc), .S(enc_reg_out), .X(X), .INV1(INV1)
+    my_encoder #(M, k, A) enc (
+        .clk(clk), .rst_n(rst_n), .en(en_enc), .S(enc_reg_out), .X(X), .INV1(INV1)
     );
 
-    Buffer #(k+M) bus_reg (
-		  .clk(clk), .rst(rst), .en(en_bus), .in({X, INV1}), .out(bus_reg_out)
+    my_buffer #(k+M) bus_reg (
+		  .clk(clk), .rst_n(rst_n), .en(en_bus), .in({X, INV1}), .out(bus_reg_out)
     );
 
-    MUX2x1 #(k+M) bus_mux (
-        .sel(en_bus & ~rst),
+    my_mux2x1 #(k+M) bus_mux (
+        .sel(en_bus),
         .a(n_zero_input), 
         .b(bus_reg_out),
         .out(bus_mux_out)
     );
             
-    MUX2x1 #(k+M) dec_mux (
-        .sel(en_dec & ~rst),
+    my_mux2x1 #(k+M) dec_mux (
+        .sel(en_dec),
         .a(n_zero_input), 
         .b(bus_mux_out),
         .out(dec_mux_out)
     );
 
-    Buffer #(k+M) dec_reg (
-	.clk(clk), .rst(rst), .en(en_dec), .in(dec_mux_out), .out(dec_reg_out)
+    my_buffer #(k+M) dec_reg (
+	.clk(clk), .rst_n(rst_n), .en(en_dec), .in(dec_mux_out), .out(dec_reg_out)
     );
     
-    Decoder #(M, k, A) dec(
+    my_decoder #(M, k, A) dec(
         .X(dec_reg_out[(k+M)-1:M]), .INV1(dec_reg_out[M-1:0]),
         .S_out(S_out)
     );
 
-    Buffer #(k) kcomp_reg (
-	.clk(clk), .rst(rst), .en(en_k_comp), .in(S_out), .out(kcomp_reg_out)
+    my_buffer #(k) kcomp_reg (
+	.clk(clk), .rst_n(rst_n), .en(en_k_comp), .in(S_out), .out(kcomp_reg_out)
     );
     
-    MUX2x1 #(k) kcomp_mux (
-        .sel(en_k_comp & ~rst),
+    my_mux2x1 #(k) kcomp_mux (
+        .sel(en_k_comp),
         .a(S_data_2cmp),  
         .b(kcomp_reg_out),
         .out(kcomp_mux_out)
     );
 
-    wire [11*((k+M)/2)-1:0] trans_cnt_registers;
-
-    Transition_Counter #(k+M) trans_cnt ( 
-        .clk(clk), .rst(rst), .en(en_trans_count), .done(done),
-        .data_in(bus_mux_out), .registers(trans_cnt_registers)
+    //wire [11*((k+M)/2)-1:0] trans_cnt_registers;
+	(* S = "TRUE"*) (* dont_touch = "TRUE" *)
+    my_transition_counter #(k+M) trans_cnt ( 
+        .clk(clk), .rst_n(rst_n), .en(en_trans_count), .done(done),
+        .data_in(bus_mux_out), .registers(registers)
     );
 
     
-    FourCycleDelay #(k) fcd (
-        .clk(clk), .rst(rst), .data_in(enc_mux_out), .data_out(S_data_2cmp)
+    my_fcd #(k) fcd (
+        .clk(clk), .rst_n(rst_n), .data_in(enc_mux_out), .data_out(S_data_2cmp)
     );
 
-    K_Comparator #(k) k_comp (
+    my_k_comparator #(k) k_comp (
         .S_in(S_data_2cmp), .S_out(kcomp_mux_out), .isequal(isequal)
     );
 	 
-	 always @(*) begin
-		registers = trans_cnt_registers;
-	 end
+	 //always @(*) begin
+	//	registers = trans_cnt_registers;
+	 //end
 endmodule
 
 
