@@ -6,8 +6,9 @@ from syndrome_to_flip import syndrome_to_flip
 PARITY_POS = [2**i - 1 for i in range(6)] # [0, 1, 3, 7, 15, 31]                  
 DATA_POS = [i for i in range(63) if i not in PARITY_POS]   
 # Choose 12 random positions for f- bits, that are not parity bits, and are in DATA_POS
-# F_POS = DATA_POS[32:45]  # Example fixed positions for f-bits
-F_POS = random.sample(DATA_POS, 9)
+#F_POS = [62, 61, 59, 58, 55, 54, 53, 47, 46, 45, 43, 39, 37, 14]  # Example fixed positions for f-bits
+#F_POS = random.sample(DATA_POS, 10)
+F_POS = DATA_POS[32:45]  # Example fixed positions for f-bits (39 to 51 inclusive)
 INFO_POS = [i for i in DATA_POS if i not in F_POS][:32]
 PADDDED_POS = [i for i in DATA_POS if i not in F_POS and i not in INFO_POS]
 
@@ -17,6 +18,10 @@ M_BITS = 6  # Number of parity bits
 K_BITS = 57  # Number of data bits
 INFO_LEN = 32  # Number of info bits
 F_LEN = len(F_POS)  # Number of f-bits
+
+# Create F_COLS: syndrome values for each f-bit position (1-indexed)
+# F_COLS = [pos + 1 for pos in F_POS]  # Convert to 1-indexed for syndrome calculation
+COL2IDX = {col: i for i, col in enumerate(F_POS)}  # Map syndrome value to f-bit index
 
 
 def print_codeword_layout():
@@ -32,7 +37,7 @@ def print_codeword_layout():
           
 
 def build_matrices():
-    """Build (G, H) for the systematic (63, 57) Hamming code with parity bits at positions 0,1,3,7,15,31."""
+    """Build (G, H) for the systematic (63, 57) Hamming code with parity bits at positions 0,1,3,7,15,31"""
     m, n = M_BITS, N_BITS
     k = K_BITS
 
@@ -65,7 +70,7 @@ def syndrome_delta_m(info_prev, info_word):
     syndrome = 0
     for i in range(INFO_LEN):
         if info_prev[i] != info_word[i]:
-            pos = DATA_POS[i] + 1  # Convert to 1-indexed
+            pos = INFO_POS[i] + 1  # Convert to 1-indexed
             syndrome ^= pos
     return syndrome
 
@@ -77,15 +82,43 @@ def choose_f_part(c_prev, info_word):
     
     s = syndrome_delta_m(info_prev, info_word)
 
-    # Use the syndrome_to_flip LUT
+    # w(s) <= 2: no need to flip any f-bits
+    if bin(s).count('1') <= 2:  
+        return f_prev
+    
+    for i, col in enumerate(F_POS):
+        result = bin(s ^ (col + 1))
+        if 1 + result.count('1') <= 2:                   # 1 + ≤1 = 2
+            f_prev[i] = 1 - f_prev[i]  
+            return f_prev
+
+
+    for i, col_i in enumerate(F_POS):
+        col_j = s ^ (col_i + 1)                                    # mate column
+        j = COL2IDX.get(col_j)
+        if j is not None and j != i:                         # unique pair
+            f_prev[j] = 1 - f_prev[j]
+            f_prev[i] = 1 - f_prev[i]
+            return f_prev
+
+    raise RuntimeError("No valid f₂ found (should be impossible)")
+
+
+
+
+
+
+
+
+    """ Use the syndrome_to_flip LUT
     if s in syndrome_to_flip:
         flip_indices = syndrome_to_flip[s]
         for idx in flip_indices:
             if idx < len(f_prev):
                 f_prev[idx] = 1 - f_prev[idx]
         return f_prev
+        """
 
-    raise RuntimeError("No valid f found (should be impossible)")
 
 
 def main():
