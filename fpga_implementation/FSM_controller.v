@@ -10,7 +10,7 @@
 
 module FSM_controller (
     input  wire         clk,
-    input  wire         reset,
+    input  wire         rst_n,
     input  wire         valid_in,
     input  wire         txFinish,
     output reg          en_gen_data,
@@ -34,16 +34,16 @@ module FSM_controller (
     localparam [2:0] S4   = 3'd5;
     localparam [2:0] S5   = 3'd6;
 
-    reg [2:0] state, nextstate;
+    (* S = "TRUE"*) (* dont_touch = "TRUE" *) reg [2:0] state, nextstate;
 
     // Counter signals
     reg  enable_cnt, enable_cnt_next;
     reg  done_cnt;
     reg [10:0] cnt;
 
-    always @(posedge clk or posedge reset) begin
+    always @(posedge clk) begin ////////
 	// Synchronous state register
-        if (reset) begin
+        if (~rst_n) begin
             state       <= IDLE;
             enable_cnt  <= 1'b0;
             cnt         <= 11'b1;

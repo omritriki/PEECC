@@ -50,21 +50,21 @@ module top_wrapper_tb();
     end
     endtask
 
-    always #(20.8333/2) clk = ~clk; //48MHZ clock (IF USING PLL)
+    always #(20.833/2) clk = ~clk; //48MHZ clock (IF USING PLL)
     //always #125 clk = ~clk;     //4MHZ clock (IF NOT USING PLL)
 
-    initial begin
+   initial begin
 	clk = 0;
 	rst_n = 0;
 	rx = 1;
-	repeat (4) @(posedge clk);
+	repeat (20) @(posedge clk);
 
 	rst_n = 1;
 	
 	send_uart_byte(8'h00);
 	send_uart_byte(8'h00);
 
-	repeat (30000) @(posedge clk);
+	repeat (300000) @(posedge clk);
 
 	$stop;
 
