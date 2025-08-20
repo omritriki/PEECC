@@ -4,19 +4,18 @@ from typing import List, Tuple, Optional, Dict
 import random
 import syndrome_lut
 
-# Configuration
-MODE = "min_flips"  # Options: "min_flips" or "min_weight"
-
 
 def create_redundancy_matrix() -> np.ndarray:
-    """Create and return the user-provided redundancy matrix H_V (6×13)"""
+    """Create and return the user-provided redundancy matrix H_V (6×13) with columns sorted by value"""
+    # Columns are sorted by their 6-bit binary values (LSB first)
+    # Column values: [2, 3, 15, 19, 20, 24, 25, 29, 35, 44, 48, 54, 62]
     return np.array([
-        [1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1],
-        [1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1],
-        [0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0],
-        [0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0],
-        [0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1],
-        [0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0]
+        [0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+        [1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1],
+        [0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1],
+        [0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 1],
+        [0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1]
     ])
 
 
@@ -137,49 +136,25 @@ def update_with_previous_state(u_bits: np.ndarray, prev_syndrome: np.ndarray, pr
     return s_curr, v_curr
 
 
-def encode_min_weight(u_bits: np.ndarray, H_U: np.ndarray) -> np.ndarray:
-    """Encode u using minimum-weight approach (stateless)"""
-    # Compute syndrome s_curr = H_U @ u_bits
-    s_curr = syndrome_of_u(H_U, u_bits)
-    
-    # Return v = get_leader_for_syndrome(s_curr)
-    return get_leader_for_syndrome(s_curr)
-
-
 def encode(u_bits: np.ndarray, H_U: np.ndarray, state: Optional[Dict] = None) -> Dict:
-    """Encoder façade with mode switch and state threading"""
-    if MODE == "min_flips":
-        if state is None:
-            # Initialize state: prev_syndrome = zeros(6), prev_v = zeros(13)
-            prev_syndrome = np.zeros(6, dtype=int)
-            prev_v = np.zeros(13, dtype=int)
-        else:
-            prev_syndrome = state["prev_syndrome"]
-            prev_v = state["prev_v"]
-        
-        # Update with previous state
-        s_curr, v_curr = update_with_previous_state(u_bits, prev_syndrome, prev_v, H_U)
-        
-        return {
-            "u": u_bits,
-            "v": v_curr,
-            "syndrome": s_curr,
-            "state": {"prev_syndrome": s_curr, "prev_v": v_curr}
-        }
-    
-    elif MODE == "min_weight":
-        # Stateless encoding
-        s_curr = syndrome_of_u(H_U, u_bits)
-        v = get_leader_for_syndrome(s_curr)
-        
-        return {
-            "u": u_bits,
-            "v": v,
-            "syndrome": s_curr
-        }
-    
+    """Encoder façade with state threading for Δ-syndrome approach"""
+    if state is None:
+        # Initialize state: prev_syndrome = zeros(6), prev_v = zeros(13)
+        prev_syndrome = np.zeros(6, dtype=int)
+        prev_v = np.zeros(13, dtype=int)
     else:
-        raise ValueError(f"Unknown mode: {MODE}")
+        prev_syndrome = state["prev_syndrome"]
+        prev_v = state["prev_v"]
+    
+    # Update with previous state using Δ-syndrome approach
+    s_curr, v_curr = update_with_previous_state(u_bits, prev_syndrome, prev_v, H_U)
+    
+    return {
+        "u": u_bits,
+        "v": v_curr,
+        "syndrome": s_curr,
+        "state": {"prev_syndrome": s_curr, "prev_v": v_curr}
+    }
 
 
 def construct_H_matrix(H_U: np.ndarray, H_V: np.ndarray) -> np.ndarray:
@@ -204,7 +179,7 @@ def display_H_matrix(H_matrix: np.ndarray) -> None:
 def test_random_info_words(H_U: np.ndarray,
                           num_tests: int = 500) -> List[int]:
     """Test random info words and return list of transition costs"""
-    print(f"\nTesting {num_tests} random info words with {MODE} encoding...")
+    print(f"\nTesting {num_tests} random info words with Δ-syndrome encoding...")
     
     results = []
     state = None
@@ -216,21 +191,16 @@ def test_random_info_words(H_U: np.ndarray,
         # Encode using the new encoder
         result = encode(u_bits, H_U, state)
         
-        if MODE == "min_flips":
-            # For min_flips mode, compute transition cost
-            if state is None:
-                # First iteration: transition cost is weight of v
-                transition_cost = np.sum(result["v"])
-            else:
-                # Compute transition cost: XOR between previous and current v
-                transition_cost = np.sum(result["v"] ^ state["prev_v"])
-            
-            results.append(transition_cost)
-            state = result["state"]
+        # Compute transition cost
+        if state is None:
+            # First iteration: transition cost is weight of v
+            transition_cost = np.sum(result["v"])
         else:
-            # For min_weight mode, just track the weight
-            weight = np.sum(result["v"])
-            results.append(weight)
+            # Compute transition cost: XOR between previous and current v
+            transition_cost = np.sum(result["v"] ^ state["prev_v"])
+        
+        results.append(transition_cost)
+        state = result["state"]
     
     return results
 
@@ -240,14 +210,7 @@ def display_summary(results: List[int]) -> None:
     print(f"\nSummary:")
     print("=" * 30)
     print(f"Total info words tested: {len(results)}")
-    if MODE == "min_flips":
-        print(f"Maximum transition cost: {max(results)}")
-        print(f"Minimum transition cost: {min(results)}")
-        print(f"Average transition cost: {np.mean(results):.2f}")
-    else:
-        print(f"Maximum weight: {max(results)}")
-        print(f"Minimum weight: {min(results)}")
-        print(f"Average weight: {np.mean(results):.2f}")
+    print(f"Maximum transition cost: {max(results)}")
 
 
 def main():
