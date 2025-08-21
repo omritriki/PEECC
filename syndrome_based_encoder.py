@@ -27,27 +27,80 @@ def generate_random_mask(num_bits: int) -> np.ndarray:
             return mask
 
 
-def generate_HU_from_HV(H_V: np.ndarray, k: int = 32, rng_seed: Optional[int] = None) -> np.ndarray:
-    """Build H_U as GF(2) linear combinations of H_V columns"""
+def generate_HU_from_HV(H_V: np.ndarray, k: int = 32, rng_seed: Optional[int] = None, sort_columns: bool = True) -> np.ndarray:
+    """Build H_U as GF(2) linear combinations of H_V columns with UNIQUE columns.
+
+    - Enforces uniqueness of the 6-bit column vectors.
+    - Optionally sorts columns by their 6-bit LSB-first numeric value.
+    """
     if rng_seed is not None:
         np.random.seed(rng_seed)
     
     r = H_V.shape[0]  # Number of rows (6)
     n_V = H_V.shape[1]  # Number of columns in H_V (13)
     
-    H_U = np.zeros((r, k), dtype=int)
-    
-    for col in range(k):
+    # Collect unique columns
+    unique_cols: List[np.ndarray] = []
+    seen_keys = set()
+
+    # Try random sampling first
+    attempts = 0
+    max_attempts = 20 * k  # generous cap
+    while len(unique_cols) < k and attempts < max_attempts:
+        attempts += 1
         # Generate random mask for selecting H_V columns
         mask = generate_random_mask(n_V)
-        
+
         # XOR the selected columns of H_V
         result = np.zeros(r, dtype=int)
         for i in range(n_V):
             if mask[i]:
                 result = (result + H_V[:, i]) % 2
-        
-        H_U[:, col] = result
+
+        # Skip all-zero column
+        if not np.any(result):
+            continue
+
+        key = syndrome_to_key(result)
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        unique_cols.append(result)
+
+    # If random sampling didn't yield enough, exhaustively enumerate remaining
+    if len(unique_cols) < k:
+        for m in range(1 << n_V):
+            v_bits = np.array([(m >> j) & 1 for j in range(n_V)])
+            result = (H_V @ v_bits) % 2
+            # Skip all-zero column
+            if not np.any(result):
+                continue
+            key = syndrome_to_key(result)
+            if key in seen_keys:
+                continue
+            seen_keys.add(key)
+            unique_cols.append(result)
+            if len(unique_cols) == k:
+                break
+
+    # Final guard: if still not enough unique columns, raise an error
+    if len(unique_cols) < k:
+        raise ValueError(f"Could not generate {k} unique columns for H_U; only {len(unique_cols)} available.")
+
+    # Stack into matrix (6 × k)
+    H_U = np.stack(unique_cols, axis=1)
+
+    if sort_columns:
+        # Compute LSB-first 6-bit numeric value for each column and sort ascending
+        col_values: List[Tuple[int, int]] = []
+        for c in range(k):
+            val = 0
+            for r_idx in range(r):
+                val |= (int(H_U[r_idx, c]) << r_idx)
+            col_values.append((val, c))
+        col_values.sort()
+        sorted_indices = [c for _, c in col_values]
+        H_U = H_U[:, sorted_indices]
     
     return H_U
 
