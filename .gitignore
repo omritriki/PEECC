@@ -7,3 +7,7 @@ simulation_logs.log
 unused/
 coding_schemes/Useless.py
 python_simulation/coding_schemes/Useless.py
+
+# Python virtual environments
+.venv/
+venv/
