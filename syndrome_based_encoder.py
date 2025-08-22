@@ -1,13 +1,11 @@
 import numpy as np  # type: ignore
 import pandas as pd  # type: ignore
-from typing import List, Tuple, Optional, Dict
-import random
+from typing import List, Tuple, Optional
 import syndrome_lut
 
 
 def create_redundancy_matrix() -> np.ndarray:
     """Create and return the user-provided redundancy matrix H_V (6×13) with columns sorted by value"""
-    # Columns are sorted by their 6-bit binary values (LSB first)
     # Column values: [2, 3, 15, 19, 20, 24, 25, 29, 35, 44, 48, 54, 62]
     return np.array([
         [0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0],
@@ -27,7 +25,7 @@ def generate_random_mask(num_bits: int) -> np.ndarray:
             return mask
 
 
-def generate_HU_from_HV(H_V: np.ndarray, k: int = 32, rng_seed: Optional[int] = None, sort_columns: bool = True) -> np.ndarray:
+def generate_HU_from_HV(H_V: np.ndarray, k: int = 32, rng_seed: Optional[int] = None) -> np.ndarray:
     """Build H_U as GF(2) linear combinations of H_V columns with UNIQUE columns.
 
     - Enforces uniqueness of the 6-bit column vectors.
@@ -43,7 +41,6 @@ def generate_HU_from_HV(H_V: np.ndarray, k: int = 32, rng_seed: Optional[int] = 
     unique_cols: List[np.ndarray] = []
     seen_keys = set()
 
-    # Try random sampling first
     attempts = 0
     max_attempts = 20 * k  # generous cap
     while len(unique_cols) < k and attempts < max_attempts:
@@ -61,58 +58,28 @@ def generate_HU_from_HV(H_V: np.ndarray, k: int = 32, rng_seed: Optional[int] = 
         if not np.any(result):
             continue
 
-        key = syndrome_to_key(result)
+        key = ''.join(map(str, result))
         if key in seen_keys:
             continue
         seen_keys.add(key)
         unique_cols.append(result)
 
-    # If random sampling didn't yield enough, exhaustively enumerate remaining
-    if len(unique_cols) < k:
-        for m in range(1 << n_V):
-            v_bits = np.array([(m >> j) & 1 for j in range(n_V)])
-            result = (H_V @ v_bits) % 2
-            # Skip all-zero column
-            if not np.any(result):
-                continue
-            key = syndrome_to_key(result)
-            if key in seen_keys:
-                continue
-            seen_keys.add(key)
-            unique_cols.append(result)
-            if len(unique_cols) == k:
-                break
-
-    # Final guard: if still not enough unique columns, raise an error
-    if len(unique_cols) < k:
-        raise ValueError(f"Could not generate {k} unique columns for H_U; only {len(unique_cols)} available.")
 
     # Stack into matrix (6 × k)
     H_U = np.stack(unique_cols, axis=1)
 
-    if sort_columns:
-        # Compute LSB-first 6-bit numeric value for each column and sort ascending
-        col_values: List[Tuple[int, int]] = []
-        for c in range(k):
-            val = 0
-            for r_idx in range(r):
-                val |= (int(H_U[r_idx, c]) << r_idx)
-            col_values.append((val, c))
-        col_values.sort()
-        sorted_indices = [c for _, c in col_values]
-        H_U = H_U[:, sorted_indices]
+    # Compute LSB-first 6-bit numeric value for each column and sort ascending
+    col_values: List[Tuple[int, int]] = []
+    for c in range(k):
+        val = 0
+        for r_idx in range(r):
+            val |= (int(H_U[r_idx, c]) << r_idx)
+        col_values.append((val, c))
+    col_values.sort()
+    sorted_indices = [c for _, c in col_values]
+    H_U = H_U[:, sorted_indices]
     
     return H_U
-
-
-def syndrome_to_key(syndrome: np.ndarray) -> str:
-    """Convert syndrome bit vector to string key for dictionary"""
-    return ''.join(map(str, syndrome))
-
-
-def key_to_syndrome(key: str) -> np.ndarray:
-    """Convert string key back to syndrome bit vector"""
-    return np.array([int(bit) for bit in key])
 
 
 def precompute_coset_leaders(H_V: np.ndarray) -> None:
@@ -130,7 +97,7 @@ def precompute_coset_leaders(H_V: np.ndarray) -> None:
         s = (H_V @ v_bits) % 2
         
         # Convert syndrome to string key
-        s_key = syndrome_to_key(s)
+        s_key = ''.join(map(str, s))
         
         # Calculate weight of v
         weight = np.sum(v_bits)
@@ -161,58 +128,27 @@ def precompute_coset_leaders(H_V: np.ndarray) -> None:
     importlib.reload(syndrome_lut)
 
 
-def syndrome_of_u(H_U: np.ndarray, u_bits: np.ndarray) -> np.ndarray:
-    """Compute syndrome s = H_U * u^T"""
-    return (H_U @ u_bits) % 2
-
-
 def get_leader_for_syndrome(syndrome_bits: np.ndarray) -> np.ndarray:
     """Get coset leader for given syndrome bits"""
-    s_key = syndrome_to_key(syndrome_bits)
+    s_key = ''.join(map(str, syndrome_bits))
     return syndrome_lut.get_leader(s_key)
 
 
-def update_with_previous_state(u_bits: np.ndarray, prev_syndrome: np.ndarray, prev_v: np.ndarray, H_U: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def encode(u_bits: np.ndarray, H_U: np.ndarray, s_prev: np.ndarray, v_prev: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """Compute v using Δ-syndrome approach with previous state"""
     # Compute current syndrome s_curr = H_U @ u_bits
-    s_curr = syndrome_of_u(H_U, u_bits)
+    s_curr = (H_U @ u_bits) % 2
     
-    # Compute delta syndrome: prev_syndrome XOR s_curr
-    delta_s = prev_syndrome ^ s_curr
+    # Compute delta syndrome: s_prev XOR s_curr
+    delta_s = s_prev ^ s_curr
     
     # Lookup delta_v = get_leader_for_syndrome(delta_s)
     delta_v = get_leader_for_syndrome(delta_s)
     
     # Set v_curr = prev_v XOR delta_v
-    v_curr = prev_v ^ delta_v
+    v_curr = v_prev ^ delta_v
     
     return s_curr, v_curr
-
-
-def encode(u_bits: np.ndarray, H_U: np.ndarray, state: Optional[Dict] = None) -> Dict:
-    """Encoder façade with state threading for Δ-syndrome approach"""
-    if state is None:
-        # Initialize state: prev_syndrome = zeros(6), prev_v = zeros(13)
-        prev_syndrome = np.zeros(6, dtype=int)
-        prev_v = np.zeros(13, dtype=int)
-    else:
-        prev_syndrome = state["prev_syndrome"]
-        prev_v = state["prev_v"]
-    
-    # Update with previous state using Δ-syndrome approach
-    s_curr, v_curr = update_with_previous_state(u_bits, prev_syndrome, prev_v, H_U)
-    
-    return {
-        "u": u_bits,
-        "v": v_curr,
-        "syndrome": s_curr,
-        "state": {"prev_syndrome": s_curr, "prev_v": v_curr}
-    }
-
-
-def construct_H_matrix(H_U: np.ndarray, H_V: np.ndarray) -> np.ndarray:
-    """Construct complete H matrix by concatenating [H_U | H_V]"""
-    return np.column_stack([H_U, H_V])
 
 
 def display_H_matrix(H_matrix: np.ndarray) -> None:
@@ -235,25 +171,24 @@ def test_random_info_words(H_U: np.ndarray,
     print(f"\nTesting {num_tests} random info words with Δ-syndrome encoding...")
     
     results = []
-    state = None
+    
+    # Initialize s and v with zeros
+    s_prev = np.zeros(6, dtype=int)
+    v_prev = np.zeros(13, dtype=int)
     
     for _ in range(num_tests):
         # Generate random info word u
-        u_bits = np.random.randint(0, 2, 32)
+        u = np.random.randint(0, 2, 32)
         
         # Encode using the new encoder
-        result = encode(u_bits, H_U, state)
+        s_curr, v_curr = encode(u, H_U, s_prev, v_prev)
         
-        # Compute transition cost
-        if state is None:
-            # First iteration: transition cost is weight of v
-            transition_cost = np.sum(result["v"])
-        else:
-            # Compute transition cost: XOR between previous and current v
-            transition_cost = np.sum(result["v"] ^ state["prev_v"])
+        # Compute transition cost: XOR between previous and current v
+        transition_cost = np.sum(v_curr ^ v_prev)
         
         results.append(transition_cost)
-        state = result["state"]
+        v_prev = v_curr
+        s_prev = s_curr
     
     return results
 
@@ -272,13 +207,13 @@ def main():
     H_V = create_redundancy_matrix()
     
     # Step 2: Generate H_U as GF(2) linear combinations of H_V
-    H_U = generate_HU_from_HV(H_V, k=32, rng_seed=42)
+    H_U = generate_HU_from_HV(H_V, rng_seed=42)
     
     # Step 3: Precompute coset leaders and write to file
     precompute_coset_leaders(H_V)
     
     # Step 4: Construct complete H matrix
-    H = construct_H_matrix(H_U, H_V)
+    H = np.column_stack([H_U, H_V])
     
     # Step 5: Display the H matrix
     display_H_matrix(H)
