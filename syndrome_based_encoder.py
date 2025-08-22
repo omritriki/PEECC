@@ -58,7 +58,7 @@ def generate_HU_from_HV(H_V: np.ndarray, k: int = 32, rng_seed: Optional[int] = 
         if not np.any(result):
             continue
 
-        key = ''.join(map(str, result))
+        key = tuple(result)
         if key in seen_keys:
             continue
         seen_keys.add(key)
@@ -96,8 +96,8 @@ def precompute_coset_leaders(H_V: np.ndarray) -> None:
         # Compute syndrome s = H_V * v^T
         s = (H_V @ v_bits) % 2
         
-        # Convert syndrome to string key
-        s_key = ''.join(map(str, s))
+        # Convert syndrome to tuple key
+        s_key = tuple(s)
         
         # Calculate weight of v
         weight = np.sum(v_bits)
@@ -116,22 +116,16 @@ def precompute_coset_leaders(H_V: np.ndarray) -> None:
         
         for s_key, (v_bits, _, _) in leaders.items():
             v_bits_str = f"np.array({v_bits.tolist()})"
-            f.write(f"    '{s_key}': {v_bits_str},\n")
+            f.write(f"    {s_key}: {v_bits_str},\n")
         
         f.write("}\n\n")
-        f.write("def get_leader(s_key: str):\n")
+        f.write("def get_leader(s_key: tuple):\n")
         f.write("    \"\"\"Get coset leader for given syndrome\"\"\"\n")
         f.write("    return COSET_LEADERS.get(s_key, None)\n")
     
     # Reload the module to get the updated lookup table
     import importlib
     importlib.reload(syndrome_lut)
-
-
-def get_leader_for_syndrome(syndrome_bits: np.ndarray) -> np.ndarray:
-    """Get coset leader for given syndrome bits"""
-    s_key = ''.join(map(str, syndrome_bits))
-    return syndrome_lut.get_leader(s_key)
 
 
 def encode(u_bits: np.ndarray, H_U: np.ndarray, s_prev: np.ndarray, v_prev: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -142,8 +136,8 @@ def encode(u_bits: np.ndarray, H_U: np.ndarray, s_prev: np.ndarray, v_prev: np.n
     # Compute delta syndrome: s_prev XOR s_curr
     delta_s = s_prev ^ s_curr
     
-    # Lookup delta_v = get_leader_for_syndrome(delta_s)
-    delta_v = get_leader_for_syndrome(delta_s)
+    # Lookup delta_v = get_leader(delta_s)
+    delta_v = syndrome_lut.get_leader(tuple(delta_s))
     
     # Set v_curr = prev_v XOR delta_v
     v_curr = v_prev ^ delta_v
