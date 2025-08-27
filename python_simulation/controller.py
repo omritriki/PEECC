@@ -36,7 +36,7 @@ def controller():
 
     scheme_choice = int(input(_get_scheme_prompt()))
     if scheme_choice not in SCHEMES:
-        controller_logger.error("Invalid choice. Please select either 1, 2, 3, 4, 5 or 6.")
+        controller_logger.error("Invalid choice. Please select a valid scheme number from the list above.")
         return
     
     coding_scheme = SCHEMES[scheme_choice]
@@ -97,6 +97,13 @@ def _get_scheme_prompt() -> str:
     prompt += "\n [Paper 2] Coding for System-on-Chip Networks: A Unified Framework:\n"
     for num, scheme in paper2_schemes.items():
         prompt += f"    {num}. {scheme.name}\n"
+    
+    # Add syndrome-based schemes
+    syndrome_schemes = {k:v for k,v in SCHEMES.items() if k >= 8}
+    if syndrome_schemes:
+        prompt += "\n [Syndrome-based Error Correction]:\n"
+        for num, scheme in syndrome_schemes.items():
+            prompt += f"    {num}. {scheme.name}\n"
     
     return prompt
 

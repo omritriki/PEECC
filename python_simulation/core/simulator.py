@@ -73,10 +73,12 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, mode = 1):
     # Log the result of the simulation ##### These need to be in the controller
     if match:
         return transition_count.transition_count(c_prev, c_prev)
-        simulator_logger.info(f"Max transitions: {max_transitions}")
-        simulator_logger.info(f"Avg transitions: {avg_transitions / num_words:.4f}\n")
     
     # Show expected average transitions only for Mbit-BI coding scheme
     if isinstance(coding_scheme, mbit_bi.MbitBI) and match: 
         simulator_logger.info(f"Expected Avg transitions: {coding_scheme.calculate_expected_average(k, M)}\n")
+    
+    # Return default values if there's a mismatch
+    simulator_logger.error("Simulation failed due to encoding/decoding mismatch")
+    return (0, 0)
     

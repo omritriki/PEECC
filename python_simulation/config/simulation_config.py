@@ -11,16 +11,17 @@
 from coding_schemes.paper1 import transition_signaling, offset, offset_xor
 from coding_schemes.paper2 import dapbi, dap, hamming_x
 from coding_schemes import mbit_bi
+from coding_schemes.syndrome_based import syndrome_based_encoder
 
 
 SIMULATION_PARAMS = {
     'INPUT_BITS': {
-        'value': 16,
+        'value': 32,
         'range': (4, 32),
         'description': 'Number of input bits (k). Must be at least 4 for error correction.'
     },
     'NUM_RANDOM_WORDS': {
-        'value': 9000,
+        'value': 5000,
         'range': (100, 10000),
         'description': 'Number of random test vectors. Higher values give better statistical results.'
     },
@@ -51,8 +52,13 @@ PAPER2_SCHEMES = {
     7: hamming_x.HammingX()
 }
 
+# Syndrome-based Error Correction Scheme
+SYNDROME_SCHEMES = {
+    8: syndrome_based_encoder.SyndromeBasedEncoder()
+}
+
 # Combined schemes dictionary
-SCHEMES = {**PAPER1_SCHEMES, **PAPER2_SCHEMES}
+SCHEMES = {**PAPER1_SCHEMES, **PAPER2_SCHEMES, **SYNDROME_SCHEMES}
 
 SIMULATION_MODES = {
     1: "Random word sequence",
