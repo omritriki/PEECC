@@ -64,7 +64,7 @@ module top_wrapper_tb();
 	send_uart_byte(8'h00);
 	send_uart_byte(8'h00);
 
-	repeat (300000) @(posedge clk);
+	repeat (100000) @(posedge clk);
 
 	$stop;
 

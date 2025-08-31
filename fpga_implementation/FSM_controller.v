@@ -22,7 +22,8 @@ module FSM_controller (
     output reg          en_k_comp,
     output reg          trigger,
     output reg          done,
-    output reg         start_tx
+    output reg         start_tx,
+	 output reg        inn_rst_n
 );
 
     // State declarations
@@ -41,7 +42,7 @@ module FSM_controller (
     reg  done_cnt;
     reg [10:0] cnt;
 
-    always @(posedge clk) begin ////////
+    always @(posedge clk) begin 
 	// Synchronous state register
         if (~rst_n) begin
             state       <= IDLE;
@@ -79,7 +80,7 @@ module FSM_controller (
 					// If (cnt > 0) and (cnt < 4) => set trigger
 					// Check cnt next-state to see if it is > 0 and < 4
 					// so we use the current value of cnt before increment
-					if ((cnt > 0) && (cnt < 4)) begin
+					if ((cnt > 0) && (cnt < 10)) begin
 						trigger <= 1'b1;
 					end
 					else begin
@@ -97,58 +98,58 @@ module FSM_controller (
     // Next-state logic
     always @(*) begin
         // Default assignments
-        nextstate   = state;
-		  enable_cnt_next = enable_cnt;
+        nextstate   <= state;
+		  enable_cnt_next <= enable_cnt;
 
         case (state)
             IDLE: begin
                 if (valid_in == 1'b1) begin
-                    nextstate  = S4; ///////////////////////////return to state s0
-                    enable_cnt_next = 1'b1;
+                    nextstate  <= S4; ///////////////////////////return to state s0
+                    enable_cnt_next <= 1'b1;
 						  //start_tx = 1'b0;
                 end
             end
 
             S0: begin
                 if (done_cnt == 1'b1) begin
-                    nextstate = S1;
+                    nextstate <= S1;
                 end
             end
 
             S1: begin
                 if (done_cnt == 1'b1) begin
-                    nextstate = S2;
+                    nextstate <= S2;
                 end
             end
 
             S2: begin
                 if (done_cnt == 1'b1) begin
-                    nextstate = S3;
+                    nextstate <= S3;
                 end
             end
 
             S3: begin
                 if (done_cnt == 1'b1) begin
-                    nextstate = S4;
+                    nextstate <= S4;
                 end
             end
 
             S4: begin
                 if (done_cnt == 1'b1) begin
-                    nextstate = S5;
+                    nextstate <= S5;
 						  //done = 1'b1;
-						  enable_cnt_next = 1'b0;
+						  enable_cnt_next <= 1'b0;
                 end
             end
 
 	    S5: begin
                 if (txFinish == 1'b1) begin
-                    nextstate = IDLE;
+                    nextstate <= IDLE;
                 end
             end
 
             default: begin
-                nextstate  = IDLE;
+                nextstate  <= IDLE;
             end
         endcase
     end
@@ -156,49 +157,51 @@ module FSM_controller (
     // State output logic
     always @(*) begin
         // Default outputs
-        en_gen_data    = 1'b0;
+        en_gen_data    <= 1'b0;
         //en_gen_err     = 1'b0;  // disabled for now
-        en_enc         = 1'b0;
-        en_bus         = 1'b0;
-        en_dec         = 1'b0;
-        en_trans_count = 1'b0;
+        en_enc         <= 1'b0;
+        en_bus         <= 1'b0;
+        en_dec         <= 1'b0;
+        en_trans_count <= 1'b0;
         //done           = 1'b0;
-        en_k_comp      = 1'b0;
+        en_k_comp      <= 1'b0;
 
         case (state)
             IDLE: begin
-                // All signals 0
+                inn_rst_n <= 0;
             end
 
             S0: begin
-                en_gen_data = 1'b1;
+					inn_rst_n <= 1;
+               en_gen_data <= 1'b1;
             end
 
             S1: begin
-                en_gen_data = 1'b1;
-                en_enc      = 1'b1;
+                en_gen_data <= 1'b1;
+                en_enc      <= 1'b1;
             end
 
             S2: begin
-                en_gen_data = 1'b1;
-                en_enc      = 1'b1;
-                en_bus      = 1'b1;
+                en_gen_data <= 1'b1;
+                en_enc      <= 1'b1;
+                en_bus      <= 1'b1;
             end
 
             S3: begin
-                en_gen_data = 1'b1;
-                en_enc      = 1'b1;
-                en_bus      = 1'b1;
-                en_dec      = 1'b1;
+                en_gen_data <= 1'b1;
+                en_enc      <= 1'b1;
+                en_bus      <= 1'b1;
+                en_dec      <= 1'b1;
             end
 
             S4: begin
-                en_gen_data    = 1'b1;
-                en_enc         = 1'b1;
-                en_bus         = 1'b1;
-                en_dec         = 1'b1;
-                en_trans_count = 1'b1;
-                en_k_comp      = 1'b1;
+					 inn_rst_n      <= 1'b1;
+                en_gen_data    <= 1'b1;
+                en_enc         <= 1'b1;
+                en_bus         <= 1'b1;
+                en_dec         <= 1'b1;
+                en_trans_count <= 1'b1;
+                en_k_comp      <= 1'b1;
             end
 
 	    S5: begin

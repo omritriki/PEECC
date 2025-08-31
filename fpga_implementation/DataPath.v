@@ -68,14 +68,19 @@ endmodule
 
 
 module my_adder #(parameter A = 8)(
+    input wire rst_n,
     input wire [A-1:0] a,
-    output reg [$clog2(A+1)-1:0] sum 
+    output reg [$clog2(A+1)-1:0] sum
 );
     integer i;
     always @(*) begin
-        sum = 0;
-        for (i = 0; i < A; i = i + 1) begin
-            sum = sum + a[i];
+        if (~rst_n) begin
+            sum = 0;
+        end else begin
+            sum = 0;
+            for (i = 0; i < A; i = i + 1) begin
+                sum = sum + a[i];
+            end
         end
     end
 endmodule
@@ -107,7 +112,7 @@ module my_check_invert #(parameter A = 8)(
     my_buffer #(1) buf_inv (.clk(clk), .rst_n(rst_n), .en(en), .in(INV_i), .out(inv_prev));
     my_buffer #(A) buf_s_x (.clk(clk), .rst_n(rst_n), .en(en), .in(X_i), .out(X_i_prev)); 
 	 my_bitwiseXOR #(A) bxor (.a(S_i), .b(X_i_prev), .out(xor_out)); 
-	 my_adder #(A) add (.a(xor_out), .sum(sum));
+	 my_adder #(A) add (.rst_n(rst_n), .a(xor_out), .sum(sum));
     my_comparator #(A) cmp (.sum(sum), .equal(equal), .greater(greater));
 
     assign INV_i = (equal & inv_prev) | greater;
@@ -228,56 +233,97 @@ module my_transition_counter #(parameter n = 37) (
     input wire en,
     input wire done,
     input wire [n-1:0] data_in,
-    output reg [11*(n/2)-1:0] registers
+    //output reg [11*(n/2)-1:0] registers
+    output reg  [4:0] reg_num,
+    output reg  [21:0] sum_value
 );
 
     reg [n-1:0] prev_data;
     reg [n-1:0] xor_result;
-    reg [10:0] registers_cnt [(n/2):0]; 
-    
-    integer i, j, transition_count;
+    reg [10:0] registers_cnt [(n/2):0];
+    reg [10:0] max_value;  
+// Use local variables for calculation
+	reg [10:0] temp_max;
+	reg [21:0] temp_sum;
+	reg [4:0] temp_reg;	 
 
-    initial begin
-        for (i = 0; i <= (n/2); i = i + 1) begin
-            registers_cnt[i] = 11'b0;
-        end
-	registers <= 0;
-    end
+    integer i, j, transition_count;
     
+    // In my_transition_counter module:
+	always @(posedge clk or negedge rst_n) begin
+		 if (~rst_n) begin
+			  prev_data = 0;
+			  xor_result = 0;
+			  reg_num = 0;
+			  sum_value = 0;
+			  // Reset all registers
+			  for (i = 0; i <= (n/2); i = i + 1) begin
+					registers_cnt[i] = 11'b0;
+			  end
+		 end 
+		 else begin
+			  if (en) begin
+					xor_result = data_in ^ prev_data;
+					transition_count = 0;  // This can stay blocking
+					// Count transitions
+					for (i = 0; i < n; i = i + 1) begin
+						 transition_count = transition_count + xor_result[i];
+					end
+					prev_data = data_in;
+					registers_cnt[transition_count] = registers_cnt[transition_count] + 1'b1;
+			  end
+
+			  if (done) begin
+					
+					temp_max = 0;
+					temp_sum = 0;
+					temp_reg = reg_num;
+					
+					for (j = 0; j < (n/2); j = j + 1) begin
+						 if (registers_cnt[j] > temp_max) begin
+							  temp_max = registers_cnt[j];
+							  temp_reg = j;
+						 end
+						 temp_sum = temp_sum + (registers_cnt[j] * j);
+					end
+					
+					reg_num = temp_reg;
+					sum_value = temp_sum;
+			  end
+		 end
+	end
+endmodule
+
+module max_sum_finder #(parameter n = 37)(
+	 input wire clk,
+    input wire rst_n,
+    input wire [11*(n/2)-1:0] registers,
+    output reg  [4:0] reg_num,
+    output reg  [21:0] sum_value // 22 bits to avoid overflow for sum
+);
+    integer i;
+    reg [10:0] value;
+	 reg [10:0] max_value;
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
-            prev_data <= {n{1'b0}};
-            // Reset all registers
-            for (i = 0; i <= (n/2); i = i + 1) begin
-                registers_cnt[i] <= 11'b0; 
-            end
-				registers <= 0; 
-        end 
-	     else begin
-				if (en) begin
-					xor_result = data_in ^ prev_data;
-					transition_count = 0;
-					// Count the number of transitions
-					for (i = 0; i < n; i = i + 1) begin
-						transition_count = transition_count + xor_result[i];
+				max_value = 0;
+				sum_value = 0;
+				reg_num = 0;
+			end
+		  else begin
+				for (i = 0; i < (n/2); i = i + 1) begin
+					value = registers[i*11 +: 11];
+					if (value > max_value) begin
+						max_value = value;
+						reg_num = i;
 					end
-					prev_data <= data_in;
-					// Increment the corresponding register
-					registers_cnt[transition_count] <= registers_cnt[transition_count] + 1'b1;  
+					sum_value = sum_value + value*i;
 				end
-
-				// Store the final count in the output register after 2000 cycles
-				if (done) begin
-					for (j = 0; j < (n/2); j = j + 1) begin 
-						registers[j*11 +: 11] <= registers_cnt[j];
-						$display("register", j, ": ", registers_cnt[j]);
-					end
-					//$display("registers: ", registers_cnt);
-				end
+				$display("reg num:", reg_num);
+				$display("sum:", sum_value);
 		  end
     end
 endmodule
-
 
 /*
 module K_Comparator #(parameter k = 32)(
@@ -381,10 +427,10 @@ module my_fcd #(parameter k = 32)(
 
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
-            buf0 <= 1'b0;
-            buf1 <= 1'b0;
-            buf2 <= 1'b0;
-				data_out <= 1'b0;
+            buf0 <= 0;
+            buf1 <= 0;
+            buf2 <= 0;
+				data_out <= 0;
         end 
         else begin
             buf2 <= buf1;
@@ -415,7 +461,9 @@ module DataPath #(parameter M = 5, k = 32, A = 8)(
     input wire en_gen_data, en_enc, en_bus, en_dec, en_trans_count, en_k_comp,
 	 //input wire en_gen_err,
     output wire isequal,
-    output wire [11*((k+M)/2)-1:0] registers
+    //output wire [11*((k+M)/2)-1:0] registers
+	 output wire [4:0] max_reg,
+    output wire [21:0] sum_transitions
 	 //output [(k+M)-1:0] dec_reg_out
 );
     wire [k-1:0] X, enc_mux_out, kcomp_mux_out, enc_reg_out, kcomp_reg_out;
@@ -425,6 +473,7 @@ module DataPath #(parameter M = 5, k = 32, A = 8)(
 	 //wire [k-1:0] S_data, enc_mux_out, enc_reg_out, X, S_data_2cmp;
     wire [k-1:0] k_zero_input = {k{1'b0}};
     wire [(k+M)-1:0] n_zero_input = {(k+M){1'b0}};
+	 wire [11*((k+M)/2)-1:0] registers;
 
     input_data_generator #(k) data_gen( 
         .clk(clk), .rst_n(rst_n), .en(en_gen_data), .S_data(S_data)
@@ -484,13 +533,19 @@ module DataPath #(parameter M = 5, k = 32, A = 8)(
     );
 
     //wire [11*((k+M)/2)-1:0] trans_cnt_registers;
-	(* S = "TRUE"*) (* dont_touch = "TRUE" *)
     my_transition_counter #(k+M) trans_cnt ( 
         .clk(clk), .rst_n(rst_n), .en(en_trans_count), .done(done),
-        .data_in(bus_mux_out), .registers(registers)
+        .data_in(bus_mux_out), .reg_num(max_reg), .sum_value(sum_transitions) //.registers(registers)
     );
+	 
+	/* max_sum_finder #(k+M) max_sum_inst (
+		  .clk(clk), 
+		  .rst_n(rst_n),
+        .registers(registers),
+        .reg_num(max_reg),
+        .sum_value(sum_transitions)
+    );*/
 
-    
     my_fcd #(k) fcd (
         .clk(clk), .rst_n(rst_n), .data_in(enc_mux_out), .data_out(S_data_2cmp)
     );

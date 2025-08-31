@@ -20,8 +20,9 @@ module TopModule #(parameter M=5, k=32, A=8)(
 );
 
     // Calculate the number of padding bits needed
-    localparam integer PADDING_BITS = ((((11*((k+M)/2))+8-1)/8)*8) - (11*((k+M)/2));
+    localparam integer PADDING_BITS = 4;
 
+	 wire inn_rst_n;
     // Internal signals
     wire en_gen_data;
 	 wire isequal;
@@ -33,7 +34,7 @@ module TopModule #(parameter M=5, k=32, A=8)(
     wire en_k_comp;
     wire done;
     //wire [15:0] data_bus_rx_in; // 128 bits - 16 bytes
-    wire [11*((k+M)/2)-1:0] data_bus_tx_out; // 128 bits - 16 bytes
+    wire [26:0] data_bus_tx_out; // 128 bits - 16 bytes
     wire rx_valid_in; // valid input from uart - '1' when data is valid
     wire start_tx; // start transmission signal to uart - '1' when data is ready to be sent
     wire txFinish; // transmission finished signal from uart - '1' when data is sent
@@ -44,14 +45,14 @@ module TopModule #(parameter M=5, k=32, A=8)(
     //----------------------------------------------
     uart_interface #(
     	.bytes_to_receive(2), // 128 bits - 16 bytes /////////////will need to change for our needs
-	.bytes_to_transmit(((11*((k+M)/2))+8-1)/8) // 128 bits - 16 bytes /////////////will need to change for our needs
+	.bytes_to_transmit(4) // 128 bits - 16 bytes /////////////will need to change for our needs
     ) inst_uart_interface(
 	.clk(M_CLK_OSC), // clk input
 	.reset(~M_RESET_B), // active high reset 
 	.ser_in(FTDI_BDBUS_0),  // uart RXD input
 	.ser_out(FTDI_BDBUS_1), // uart TXD output
 	.bus_SERDES(), // parallel input 16 bytes from uart
-	.ciphertext({{(PADDING_BITS-1){1'b0}}, isequal, data_bus_tx_out}), // parallel output 16 bytes to uart
+	.ciphertext({{(PADDING_BITS){1'b0}}, isequal, data_bus_tx_out}), // parallel output 16 bytes to uart
 	.valid_in(rx_valid_in), // valid input from uart - '1' when data is valid
 	.start_tx(start_tx), // start transmission signal to uart - '1' when data is ready to be sent
 	.txFinish(txFinish), // transmission finished signal from uart - '1' when data is sent
@@ -75,7 +76,8 @@ module TopModule #(parameter M=5, k=32, A=8)(
         .en_k_comp       (en_k_comp),
         .trigger         (M_HEADER),
         .done            (done),
-	.start_tx	 (start_tx)
+		  .start_tx	       (start_tx),
+		  .inn_rst_n       (inn_rst_n)
     );
 
     //----------------------------------------------
@@ -87,7 +89,7 @@ module TopModule #(parameter M=5, k=32, A=8)(
         .A(A) //8
     ) U2 (
         .clk            (M_CLK_OSC),
-        .rst_n          (M_RESET_B),
+        .rst_n          (inn_rst_n),
         .done           (done),
         .en_gen_data    (en_gen_data),
         //.en_gen_err     (en_gen_err),
@@ -96,8 +98,10 @@ module TopModule #(parameter M=5, k=32, A=8)(
         .en_dec         (en_dec),
         .en_trans_count (en_trans_count),
         .en_k_comp      (en_k_comp),
-        .registers      (data_bus_tx_out),
-        .isequal        (isequal)
+        //.registers      (data_bus_tx_out),
+        .isequal        (isequal),
+		  .max_reg        (data_bus_tx_out[26:22]),
+		  .sum_transitions (data_bus_tx_out[21:0])
     );
 	 
 	 always @(negedge done) begin
@@ -134,6 +138,3 @@ endmodule
 	.txFinish(txFinish), // transmission finished signal from uart - '1' when data is sent
 	.eot(txBusy) // end of transmission signal from uart - '1' while data is sent 
     );*/
-
-    /* expexted registers string = 01 | 000000000000111011100000010001010001000110010000111011000000100000000010101110000000110100000100000000001100110000001101000000110100000100011110000010110100000000000000000000000000000000000001001111
-    // bytes devision = 01000000 | 00000011 | 10111000 | 00010001 | 01000100 | 01100100 | 00111011 | 00000010 | 00000000 | 10101110 | 00000011 | 01000001 | 00000000 | 00110011 | 00000011 | 01000000 | 11010000 | 01000111 | 10000010 | 11010000 | 00000000 | 00000000 | 00000000 | 00000000 | 01001111
