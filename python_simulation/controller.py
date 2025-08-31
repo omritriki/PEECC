@@ -40,6 +40,13 @@ def controller():
         return
     
     coding_scheme = SCHEMES[scheme_choice]
+    
+    # Verify syndrome-based encoder requires exactly 32 bits
+    if scheme_choice == 8:  # Syndrome-based encoder
+        if k != 32:
+            controller_logger.error(f"Syndrome-based encoder requires exactly 32 bits, but {k} bits were configured.")
+            controller_logger.error("Please update the INPUT_BITS value in simulation_config.py to 32.")
+            return
 
     generator_choice = int(input(_get_mode_prompt()))
     if generator_choice not in SIMULATION_MODES:

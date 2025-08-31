@@ -1,14 +1,14 @@
-PEECC - Syndrome-Based Encoder with Coset-Leader LUT
-====================================================
+PEECC - Syndrome-Based Encoder with Automatic LUT Generation
+============================================================
 
 DATE: Current session
-STATUS: Implemented coset-leader lookup table with Δ-syndrome flow
+STATUS: Implemented complete syndrome-based coding system with automatic LUT generation
 
 OVERVIEW:
 ---------
 This module implements a syndrome-based encoder for a 6×45 parity check matrix H = [H_U | H_V].
 The system uses coset leaders to achieve optimal encoding with O(1) lookup complexity.
-Two encoding modes are supported: minimum-weight (stateless) and minimum-transitions (stateful).
+Features automatic LUT generation and supports both minimum-weight and minimum-transitions encoding.
 
 MATHEMATICAL FOUNDATION:
 ------------------------
@@ -17,6 +17,15 @@ MATHEMATICAL FOUNDATION:
 - Redundancy vector: v (13 bits)
 - Syndrome: s = H_U @ u^T (6 bits)
 - Codeword constraint: H_U @ u^T + H_V @ v^T = 0
+- Column-Space Relation: Every column of H_U lies in the span of H_V columns
+- Multiplicity: Each syndrome corresponds to 128 valid redundancy vectors (2^7)
+
+H MATRIX STRUCTURE:
+-------------------
+- H_V: Fixed 6×13 binary matrix with full rank (rank 6)
+- H_U: 6×32 binary matrix generated as linear combinations of H_V columns in GF(2)
+- All columns in H_U are unique and distinct from H_V columns
+- Matrix satisfies theoretical requirements for syndrome-based encoding
 
 COSET-LEADER APPROACH:
 ---------------------
@@ -27,12 +36,12 @@ COSET-LEADER APPROACH:
 
 ENCODING MODES:
 ---------------
-1. min_weight (stateless):
+1. Minimum-weight (stateless):
    - Compute s = H_U @ u^T
    - Return v = coset_leader(s)
    - Optimizes absolute weight of redundancy bits
 
-2. min_flips (stateful):
+2. Minimum-transitions (stateful):
    - Compute s_curr = H_U @ u^T
    - Compute delta_s = prev_syndrome XOR s_curr
    - Lookup delta_v = coset_leader(delta_s)
@@ -42,21 +51,31 @@ ENCODING MODES:
 IMPLEMENTATION DETAILS:
 ----------------------
 Files:
-- syndrome_based_encoder.py: Main encoder with mode switching
-- syndrome_lut.py: Generated coset-leader lookup table
+- H_matrix.py: Contains hard-coded H_U and H_V matrices
+- generate_lut.py: Standalone script for LUT generation from any H_V matrix
+- syndrome_based_encoder.py: Main encoder with automatic LUT generation
+- syndrome_lut.py: Generated coset-leader lookup table (auto-generated)
 
 Key Functions:
 - precompute_coset_leaders(): Builds LUT with minimum-weight vectors
-- encode(): Unified encoder façade with mode switching
-- update_with_previous_state(): Implements Δ-syndrome flow
-- get_leader_for_syndrome(): Stable LUT API
+- encode(): Implements Δ-syndrome flow for minimum transitions
+- decode(): Syndrome-based error detection and correction
+- get_leader(): Stable LUT API for coset leader lookup
+
+AUTOMATIC LUT GENERATION:
+-------------------------
+- Encoder automatically generates LUT if syndrome_lut.py is missing
+- Standalone generate_lut.py script for custom H_V matrices
+- Supports multiple input formats: NumPy arrays (.npy) and text files
+- Validates matrix dimensions and generates progress feedback
+- Creates LUT in syndrome_based folder with proper file paths
 
 PERFORMANCE CHARACTERISTICS:
 ---------------------------
 Precomputation:
 - Complexity: O(2^13) = 8192 iterations (one-time)
 - Generates 64 coset leaders
-- Writes to syndrome_lut.py
+- Writes to syndrome_lut.py in syndrome_based folder
 
 Runtime:
 - Lookup complexity: O(1)
@@ -69,7 +88,8 @@ VALIDATION:
 - LUT integrity: Exactly 64 entries, correct syndromes
 - Codeword validation: H_U @ u^T + H_V @ v^T = 0
 - Δ-syndrome flow: Transition costs match coset leader weights
-- Both encoding modes tested and verified
+- Matrix properties: Binary values, no duplicates, proper dimensions
+- Automatic generation: LUT created correctly when missing
 
 ADVANTAGES:
 -----------
@@ -79,6 +99,22 @@ ADVANTAGES:
 4. Deterministic: No randomness in encoding decisions
 5. Memory efficient: Minimal storage requirements
 6. Transition optimization: Minimizes bus switching costs
+7. Automatic setup: No manual LUT generation required
+8. Customizable: Easy to change H matrix and regenerate LUT
+
+USAGE:
+------
+Automatic (recommended):
+```python
+from coding_schemes.syndrome_based.syndrome_based_encoder import SyndromeBasedEncoder
+encoder = SyndromeBasedEncoder()  # Automatically generates LUT if needed
+```
+
+Manual LUT generation:
+```bash
+python -m coding_schemes.syndrome_based.generate_lut
+python -m coding_schemes.syndrome_based.generate_lut custom_H_V.npy
+```
 
 APPLICATIONS:
 -------------
@@ -86,3 +122,4 @@ APPLICATIONS:
 - Bus encoding for reduced switching activity
 - Error correction codes with transition cost constraints
 - Real-time encoding with minimal computational overhead
+- Research and development of syndrome-based coding schemes
