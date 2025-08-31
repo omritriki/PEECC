@@ -1,9 +1,13 @@
+# Core scientific computing
+numpy>=1.21.0
+pandas>=1.3.0
+
 # Logging and utilities
 loguru==0.7.0
 
-# Functional programming utilities
+# Functional programming utilities (for older Python versions)
 functools32; python_version < "3.4"
 
-# Abstract base classes
-abc; python_version >= "3.4"
+# Abstract base classes (built-in for Python 3.4+)
+# abc is built-in for Python 3.4+, so no need to specify it
 

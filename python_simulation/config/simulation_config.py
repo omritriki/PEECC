@@ -8,9 +8,8 @@
 ======================================================
 """
 
-from coding_schemes.paper1 import transition_signaling, offset, offset_xor
+from coding_schemes.paper1 import transition_signaling, offset, offset_xor, mbit_bi
 from coding_schemes.paper2 import dapbi, dap, hamming_x
-from coding_schemes import mbit_bi
 from coding_schemes.syndrome_based import syndrome_based_encoder
 
 
@@ -41,12 +40,12 @@ SIMULATION_PARAMS = {
 PAPER1_SCHEMES = {
     1: transition_signaling.Transition_Signaling(),
     2: offset.Offset(),
-    3: offset_xor.Offset_XOR()
+    3: offset_xor.Offset_XOR(),
+    4: mbit_bi.MbitBI()
 }
 
 # Schemes from Paper 2: "Coding for System-on-Chip Networks: A Unified Framework"
 PAPER2_SCHEMES = {
-    4: mbit_bi.MbitBI(),
     5: dapbi.DAPBI(),
     6: dap.DAP(),
     7: hamming_x.HammingX()
