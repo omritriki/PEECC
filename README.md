@@ -35,11 +35,18 @@ python_simulation/
 │   │   └── hamming_x.py
 │   └── syndrome_based/          # MAIN PROJECT FOCUS
 │       ├── __init__.py
-│       ├── H_matrix.py          # Parity check matrices H_U and H_V
-│       ├── generate_lut.py      # LUT generation for any H_V matrix
+│       ├── H_matrix.py          # Original hard-coded parity check matrices
 │       ├── syndrome_based_encoder.py  # Main encoder with auto LUT generation
 │       ├── syndrome_lut.py      # Generated coset leaders lookup table
-│       └── syndrome_encoder_summary.txt  # Comprehensive documentation
+│       ├── syndrome_encoder_summary.txt  # Comprehensive documentation
+│       └── matrix_generation/   # Automated matrix generation system
+│           ├── main.py          # Orchestration script for complete generation
+│           ├── hv_greedy_algorithm.py  # H_V matrix generation using greedy algorithm
+│           ├── hu_generator.py  # H_U matrix generation from H_V
+│           ├── generate_lut.py  # Syndrome LUT generation
+│           └── output/          # Generated files
+│               ├── generated_H_matrix.py  # Drop-in replacement for H_matrix.py
+│               └── generated_syndrome_lut.py  # Generated coset leaders lookup table
 └── controller.py
 ```
 
@@ -60,12 +67,16 @@ The **Syndrome-Based Error Correction** is the primary contribution of this proj
 
 ### Key Features
 - **6×45 Parity Check Matrix**: H = [H_U | H_V] where H_U is 6×32 (information) and H_V is 6×13 (redundancy)
+- **Automated Matrix Generation**: Complete H_V and H_U matrix generation using greedy algorithms
 - **Automatic LUT Generation**: Coset leaders lookup table generated automatically for any H_V matrix
 - **Minimum Transition Encoding**: Optimizes bus switching activity while maintaining error correction
 - **O(1) Lookup Complexity**: Efficient encoding through precomputed coset leaders
 - **32-bit Information Words**: Designed specifically for 32-bit data with 13-bit redundancy
+- **Drop-in Replacement**: Generated matrices work seamlessly with existing code
 
 ### Mathematical Foundation
+- **H_V Matrix Structure**: [I_6 | H_extra] where I_6 is 6×6 identity matrix and H_extra contains 7 additional vectors
+- **Greedy Algorithm**: H_extra vectors chosen to ensure every 6-vector expressible as sum of at most 2 vectors
 - **Column-Space Relation**: Every column of H_U lies in the span of H_V columns
 - **Multiplicity**: Each syndrome corresponds to 128 valid redundancy vectors (2^7)
 - **Full Rank**: H matrix has rank 6, ensuring all parity-check equations are linearly independent
@@ -84,12 +95,24 @@ The **Syndrome-Based Error Correction** is the primary contribution of this proj
 - **Error Correction**: Single-bit error detection and correction
 - **Area Overhead**: 13 bits (40.6% for 32-bit data)
 
+### Matrix Generation
+Generate matrices and LUT with a single command:
+```bash
+cd python_simulation/coding_schemes/syndrome_based/matrix_generation
+python main.py
+```
+
 ### Usage
 ```python
-from coding_schemes.syndrome_based.syndrome_based_encoder import SyndromeBasedEncoder
+# Option 1: Use original hard-coded matrices
+from coding_schemes.syndrome_based.H_matrix import return_H_V, return_H_U
 
-# Automatically generates LUT if needed
-encoder = SyndromeBasedEncoder()
+# Option 2: Use generated matrices (drop-in replacement)
+from coding_schemes.syndrome_based.matrix_generation.output.generated_H_matrix import return_H_V, return_H_U
+
+# Use with encoder
+from coding_schemes.syndrome_based.syndrome_based_encoder import SyndromeBasedEncoder
+encoder = SyndromeBasedEncoder()  # Automatically generates LUT if needed
 
 # Encode 32-bit information word
 u_bits = [0, 1, 0, 1, ...]  # 32 bits
@@ -126,9 +149,11 @@ The controller will prompt for:
 #### **MAIN PROJECT: Syndrome-Based Error Correction**
 - **Syndrome-Based Encoder**: Novel approach combining error correction with power efficiency
   - 32-bit information words with 13-bit redundancy
+  - Automated matrix generation using greedy algorithms
   - Automatic coset leaders lookup table generation
   - Minimum transition encoding for power optimization
   - Single-bit error detection and correction
+  - Drop-in replacement matrices for seamless integration
 
 #### Paper 1: Memory Bus Encoding Tutorial
 - **Transition Signaling**: Data encoding using signal transitions
@@ -154,6 +179,9 @@ The controller will prompt for:
 
 ## Key Features
 - **Novel Syndrome-Based Error Correction**: Main project contribution
+- **Automated Matrix Generation**: Complete H_V and H_U matrix generation with single command
+- **Greedy Algorithm**: Optimal H_V matrix with identity + 7 extra vectors
+- **Drop-in Replacement**: Generated matrices work seamlessly with existing code
 - Modular design with clear separation of concerns
 - Configurable simulation parameters
 - Comprehensive logging and statistics
@@ -167,6 +195,8 @@ The controller will prompt for:
 - **Novel Contribution**: Power-efficient error correction using coset leaders
 - **Key Innovation**: Combines error correction with transition cost optimization
 - **Technical Foundation**: Based on established coset-leader theory in coding theory
+- **Matrix Generation**: Automated H_V and H_U matrix generation using greedy algorithms
+- **System Architecture**: Complete matrix generation and LUT system with single command execution
 
 ### Paper 1
 - Title: Memory Bus Encoding for Low Power: A Tutorial

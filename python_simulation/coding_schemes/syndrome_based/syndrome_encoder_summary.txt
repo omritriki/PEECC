@@ -1,14 +1,14 @@
-PEECC - Syndrome-Based Encoder with Automatic LUT Generation
-============================================================
+PEECC - Syndrome-Based Encoder with Matrix Generation and LUT System
+====================================================================
 
 DATE: Current session
-STATUS: Implemented complete syndrome-based coding system with automatic LUT generation
+STATUS: Implemented complete syndrome-based coding system with automated matrix generation and LUT creation
 
 OVERVIEW:
 ---------
 This module implements a syndrome-based encoder for a 6×45 parity check matrix H = [H_U | H_V].
-The system uses coset leaders to achieve optimal encoding with O(1) lookup complexity.
-Features automatic LUT generation and supports both minimum-weight and minimum-transitions encoding.
+The system features automated matrix generation using greedy algorithms, coset leaders for optimal 
+encoding with O(1) lookup complexity, and supports both minimum-weight and minimum-transitions encoding.
 
 MATHEMATICAL FOUNDATION:
 ------------------------
@@ -22,9 +22,11 @@ MATHEMATICAL FOUNDATION:
 
 H MATRIX STRUCTURE:
 -------------------
-- H_V: Fixed 6×13 binary matrix with full rank (rank 6)
+- H_V: Generated 6×13 binary matrix with structure [I_6 | H_extra] where I_6 is 6×6 identity
+- H_extra: 7 additional vectors (6×7) chosen via greedy algorithm
+- Property: Every 6-vector expressible as sum of at most 2 vectors from H_V
 - H_U: 6×32 binary matrix generated as linear combinations of H_V columns in GF(2)
-- All columns in H_U are unique and distinct from H_V columns
+- All columns in H_U are unique, non-zero, and distinct from H_V columns
 - Matrix satisfies theoretical requirements for syndrome-based encoding
 
 COSET-LEADER APPROACH:
@@ -51,31 +53,47 @@ ENCODING MODES:
 IMPLEMENTATION DETAILS:
 ----------------------
 Files:
-- H_matrix.py: Contains hard-coded H_U and H_V matrices
-- generate_lut.py: Standalone script for LUT generation from any H_V matrix
+- H_matrix.py: Contains hard-coded H_U and H_V matrices (original)
+- matrix_generation/: Automated matrix generation system
+  - main.py: Orchestration script for complete matrix generation
+  - hv_greedy_algorithm.py: Generates H_V matrix using greedy algorithm
+  - hu_generator.py: Generates H_U matrix from H_V matrix
+  - generate_lut.py: Generates syndrome lookup table
+  - output/: Generated files
+    - generated_H_matrix.py: Drop-in replacement for H_matrix.py
+    - generated_syndrome_lut.py: Generated coset-leader lookup table
 - syndrome_based_encoder.py: Main encoder with automatic LUT generation
-- syndrome_lut.py: Generated coset-leader lookup table (auto-generated)
 
 Key Functions:
+- generate_hv_matrix_entry_point(): Generates H_V matrix using greedy algorithm
+- generate_hu_entry_point(): Generates H_U matrix from H_V matrix
+- generate_syndrome_lut_entry_point(): Generates syndrome lookup table
 - precompute_coset_leaders(): Builds LUT with minimum-weight vectors
 - encode(): Implements Δ-syndrome flow for minimum transitions
 - decode(): Syndrome-based error detection and correction
 - get_leader(): Stable LUT API for coset leader lookup
 
-AUTOMATIC LUT GENERATION:
--------------------------
-- Encoder automatically generates LUT if syndrome_lut.py is missing
-- Standalone generate_lut.py script for custom H_V matrices
-- Supports multiple input formats: NumPy arrays (.npy) and text files
-- Validates matrix dimensions and generates progress feedback
-- Creates LUT in syndrome_based folder with proper file paths
+AUTOMATIC MATRIX AND LUT GENERATION:
+------------------------------------
+- Complete matrix generation system with single command: python main.py
+- H_V matrix generation using greedy algorithm with identity matrix + 7 extra vectors
+- H_U matrix generation as linear combinations of H_V columns (32 columns)
+- Syndrome LUT generation from generated H_V matrix
+- All generated files saved to matrix_generation/output/ folder
+- Drop-in replacement files: generated_H_matrix.py and generated_syndrome_lut.py
+- No command-line arguments required - fully automated process
 
 PERFORMANCE CHARACTERISTICS:
 ---------------------------
-Precomputation:
+Matrix Generation:
+- H_V generation: Greedy algorithm with identity matrix + 7 extra vectors
+- H_U generation: 32 linear combinations of H_V columns
+- Total generation time: ~1-2 seconds for complete system
+
+LUT Generation:
 - Complexity: O(2^13) = 8192 iterations (one-time)
 - Generates 64 coset leaders
-- Writes to syndrome_lut.py in syndrome_based folder
+- Writes to generated_syndrome_lut.py in matrix_generation/output/ folder
 
 Runtime:
 - Lookup complexity: O(1)
@@ -85,11 +103,13 @@ Runtime:
 
 VALIDATION:
 -----------
+- H_V matrix: Identity matrix + 7 extra vectors, all 6-vectors expressible as sum of ≤2 vectors
+- H_U matrix: 32 unique non-zero columns, all in span of H_V columns
 - LUT integrity: Exactly 64 entries, correct syndromes
 - Codeword validation: H_U @ u^T + H_V @ v^T = 0
 - Δ-syndrome flow: Transition costs match coset leader weights
 - Matrix properties: Binary values, no duplicates, proper dimensions
-- Automatic generation: LUT created correctly when missing
+- Generated files: Drop-in replacement functionality verified
 
 ADVANTAGES:
 -----------
@@ -99,21 +119,31 @@ ADVANTAGES:
 4. Deterministic: No randomness in encoding decisions
 5. Memory efficient: Minimal storage requirements
 6. Transition optimization: Minimizes bus switching costs
-7. Automatic setup: No manual LUT generation required
-8. Customizable: Easy to change H matrix and regenerate LUT
+7. Automated generation: Complete matrix and LUT generation with single command
+8. Greedy algorithm: Optimal H_V matrix with identity + 7 extra vectors
+9. Drop-in replacement: Generated files work seamlessly with existing code
+10. Clean architecture: Modular design with clear separation of concerns
 
 USAGE:
 ------
-Automatic (recommended):
-```python
-from coding_schemes.syndrome_based.syndrome_based_encoder import SyndromeBasedEncoder
-encoder = SyndromeBasedEncoder()  # Automatically generates LUT if needed
+Matrix and LUT Generation:
+```bash
+cd python_simulation/coding_schemes/syndrome_based/matrix_generation
+python main.py
 ```
 
-Manual LUT generation:
-```bash
-python -m coding_schemes.syndrome_based.generate_lut
-python -m coding_schemes.syndrome_based.generate_lut custom_H_V.npy
+Using Generated Files:
+```python
+# Option 1: Use original hard-coded matrices
+from coding_schemes.syndrome_based.H_matrix import return_H_V, return_H_U
+
+# Option 2: Use generated matrices (drop-in replacement)
+from coding_schemes.syndrome_based.matrix_generation.output.generated_H_matrix import return_H_V, return_H_U
+from coding_schemes.syndrome_based.matrix_generation.output.generated_syndrome_lut import get_leader
+
+# Use with encoder
+from coding_schemes.syndrome_based.syndrome_based_encoder import SyndromeBasedEncoder
+encoder = SyndromeBasedEncoder()  # Automatically generates LUT if needed
 ```
 
 APPLICATIONS:
