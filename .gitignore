@@ -11,3 +11,6 @@ python_simulation/coding_schemes/Useless.py
 # Python virtual environments
 .venv/
 venv/
+
+# Matrix generation output files
+python_simulation/coding_schemes/syndrome_based/matrix_generation/output/

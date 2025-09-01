@@ -9,23 +9,10 @@
 """
 
 import logging
-import os
 from coding_schemes.base_coding_scheme import CodingScheme
-import numpy as np  # type: ignore
-from typing import List, Tuple
+import numpy as np  
 from .H_matrix import return_H_U, return_H_V
-
-# Try to import syndrome_lut, generate it if it doesn't exist
-try:
-    from . import syndrome_lut
-except ImportError:
-    # LUT doesn't exist, generate it
-    from .generate_lut import precompute_coset_leaders
-    import logging
-    logging.info("Syndrome LUT not found. Generating new LUT...")
-    precompute_coset_leaders(return_H_V(), os.path.join(os.path.dirname(__file__), 'syndrome_lut.py'))
-    from . import syndrome_lut
-
+from . import syndrome_lut
 
 class SyndromeBasedEncoder(CodingScheme):
     """
