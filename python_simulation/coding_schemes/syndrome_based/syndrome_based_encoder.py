@@ -12,7 +12,7 @@ import logging
 from coding_schemes.base_coding_scheme import CodingScheme
 import numpy as np  
 from .H_matrix import return_H_U, return_H_V
-from . import syndrome_lut
+from .syndrome_lut import get_leader
 
 class SyndromeBasedEncoder(CodingScheme):
     """
@@ -44,7 +44,7 @@ class SyndromeBasedEncoder(CodingScheme):
         return n
 
 
-    def encode(self, u_bits: list, c_prev: list, M=None) -> list:
+    def encode(self, u_bits: list, c_prev: list, M=None, mode=None) -> list:
         """Compute v using Δ-syndrome approach with previous state"""
 
         u_array = np.array(u_bits)
@@ -59,7 +59,7 @@ class SyndromeBasedEncoder(CodingScheme):
         # Lookup delta_v = get_leader(delta_s)
         # Convert syndrome to tuple of int64 for lookup
         delta_s_tuple = tuple(np.int64(x) for x in delta_s)
-        delta_v = syndrome_lut.get_leader(delta_s_tuple)
+        delta_v = get_leader(delta_s_tuple)
         if delta_v is None:
             logging.error(f"No coset leader found for syndrome {delta_s}")
             # Use zero vector as fallback
@@ -70,10 +70,12 @@ class SyndromeBasedEncoder(CodingScheme):
         # Set v_curr = prev_v XOR delta_v
         v_curr = v_prev ^ delta_v
 
-        self.syndrome_prev = s_curr
+        # Only update syndrome state if not in exhaustive mode (mode 3)
+        if mode != 3:
+            self.syndrome_prev = s_curr
 
         c = np.concatenate((u_array, v_curr))
-        logging.debug(f"Syndrome-based encoded word: {c}")
+        logging.debug(f"Syndrome-based encoded word:            {c}")
         return c.tolist()
     
 

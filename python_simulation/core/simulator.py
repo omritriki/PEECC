@@ -29,7 +29,7 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, mode = 1):
         mode (int): Word generation mode (1=random, 2=LFSR, 3=exhaustive)
 
     Returns:
-        tuple[int, int]: Maximum transitions and total average transitions recorded during simulation.
+        tuple[int, int, bool]: Maximum transitions, total average transitions, and success status (True if all words processed successfully, False if encoding/decoding mismatch occurred).
     """
     simulator_logger = logging.getLogger("Simulator")
     encoder = coding_scheme.encode
@@ -53,7 +53,7 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, mode = 1):
 
         s_in = generator.generate(k, mode=mode, i=i)
        
-        c = encoder(s_in, c_prev, M)
+        c = encoder(s_in, c_prev, M, mode)
         transition_count.transition_count(c, c_prev)
 
         # Generate error
@@ -70,15 +70,17 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, mode = 1):
         # Update the previous codeword
         c_prev = c
 
+    # Get transition counts
+    max_transitions, avg_transitions = transition_count.transition_count(c_prev, c_prev)
+    
     # Log the result of the simulation ##### These need to be in the controller
     if match:
-        return transition_count.transition_count(c_prev, c_prev)
+        # Show expected average transitions only for Mbit-BI coding scheme
+        if isinstance(coding_scheme, mbit_bi.MbitBI): 
+            simulator_logger.info(f"Expected Avg transitions: {coding_scheme.calculate_expected_average(k, M)}\n")
+        return max_transitions, avg_transitions, True
     
-    # Show expected average transitions only for Mbit-BI coding scheme
-    if isinstance(coding_scheme, mbit_bi.MbitBI) and match: 
-        simulator_logger.info(f"Expected Avg transitions: {coding_scheme.calculate_expected_average(k, M)}\n")
-    
-    # Return default values if there's a mismatch
+    # Return transition counts with failure status if there's a mismatch
     simulator_logger.error("Simulation failed due to encoding/decoding mismatch")
-    return (0, 0)
+    return max_transitions, avg_transitions, False
     

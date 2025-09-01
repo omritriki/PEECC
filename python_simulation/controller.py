@@ -52,13 +52,18 @@ def controller():
     if generator_choice not in SIMULATION_MODES:
         controller_logger.error("Invalid choice. Please select either 1, 2, or 3\n")
         return
+
     
     if generator_choice == 3:
         t = 2 ** k
 
     start = time.perf_counter()   
-    max_transitions, avg_transitions = simulator.simulate(coding_scheme, k, t, error_p, M=M, mode=generator_choice)
+    max_transitions, avg_transitions, simulation_success = simulator.simulate(coding_scheme, k, t, error_p, M=M, mode=generator_choice)
     elapsed = time.perf_counter() - start
+
+    # Check if simulation failed
+    if not simulation_success:
+        return
 
     print("\n============= SIMULATION RESULTS =============\n")
 
@@ -93,9 +98,10 @@ def _get_scheme_prompt() -> str:
     """
     prompt = "\n========== ENCODING SCHEME SELECTION ==========\n\n"
     
-    # Group schemes by paper
-    paper1_schemes = {k:v for k,v in SCHEMES.items() if k < 4}
-    paper2_schemes = {k:v for k,v in SCHEMES.items() if k >= 4}
+    # Group schemes by paper (using correct indices from simulation_config.py)
+    paper1_schemes = {k:v for k,v in SCHEMES.items() if 1 <= k <= 4}
+    paper2_schemes = {k:v for k,v in SCHEMES.items() if 5 <= k <= 7}
+    syndrome_schemes = {k:v for k,v in SCHEMES.items() if k >= 8}
     
     prompt += " [Paper 1] Memory Bus Encoding for Low Power: A Tutorial:\n"
     for num, scheme in paper1_schemes.items():
@@ -106,7 +112,6 @@ def _get_scheme_prompt() -> str:
         prompt += f"    {num}. {scheme.name}\n"
     
     # Add syndrome-based schemes
-    syndrome_schemes = {k:v for k,v in SCHEMES.items() if k >= 8}
     if syndrome_schemes:
         prompt += "\n [Syndrome-based Error Correction]:\n"
         for num, scheme in syndrome_schemes.items():

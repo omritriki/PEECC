@@ -98,14 +98,21 @@ def generate_hu_from_hv(Hv, hu_cols=32, seed=None):
             if np.all(candidate == 0):
                 continue
             
-            # Check if this vector is already in Hu (avoid duplicates)
-            is_duplicate = False
+            # Check if this vector is already in Hu (avoid duplicates within Hu)
+            is_duplicate_in_hu = False
             for existing_col in range(col_idx):
                 if np.array_equal(candidate, Hu[:, existing_col]):
-                    is_duplicate = True
+                    is_duplicate_in_hu = True
                     break
             
-            if not is_duplicate:
+            # Check if this vector already exists in Hv (avoid duplicates with Hv)
+            is_duplicate_in_hv = False
+            for hv_col in range(Hv.shape[1]):
+                if np.array_equal(candidate, Hv[:, hv_col]):
+                    is_duplicate_in_hv = True
+                    break
+            
+            if not is_duplicate_in_hu and not is_duplicate_in_hv:
                 # Verify it's in the span of Hv
                 if is_in_span(candidate, Hv):
                     Hu[:, col_idx] = candidate
@@ -150,6 +157,20 @@ def validate_hu_properties(Hu, Hv):
         print("✓ All columns of Hu are in span of Hv")
     else:
         print("✗ Some columns of Hu are not in span of Hv")
+        return False
+    
+    # Check for duplicates between Hu and Hv
+    has_duplicates_with_hv = False
+    for hu_col_idx in range(Hu.shape[1]):
+        for hv_col_idx in range(Hv.shape[1]):
+            if np.array_equal(Hu[:, hu_col_idx], Hv[:, hv_col_idx]):
+                print(f"✗ Column {hu_col_idx + 1} of Hu is identical to column {hv_col_idx + 1} of Hv")
+                has_duplicates_with_hv = True
+    
+    if not has_duplicates_with_hv:
+        print("✓ No duplicate columns between Hu and Hv")
+    else:
+        print("✗ Found duplicate columns between Hu and Hv")
         return False
     
     return True
