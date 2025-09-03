@@ -22,29 +22,28 @@ def read_128bit_word(ser):
     result = int.from_bytes(word_bytes, byteorder='big')  # MSB first
     return result
 """
+
+
 def main():
     p_ser = serial.Serial(port="COM5", baudrate=57600, bytesize=serial.EIGHTBITS,
-                          parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, timeout=30, xonxoff=0, rtscts=0, dsrdtr=0)
+                          parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, timeout=30, xonxoff=0, rtscts=0,
+                          dsrdtr=0)
 
-    p_ser.setDTR(True)
-    time.sleep(0.5)
+    conf_byte = bytes([0x00] * 2)  # Configuration byte to read the PUF
+    for i in range(4):
+        print(f"------iteration {i + 1}--------")
+        p_ser.write(conf_byte)
+        word_bytes = p_ser.read(4)
+        print(f"Raw bytes: {[hex(b) for b in word_bytes]}")
+        received_word = int.from_bytes(word_bytes, byteorder='big')  # MSB first
+        reg_num = (received_word >> 22) & 0x1F  # Extract 5-bit reg_num
+        sum_value = received_word & 0x3FFFFF  # Extract 22-bit sum_value
 
-    p_ser.reset_input_buffer()
-    p_ser.reset_output_buffer()
-
-    conf_byte = bytes([0x00]*2)  # Configuration byte to read the PUF
-    p_ser.write(conf_byte)
-    #received_word = read_128bit_word(p_ser)
-    #time.sleep(0.5)
-    word_bytes = p_ser.read(4)
-    print(f"word_bytes: {word_bytes}")
-    received_word = int.from_bytes(word_bytes, byteorder='big')  # MSB first
-    print(received_word)
-    #print(f"\nRECEIVED 200-BIT WORD FOR NOISY PUF: {received_word:050x}\n")
-    bin_str = bin(received_word)#[2:]#.zfill(200)
-    print(f"Binary string: {bin_str}")
+        print(f"reg_num: {reg_num}")
+        print(f"sum_value: {sum_value}")
+        print(f"Full binary: {bin(received_word)[2:].zfill(32)}")
+        time.sleep(1)
     p_ser.close()
-
 
 
 """

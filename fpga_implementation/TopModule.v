@@ -35,6 +35,7 @@ module TopModule #(parameter M=5, k=32, A=8)(
     wire done;
     //wire [15:0] data_bus_rx_in; // 128 bits - 16 bytes
     wire [26:0] data_bus_tx_out; // 128 bits - 16 bytes
+	 //wire [4:0] state_num;
     wire rx_valid_in; // valid input from uart - '1' when data is valid
     wire start_tx; // start transmission signal to uart - '1' when data is ready to be sent
     wire txFinish; // transmission finished signal from uart - '1' when data is sent
@@ -52,7 +53,7 @@ module TopModule #(parameter M=5, k=32, A=8)(
 	.ser_in(FTDI_BDBUS_0),  // uart RXD input
 	.ser_out(FTDI_BDBUS_1), // uart TXD output
 	.bus_SERDES(), // parallel input 16 bytes from uart
-	.ciphertext({{(PADDING_BITS){1'b0}}, isequal, data_bus_tx_out}), // parallel output 16 bytes to uart
+	.ciphertext({/*state_num, */{(PADDING_BITS){1'b0}}, isequal, data_bus_tx_out}), // parallel output 16 bytes to uart
 	.valid_in(rx_valid_in), // valid input from uart - '1' when data is valid
 	.start_tx(start_tx), // start transmission signal to uart - '1' when data is ready to be sent
 	.txFinish(txFinish), // transmission finished signal from uart - '1' when data is sent
@@ -78,6 +79,7 @@ module TopModule #(parameter M=5, k=32, A=8)(
         .done            (done),
 		  .start_tx	       (start_tx),
 		  .inn_rst_n       (inn_rst_n)
+		  //.state_num		 (state_num)
     );
 
     //----------------------------------------------

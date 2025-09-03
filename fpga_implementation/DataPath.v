@@ -398,7 +398,7 @@ module input_data_generator #(parameter k = 32)(
             lfsr_14bit lfsr (
                 .clk(clk),
                 .rst_n(rst_n),
-                .seed(14'b11000000000001 ^ j),
+                .seed(14'b11000000000001 ^ j[13:0]),
                 .msb_out(lfsr_out[j])
             );
         end

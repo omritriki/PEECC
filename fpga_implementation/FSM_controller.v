@@ -1,13 +1,3 @@
- /*
-======================================================
-   Power Efficient Error Correction Encoding for
-           On-Chip Interconnection Links
-
-           Shlomit Lenefsky & Omri Triki
-                   06.2025
-======================================================
-*/
-
 module FSM_controller (
     input  wire         clk,
     input  wire         rst_n,
@@ -22,8 +12,9 @@ module FSM_controller (
     output reg          en_k_comp,
     output reg          trigger,
     output reg          done,
-    output reg         start_tx,
-	 output reg        inn_rst_n
+    output reg          start_tx,
+	 output reg          inn_rst_n
+	 //output reg				state_num
 );
 
     // State declarations
@@ -35,124 +26,76 @@ module FSM_controller (
     localparam [2:0] S4   = 3'd5;
     localparam [2:0] S5   = 3'd6;
 
-    (* S = "TRUE"*) (* dont_touch = "TRUE" *) reg [2:0] state, nextstate;
+    reg [2:0] state;
+	reg [2:0] prev_state;
+	reg [2:0] next_state_reg; // holds next state to execute
 
-    // Counter signals
-    reg  enable_cnt, enable_cnt_next;
-    reg  done_cnt;
+        // Counter signals
     reg [10:0] cnt;
-
-    always @(posedge clk) begin 
-	// Synchronous state register
+    reg [3:0]  state_counter;       // counts runs in current state      
+	
+    always @(posedge clk or negedge rst_n) begin 
         if (~rst_n) begin
-            state       <= IDLE;
-            enable_cnt  <= 1'b0;
-            cnt         <= 11'b1;
-            done_cnt    <= 1'b0;
-            trigger     <= 1'b0;
-				done        <= 1'b0;
-				start_tx    <= 1'b0;
+            state          <= IDLE;
+            prev_state     <= IDLE;
+            next_state_reg <= S0; 
+            cnt            <= 11'd0;
+            trigger        <= 1'b0;
+            done           <= 1'b0;
+            start_tx       <= 1'b0;
+            state_counter  <= 4'd0; 
         end
         else begin
-            state <= nextstate;
-				enable_cnt <= enable_cnt_next;
-				// Pulse start_tx only on S5 entry
-            if (state != S5 && nextstate == S5) begin
-                start_tx <= 1'b1;
-					 done <= 1'b1;
-				end
-            else begin
-                start_tx <= 1'b0;
-					 done <= 1'b0;
-            end
+            // Save previous state
+            prev_state <= state;
 
-				// Counter
-				if (enable_cnt) begin
-					if (cnt == 11'd0) begin
-						done_cnt <= 1'b1;
-					end
-					else begin
-						done_cnt <= 1'b0;
-					end
-
-					cnt <= cnt + 1'b1;
-
-					// If (cnt > 0) and (cnt < 4) => set trigger
-					// Check cnt next-state to see if it is > 0 and < 4
-					// so we use the current value of cnt before increment
-					if ((cnt > 0) && (cnt < 10)) begin
-						trigger <= 1'b1;
-					end
-					else begin
+            // Default outputs
+            start_tx <= 1'b0;
+            done     <= 1'b0;
+                
+            case (state)
+                IDLE: begin
 						trigger <= 1'b0;
-					end
+						if (valid_in) begin
+							state <= next_state_reg;   // jump to stored state
+						end
 				end
-				else begin
-					cnt      <= 11'd1;
-					done_cnt <= 1'b0;
-					trigger  <= 1'b0;
-				end
-		  end
+
+                S0, S1, S2, S3, S4: begin
+                        trigger <= 1'b1;
+                        if (cnt == 11'b11111111111) begin
+                            cnt   <= 11'd0;
+                            state <= S5;              // after 16 runs ? transmit
+                        end 
+                        else begin
+                            cnt <= cnt + 1'b1;
+                        end
+                end
+
+                S5: begin
+							trigger <= 1'b0;
+                    // Pulse start_tx and done on S5 entry
+                    if (prev_state != S5 && state == S5) begin
+                        start_tx <= 1'b1;
+                        done     <= 1'b1;
+                    end
+                    if (txFinish) begin
+                        if (state_counter == 4'd1) begin
+                            state_counter  <= 4'd0;
+									 next_state_reg <= next_state_reg + 3'd4;
+                        end
+                        else begin
+									 state_counter <= state_counter + 1'b1;
+								end
+								state <= IDLE;
+                    end
+                end
+            endcase
+        end
     end
- 
-    // Next-state logic
-    always @(*) begin
-        // Default assignments
-        nextstate   <= state;
-		  enable_cnt_next <= enable_cnt;
 
-        case (state)
-            IDLE: begin
-                if (valid_in == 1'b1) begin
-                    nextstate  <= S4; ///////////////////////////return to state s0
-                    enable_cnt_next <= 1'b1;
-						  //start_tx = 1'b0;
-                end
-            end
 
-            S0: begin
-                if (done_cnt == 1'b1) begin
-                    nextstate <= S1;
-                end
-            end
 
-            S1: begin
-                if (done_cnt == 1'b1) begin
-                    nextstate <= S2;
-                end
-            end
-
-            S2: begin
-                if (done_cnt == 1'b1) begin
-                    nextstate <= S3;
-                end
-            end
-
-            S3: begin
-                if (done_cnt == 1'b1) begin
-                    nextstate <= S4;
-                end
-            end
-
-            S4: begin
-                if (done_cnt == 1'b1) begin
-                    nextstate <= S5;
-						  //done = 1'b1;
-						  enable_cnt_next <= 1'b0;
-                end
-            end
-
-	    S5: begin
-                if (txFinish == 1'b1) begin
-                    nextstate <= IDLE;
-                end
-            end
-
-            default: begin
-                nextstate  <= IDLE;
-            end
-        endcase
-    end
 
     // State output logic
     always @(*) begin
@@ -169,11 +112,13 @@ module FSM_controller (
         case (state)
             IDLE: begin
                 inn_rst_n <= 0;
+					 if (valid_in == 1) begin
+						inn_rst_n <= 1;
+					 end
             end
 
             S0: begin
-					inn_rst_n <= 1;
-               en_gen_data <= 1'b1;
+                en_gen_data <= 1'b1;
             end
 
             S1: begin
@@ -195,7 +140,6 @@ module FSM_controller (
             end
 
             S4: begin
-					 inn_rst_n      <= 1'b1;
                 en_gen_data    <= 1'b1;
                 en_enc         <= 1'b1;
                 en_bus         <= 1'b1;
@@ -204,13 +148,12 @@ module FSM_controller (
                 en_k_comp      <= 1'b1;
             end
 
-	    S5: begin
-	    end
+            S5: begin
+            end
 
             default: begin
                 // Everything stays 0
             end
         endcase
     end
-
 endmodule
