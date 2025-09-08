@@ -20,6 +20,7 @@ register          14: 117
 register          15: 093
 register          16: 3b8
 register          17: 000
+register          18: 000
 """
 
 # Parse "register <idx>: <hexval>"
