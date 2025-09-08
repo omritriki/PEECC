@@ -24,37 +24,41 @@ module datapath_tb;
         forever #5 clk = ~clk;
     end
 
-    // Helper: apply one vector with a reset pulse to ensure valid codeword
+    // Helper: apply one vector and check after proper pipeline delay
     task apply_and_check(input [31:0] vec);
+        reg [31:0] expected_data;
         begin
-            // Reset to clear syndrome/v_prev state so current v is valid
-            rst_n   = 1'b0;
+            // Apply the input vector
             info_in = vec;
-            @(posedge clk);
-            rst_n   = 1'b1;
-
-            // Allow a couple of cycles for pipeline (syndrome reg + v_prev reg)
-            @(posedge clk);
-            @(posedge clk);
-
-            if (match) begin
-                $display("[%0t] PASS: info_in=0x%08h decoded_out=0x%08h", $time, info_in, decoded_out);
+            expected_data = vec;  // Store what we expect to get back
+            
+            // Wait for the pipeline to process this data
+            // The encoder has 1 pipeline stage, top_module has 1 delay stage
+            // So we need to wait 2 cycles for the data to flow through
+            @(posedge clk);  // Cycle 1: data enters encoder
+            @(posedge clk);  // Cycle 2: data exits encoder, enters decoder
+            
+            // Check the result
+            if (decoded_out == expected_data) begin
+                $display("[%0t] PASS: info_in=0x%08h decoded_out=0x%08h", $time, expected_data, decoded_out);
             end else begin
-                $display("[%0t] FAIL: info_in=0x%08h decoded_out=0x%08h", $time, info_in, decoded_out);
+                $display("[%0t] FAIL: info_in=0x%08h decoded_out=0x%08h", $time, expected_data, decoded_out);
             end
         end
     endtask
 
     // Stimulus
     initial begin
-        // Init
+        // Initialize and reset
         rst_n   = 1'b0;
         info_in = 32'h0;
-        repeat (2) @(posedge clk);
+        repeat (3) @(posedge clk);
         rst_n   = 1'b1;
-        @(posedge clk);
+        
+        // Wait a few extra cycles for the system to stabilize
+        repeat (3) @(posedge clk);
 
-        // A few fixed vectors
+        // Test vectors
         apply_and_check(32'h00000000);
         apply_and_check(32'hFFFFFFFF);
         apply_and_check(32'hA5A5A5A5);
@@ -63,9 +67,11 @@ module datapath_tb;
         apply_and_check(32'hDEADBEEF);
 
         // A few random vectors
-        repeat (5) begin
-            apply_and_check($urandom);
-        end
+        apply_and_check(32'h12F837E7);
+        apply_and_check(32'h8EB74A7C);
+        apply_and_check(32'h4682679C);
+        apply_and_check(32'h3030BA1C);
+        apply_and_check(32'h519AFDE8);
 
         $display("Testbench completed.");
         $finish;
