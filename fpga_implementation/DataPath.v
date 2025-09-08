@@ -279,11 +279,12 @@ module my_transition_counter #(parameter n = 37) (
 					temp_sum = 0;
 					temp_reg = reg_num;
 					
-					for (j = 0; j < (n/2); j = j + 1) begin
+					for (j = 0; j <= (n/2); j = j + 1) begin
 						 if (registers_cnt[j] > temp_max) begin
 							  temp_max = registers_cnt[j];
 							  temp_reg = j;
 						 end
+						 $display("register %d: %h", j, registers_cnt[j]);
 						 temp_sum = temp_sum + (registers_cnt[j] * j);
 					end
 					
