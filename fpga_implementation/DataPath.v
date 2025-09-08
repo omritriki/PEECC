@@ -19,9 +19,7 @@ endmodule
 
 
 module my_buffer #(parameter A = 1)(  
-    input wire clk,
-    input wire rst_n, 
-    input wire en, 
+    input wire clk, rst_n, en,
     input wire [A-1:0] in,
     output reg [A-1:0] out
 );
@@ -33,30 +31,6 @@ module my_buffer #(parameter A = 1)(
     end
 endmodule
 
-/*
-module FourCycleDelay #(parameter k = 32)(
-    input wire clk,
-    input wire rst,
-    input wire [k-1:0] data_in,
-    output reg [k-1:0] data_out
-);
-    reg [k-1:0] buf0, buf1, buf2;
-
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
-            buf0 <= 0;
-            buf1 <= 0;
-            buf2 <= 0;
-        end 
-        else begin
-            buf2 <= buf1;
-            buf1 <= buf0;
-            buf0 <= data_in;
-            data_out <= buf2;
-        end
-    end
-endmodule
-*/
 
 module my_bitwiseXOR #(parameter A = 8)(
     input wire [A-1:0] a,   
@@ -97,9 +71,7 @@ endmodule
 
 
 module my_check_invert #(parameter A = 8)(
-    input wire clk,
-    input wire rst_n, 
-    input wire en,
+    input wire clk, rst_n, en,
     input wire [A-1:0] S_i,
     output wire [A-1:0] X_i,
     output wire INV_i
@@ -109,37 +81,38 @@ module my_check_invert #(parameter A = 8)(
     wire [$clog2(A+1)-1:0] sum;
     wire equal, greater, inv_prev;
 
-    my_buffer #(1) buf_inv (.clk(clk), .rst_n(rst_n), .en(en), .in(INV_i), .out(inv_prev));
-    my_buffer #(A) buf_s_x (.clk(clk), .rst_n(rst_n), .en(en), .in(X_i), .out(X_i_prev)); 
-	 my_bitwiseXOR #(A) bxor (.a(S_i), .b(X_i_prev), .out(xor_out)); 
-	 my_adder #(A) add (.rst_n(rst_n), .a(xor_out), .sum(sum));
-    my_comparator #(A) cmp (.sum(sum), .equal(equal), .greater(greater));
+    my_buffer #(1) buf_inv (
+        .clk(clk), 
+        .rst_n(rst_n), 
+        .en(en), 
+        .in(INV_i), 
+        .out(inv_prev));
+    my_buffer #(A) buf_s_x (
+        .clk(clk), 
+        .rst_n(rst_n), 
+        .en(en), 
+        .in(X_i), 
+        .out(X_i_prev)); 
+	my_bitwiseXOR #(A) bxor (
+        .a(S_i), 
+        .b(X_i_prev), 
+        .out(xor_out)); 
+	my_adder #(A) add (
+        .rst_n(rst_n), 
+        .a(xor_out), 
+        .sum(sum));
+    my_comparator #(A) cmp (
+        .sum(sum), 
+        .equal(equal), 
+        .greater(greater));
 
     assign INV_i = (equal & inv_prev) | greater;
     assign X_i = INV_i ? ~S_i : S_i;
 endmodule
 
 
-/*
-Module:     Encoder
-Description:
-            Applies bus invert encoding to a wide input word, partitioning it into segments
-            and encoding each segment to reduce bit transitions
-Notations:
-            S_i   - Input data word segment
-            X_i   - Encoded data word segment
-            INV_i - Inversion flag per segment
-Parameters:
-            M - Number of segments 
-            k - Total input/output word width
-            A - Segment width
-*/
-
-
 module my_encoder #(parameter M = 5, k = 32, A = 8)( 
-    input wire clk,
-    input wire rst_n,
-    input wire en,
+    input wire clk, rst_n, en,
     input wire [k-1:0] S,
     output wire [k-1:0] X,
     output wire [M-1:0] INV1
@@ -150,7 +123,9 @@ module my_encoder #(parameter M = 5, k = 32, A = 8)(
             wire [A-2:0] S_part1 = S[i*(A-1) +: (A-1)];
             wire [A-2:0] X_part1;
             my_check_invert #(A-1) ci1 (
-                .clk(clk), .rst_n(rst_n), .en(en),
+                .clk(clk), 
+                .rst_n(rst_n), 
+                .en(en),
                 .S_i(S_part1),
                 .X_i(X_part1), 
                 .INV_i(INV1[i])
@@ -162,12 +137,13 @@ module my_encoder #(parameter M = 5, k = 32, A = 8)(
     genvar j;
     generate
         for (j = 0; j < (M - ((k + M) % M)); j = j + 1) begin : check_invert_gen2
-	    localparam integer start = ((k+M)%M)*(A-1) + j*(A-2);
-	    
+	        localparam integer start = ((k+M)%M)*(A-1) + j*(A-2);
             wire [A-3:0] S_part2 = S[start +: (A-2)];
             wire [A-3:0] X_part2;
             my_check_invert #(A-2) ci2(
-                .clk(clk), .rst_n(rst_n), .en(en),
+                .clk(clk), 
+                .rst_n(rst_n), 
+                .en(en),
                 .S_i(S_part2),
                 .X_i(X_part2), 
                 .INV_i(INV1[((k+M)%M)+j])
@@ -178,19 +154,6 @@ module my_encoder #(parameter M = 5, k = 32, A = 8)(
 endmodule
 
 
-/*
-Module:     Decoder
-Description:
-            Decodes bus invert encoded data by applying inversion based on inversion flags
-Notations:
-            X_i   - Encoded data word segment
-            INV_i - Inversion flag per segment
-            S_i   - Decoded (original) data word segment
-Parameters:
-            M - Number of segments (inversion flags)
-            k - Total input/output word width
-            A - Segment width
-*/
 module my_decoder #(parameter M = 5, k = 32, A = 8)( 
     input wire [k-1:0] X,
     input wire [M-1:0] INV1,
@@ -226,173 +189,93 @@ module my_decoder #(parameter M = 5, k = 32, A = 8)(
     endgenerate
 endmodule
 
+
 (* S = "TRUE"*) (* dont_touch = "TRUE" *)
 module my_transition_counter #(parameter n = 37) (
-    input wire clk,
-    input wire rst_n,
-    input wire en,
-    input wire done,
+    input wire clk, rst_n, en, done,
     input wire [n-1:0] data_in,
-    //output reg [11*(n/2)-1:0] registers
     output reg  [4:0] reg_num,
     output reg  [21:0] sum_value
 );
-
     reg [n-1:0] prev_data;
     reg [n-1:0] xor_result;
     reg [10:0] registers_cnt [(n/2):0];
-    reg [10:0] max_value;  
-// Use local variables for calculation
 	reg [10:0] temp_max;
 	reg [21:0] temp_sum;
 	reg [4:0] temp_reg;	 
 
     integer i, j, transition_count;
     
-    // In my_transition_counter module:
 	always @(posedge clk or negedge rst_n) begin
-		 if (~rst_n) begin
-			  prev_data = 0;
-			  xor_result = 0;
-			  reg_num = 0;
-			  sum_value = 0;
-			  // Reset all registers
-			  for (i = 0; i <= (n/2); i = i + 1) begin
-					registers_cnt[i] = 11'b0;
-			  end
-		 end 
-		 else begin
-			  if (en) begin
-					xor_result = data_in ^ prev_data;
-					transition_count = 0;  // This can stay blocking
-					// Count transitions
-					for (i = 0; i < n; i = i + 1) begin
-						 transition_count = transition_count + xor_result[i];
-					end
-					prev_data = data_in;
-					registers_cnt[transition_count] = registers_cnt[transition_count] + 1'b1;
-			  end
+		if (~rst_n) begin
+            prev_data = 0;
+            xor_result = 0;
+            reg_num = 0;
+            sum_value = 0;
+            for (i = 0; i <= (n/2); i = i + 1) begin
+                registers_cnt[i] = 11'b0;
+            end
+        end 
+        else begin
+            if (en) begin
+                xor_result = data_in ^ prev_data;
+                transition_count = 0;  
+                for (i = 0; i < n; i = i + 1) begin
+                    transition_count = transition_count + xor_result[i];
+                end
+                prev_data = data_in;
+                registers_cnt[transition_count] = registers_cnt[transition_count] + 1'b1;
+            end
 
-			  if (done) begin
+            if (done) begin
+                temp_max = 0;
+                temp_sum = 0;
+                temp_reg = reg_num;
 					
-					temp_max = 0;
-					temp_sum = 0;
-					temp_reg = reg_num;
-					
-					for (j = 0; j <= (n/2); j = j + 1) begin
-						 if (registers_cnt[j] > temp_max) begin
-							  temp_max = registers_cnt[j];
-							  temp_reg = j;
-						 end
-						 $display("register %d: %h", j, registers_cnt[j]);
-						 temp_sum = temp_sum + (registers_cnt[j] * j);
-					end
-					
-					reg_num = temp_reg;
-					sum_value = temp_sum;
-			  end
-		 end
+                for (j = 0; j <= (n/2); j = j + 1) begin
+                    if (registers_cnt[j] > temp_max) begin
+                        temp_max = registers_cnt[j];
+                        temp_reg = j;
+                    end
+                    $display("register %d: %h", j, registers_cnt[j]);
+                    temp_sum = temp_sum + (registers_cnt[j] * j);
+                end
+                reg_num = temp_reg;
+                sum_value = temp_sum;
+            end
+        end
 	end
 endmodule
 
-module max_sum_finder #(parameter n = 37)(
-	 input wire clk,
-    input wire rst_n,
-    input wire [11*(n/2)-1:0] registers,
-    output reg  [4:0] reg_num,
-    output reg  [21:0] sum_value // 22 bits to avoid overflow for sum
-);
-    integer i;
-    reg [10:0] value;
-	 reg [10:0] max_value;
-    always @(posedge clk or negedge rst_n) begin
-        if (~rst_n) begin
-				max_value = 0;
-				sum_value = 0;
-				reg_num = 0;
-			end
-		  else begin
-				for (i = 0; i < (n/2); i = i + 1) begin
-					value = registers[i*11 +: 11];
-					if (value > max_value) begin
-						max_value = value;
-						reg_num = i;
-					end
-					sum_value = sum_value + value*i;
-				end
-				$display("reg num:", reg_num);
-				$display("sum:", sum_value);
-		  end
-    end
-endmodule
-
-/*
-module K_Comparator #(parameter k = 32)(
-    input wire clk,
-    input wire [k-1:0] S_in,
-    input wire [k-1:0] S_out,
-	output wire isequal
-);
-	
-	assign isequal = (S_in == S_out);
-endmodule
-*/
 
 module lfsr_14bit (
-    input  wire        clk,
-    input  wire        rst_n,
-    input  wire [13:0] seed,       // Initial seed
-    output wire        msb_out
+    input  wire clk, rst_n,
+    input  wire [13:0] seed,       
+    output wire msb_out
 );
-
     reg [13:0] lfsr_reg;
     reg feedback;
-    integer i;
-
-  // initial begin 
-//		for (i = 0; i < 14; i = i + 1) begin
-//			 lfsr_reg <= 1'b0;
-//		end
-//		feedback <= seed;
- //  end
  
-    // On reset, load the seed. Otherwise, shift and feedback.
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin 
             lfsr_reg <= seed;
-				feedback <= 1'b0;
-		  end
+            feedback <= 1'b0;
+        end
         else begin
-            // feedback: XOR of registers at 13, 4, 3, 1, 0
             feedback <= lfsr_reg[13] ^ lfsr_reg[4] ^ lfsr_reg[3] ^ lfsr_reg[1] ^ lfsr_reg[0];
             lfsr_reg <= {lfsr_reg[12:0], feedback};
         end
     end
-
     assign msb_out = lfsr_reg[0];
-
 endmodule
 
+
 module input_data_generator #(parameter k = 32)(
-    input wire clk,
-    input wire rst_n,
-    input wire en,
+    input wire clk, rst_n, en,
     output reg [k-1:0] S_data
 );
-
-    // Example: k different seeds (could be parameterized or randomized)
-    //genvar i;
-    //generate
-    //    for (i = 0; i < k; i = i + 1) begin : Gen_seeds
-	//			wire [13:0] seeds;// [k-1:0];
-           // For demonstration, each seed is a shifted version of a base seed
-   //         assign seeds = 14'b11000000000001 ^ i;
-   //     end
-    //endgenerate
-
     wire [k-1:0] lfsr_out;
 
-    // Instantiate k LFSRs
     genvar j;
     generate
         for (j = 0; j < k; j = j + 1) begin: Gen_lfsrs
@@ -405,22 +288,21 @@ module input_data_generator #(parameter k = 32)(
         end
     endgenerate
 
-    // Output logic
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
             S_data <= 0;
-		  end
+        end
         else begin 
-				if (en) begin
-					S_data <= lfsr_out;
-				end
-		  end
+            if (en) begin
+                S_data <= lfsr_out;
+            end
+        end
     end
 endmodule
 
+
 module my_fcd #(parameter k = 32)(
-    input wire clk,
-    input wire rst_n,
+    input wire clk, rst_n,
     input wire [k-1:0] data_in,
     output reg [k-1:0] data_out
 );
@@ -431,7 +313,7 @@ module my_fcd #(parameter k = 32)(
             buf0 <= 0;
             buf1 <= 0;
             buf2 <= 0;
-				data_out <= 0;
+            data_out <= 0;
         end 
         else begin
             buf2 <= buf1;
@@ -442,42 +324,35 @@ module my_fcd #(parameter k = 32)(
     end
 endmodule
 
+
 module my_k_comparator #(parameter k = 32)(
-    //input wire clk,
     input wire [k-1:0] S_in,
     input wire [k-1:0] S_out,
-	 output wire isequal
+	output wire isequal
 );
-	//wire [k-1:0] xored;
-	//BitwiseXOR bxor (.a(S_out), .b(S_in), .out(xored));
-	//HammingWeight hw (.in(xored), .weight(cnt));
-		assign isequal = (S_in == S_out);
+	assign isequal = (S_in == S_out);
 endmodule
 
 
 module DataPath #(parameter M = 5, k = 32, A = 8)(
-    input wire clk,
-    input wire rst_n,
-    input wire done, 
+    input wire clk, rst_n, done,
     input wire en_gen_data, en_enc, en_bus, en_dec, en_trans_count, en_k_comp,
-	 //input wire en_gen_err,
     output wire isequal,
-    //output wire [11*((k+M)/2)-1:0] registers
-	 output wire [4:0] max_reg,
+	output wire [4:0] max_reg,
     output wire [21:0] sum_transitions
-	 //output [(k+M)-1:0] dec_reg_out
 );
     wire [k-1:0] X, enc_mux_out, kcomp_mux_out, enc_reg_out, kcomp_reg_out;
     wire [(k+M)-1:0] bus_reg_out, bus_mux_out, dec_reg_out, dec_mux_out;
     wire [M-1:0] INV1;
     wire [k-1:0] S_data, S_data_2cmp, S_out;
-	 //wire [k-1:0] S_data, enc_mux_out, enc_reg_out, X, S_data_2cmp;
     wire [k-1:0] k_zero_input = {k{1'b0}};
     wire [(k+M)-1:0] n_zero_input = {(k+M){1'b0}};
-	 wire [11*((k+M)/2)-1:0] registers;
 
     input_data_generator #(k) data_gen( 
-        .clk(clk), .rst_n(rst_n), .en(en_gen_data), .S_data(S_data)
+        .clk(clk), 
+        .rst_n(rst_n), 
+        .en(en_gen_data), 
+        .S_data(S_data)
     );
 
     my_mux2x1 #(k) enc_mux (
@@ -488,15 +363,28 @@ module DataPath #(parameter M = 5, k = 32, A = 8)(
     );
 
     my_buffer #(k) enc_reg (
-	.clk(clk), .rst_n(rst_n), .en(en_enc), .in(enc_mux_out), .out(enc_reg_out)
+        .clk(clk), 
+        .rst_n(rst_n), 
+        .en(en_enc), 
+        .in(enc_mux_out), 
+        .out(enc_reg_out)
     );
         
     my_encoder #(M, k, A) enc (
-        .clk(clk), .rst_n(rst_n), .en(en_enc), .S(enc_reg_out), .X(X), .INV1(INV1)
+        .clk(clk), 
+        .rst_n(rst_n), 
+        .en(en_enc), 
+        .S(enc_reg_out), 
+        .X(X), 
+        .INV1(INV1)
     );
 
     my_buffer #(k+M) bus_reg (
-		  .clk(clk), .rst_n(rst_n), .en(en_bus), .in({X, INV1}), .out(bus_reg_out)
+		.clk(clk), 
+        .rst_n(rst_n), 
+        .en(en_bus), 
+        .in({X, INV1}), 
+        .out(bus_reg_out)
     );
 
     my_mux2x1 #(k+M) bus_mux (
@@ -514,16 +402,25 @@ module DataPath #(parameter M = 5, k = 32, A = 8)(
     );
 
     my_buffer #(k+M) dec_reg (
-	.clk(clk), .rst_n(rst_n), .en(en_dec), .in(dec_mux_out), .out(dec_reg_out)
+	    .clk(clk), 
+        .rst_n(rst_n), 
+        .en(en_dec), 
+        .in(dec_mux_out), 
+        .out(dec_reg_out)
     );
     
     my_decoder #(M, k, A) dec(
-        .X(dec_reg_out[(k+M)-1:M]), .INV1(dec_reg_out[M-1:0]),
+        .X(dec_reg_out[(k+M)-1:M]), 
+        .INV1(dec_reg_out[M-1:0]),
         .S_out(S_out)
     );
 
     my_buffer #(k) kcomp_reg (
-	.clk(clk), .rst_n(rst_n), .en(en_k_comp), .in(S_out), .out(kcomp_reg_out)
+	    .clk(clk), 
+        .rst_n(rst_n), 
+        .en(en_k_comp), 
+        .in(S_out), 
+        .out(kcomp_reg_out)
     );
     
     my_mux2x1 #(k) kcomp_mux (
@@ -533,75 +430,27 @@ module DataPath #(parameter M = 5, k = 32, A = 8)(
         .out(kcomp_mux_out)
     );
 
-    //wire [11*((k+M)/2)-1:0] trans_cnt_registers;
     my_transition_counter #(k+M) trans_cnt ( 
-        .clk(clk), .rst_n(rst_n), .en(en_trans_count), .done(done),
-        .data_in(bus_mux_out), .reg_num(max_reg), .sum_value(sum_transitions) //.registers(registers)
-    );
-	 
-	/* max_sum_finder #(k+M) max_sum_inst (
-		  .clk(clk), 
-		  .rst_n(rst_n),
-        .registers(registers),
-        .reg_num(max_reg),
+        .clk(clk), 
+        .rst_n(rst_n), 
+        .en(en_trans_count), 
+        .done(done),
+        .data_in(bus_mux_out), 
+        .reg_num(max_reg), 
         .sum_value(sum_transitions)
-    );*/
+    );
 
     my_fcd #(k) fcd (
-        .clk(clk), .rst_n(rst_n), .data_in(enc_mux_out), .data_out(S_data_2cmp)
+        .clk(clk), 
+        .rst_n(rst_n), 
+        .data_in(enc_mux_out), 
+        .data_out(S_data_2cmp)
     );
 
     my_k_comparator #(k) k_comp (
-        .S_in(S_data_2cmp), .S_out(kcomp_mux_out), .isequal(isequal)
+        .S_in(S_data_2cmp), 
+        .S_out(kcomp_mux_out), 
+        .isequal(isequal)
     );
-	 
-	 //always @(*) begin
-	//	registers = trans_cnt_registers;
-	 //end
+
 endmodule
-
-
-/*
-
-module Input_Data_Generator_seeded #(parameter n = 8) ( //to be used as Error_Generator
-    input wire clk,
-    input wire rst,
-    input wire en,
-    input wire [1:0] ctrl,
-    input wire load_seed,
-    input wire [n-1:0] seed,
-    output reg [n-1:0] S_data
-);
-    
-    reg [n-1:0] counter;
-    wire [n-1:0] gray_code;
-    wire [n-1:0] lfsr_out;
-    
-    GrayCounter #(n) gray_gen (.clk(clk), .rst(rst), .gray_out(gray_code));
-    LFSR #(n) lfsr_gen (.clk(clk), .rst(rst), .load(load_seed), .seed(seed), .lfsr_out(lfsr_out));
-    
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
-            S_data <= 0;
-            counter <= 0;
-        end else if (en) begin
-            case (ctrl)
-                2'b00: begin // Sequential
-                    S_data <= counter;
-                    counter <= counter + 1;
-                end
-                2'b01: begin // Gray code sequence
-                    S_data <= gray_code;
-                end
-                2'b10: begin // Random LFSR
-                    S_data <= lfsr_out;
-                end
-                2'b11: begin // Custom sequence (e.g., reverse binary)
-                    S_data <= ~counter;
-                    counter <= counter + 1;
-                end
-            endcase
-        end
-    end
-endmodule
-*/
