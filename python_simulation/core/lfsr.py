@@ -49,5 +49,4 @@ def lfsr(k, polynomial = 0b10000000011011) -> list[int]:
     # Take last bit from each LFSR to form k-bit word
     s = [register[-1] for register in lfsr.registers]
 
-    logging.debug(f"Generated a {k}-bit word:                {s}")
     return s

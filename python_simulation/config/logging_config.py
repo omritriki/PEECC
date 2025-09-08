@@ -32,10 +32,10 @@ def configure_logging(console_level=logging.WARNING):
         logging.root.removeHandler(handler)
 
     # Create file handler for all logs (DEBUG and above)
-    file_handler = logging.FileHandler(log_file_path, mode='w')
+    file_handler = logging.FileHandler(log_file_path, mode='w', encoding='utf-8')
     file_handler.setLevel(logging.DEBUG)  
     file_handler.setFormatter(logging.Formatter(
-        "%(asctime)s - %(levelname)s - %(message)s",
+        "%(asctime)s %(levelname)s %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     ))
 

@@ -40,6 +40,6 @@ def comparator(s_in, s_out) -> bool:
             )
         return False
 
-    logging.debug("Input and output words match")
+    # logging.debug("Input and output words match")
     return True
 

@@ -53,7 +53,13 @@ def simulate(coding_scheme, k, t, error_probability, M = 0, mode = 1):
 
         s_in = generator.generate(k, mode=mode, i=i)
        
-        c = encoder(s_in, c_prev, M, mode)
+        # Check if encoder supports mode parameter by inspecting its signature
+        import inspect
+        sig = inspect.signature(encoder)
+        if 'mode' in sig.parameters:
+            c = encoder(s_in, c_prev, M, mode=mode)
+        else:
+            c = encoder(s_in, c_prev, M)
         transition_count.transition_count(c, c_prev)
 
         # Generate error
