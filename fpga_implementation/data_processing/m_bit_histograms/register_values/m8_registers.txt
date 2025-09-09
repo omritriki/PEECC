@@ -1,0 +1,22 @@
+m=8:
+register           0:    4
+register           1:    0
+register           2:    0
+register           3:    0
+register           4:    0
+register           5:    0
+register           6:    7
+register           7:    0
+register           8:   32
+register           9:   26
+register          10:  169
+register          11:  285
+register          12:  445
+register          13:  470
+register          14:  400
+register          15:  179
+register          16:   31
+register          17:    0
+register          18:    0
+register          19:    0
+register          20:    0
