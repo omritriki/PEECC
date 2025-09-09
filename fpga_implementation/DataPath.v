@@ -1,12 +1,19 @@
 /*
 ======================================================
-   Power Efficient Error Correction Encoding for
-           On-Chip Interconnection Links
+    Power Efficient Error Correction Encoding for
+            On-Chip Interconnection Links
 
-           Shlomit Lenefsky & Omri Triki
-                   06.2025
+            Shlomit Lenefsky & Omri Triki
+                        09.2025
 ======================================================
 */
+
+// Purpose: Implements the data-path pipeline for the encoder/decoder flow:
+//  - Random input generation (LFSR based)
+//  - Encoding into data + control bits and bus staging
+//  - Optional decode and K-comparison against delayed source
+//  - Transition histogram and summary statistics
+
 
 module my_mux2x1 #(parameter A = 8)(
     input wire sel,
@@ -191,6 +198,7 @@ endmodule
 
 
 (* S = "TRUE"*) (* dont_touch = "TRUE" *)
+// Counts transitions between consecutive words and accumulates a histogram
 module my_transition_counter #(parameter n = 37) (
     input wire clk, rst_n, en, done,
     input wire [n-1:0] data_in,
@@ -204,9 +212,7 @@ module my_transition_counter #(parameter n = 37) (
 	reg [21:0] temp_sum;
 	reg [4:0] temp_reg;
 
-reg [15:0] total_measurements;	
-
-    integer i, j, k, transition_count;
+    integer i, j, transition_count;
     
 	always @(posedge clk or negedge rst_n) begin
 		if (~rst_n) begin
@@ -305,13 +311,12 @@ endmodule*/
 module lfsr_14bit (
     input  wire        clk,
     input  wire        rst_n,
-    input  wire [13:0] seed,       // Initial seed
-    output wire        lsb_out     // Changed from msb_out to lsb_out to match Python
+    input  wire [13:0] seed,       
+    output wire        lsb_out     
 );
 
     reg [13:0] lfsr_reg;
     reg feedback;
-    integer i;
 
     // On reset, load the seed. Otherwise, shift and feedback.
     always @(posedge clk or negedge rst_n) begin
@@ -326,7 +331,6 @@ module lfsr_14bit (
         end
     end
 
-    // Python takes the last bit: register[-1], which is lfsr_reg[0] in Verilog
     assign lsb_out = lfsr_reg[0];
 
 endmodule

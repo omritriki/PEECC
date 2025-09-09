@@ -1,3 +1,18 @@
+/*
+======================================================
+    Power Efficient Error Correction Encoding for
+            On-Chip Interconnection Links
+
+            Shlomit Lenefsky & Omri Triki
+                        09.2025
+======================================================
+*/
+
+// Purpose: Board-level wrapper wiring system clocks/resets and UART IO
+//          to the synthesizable core (TopModule) via a PLL.
+
+
+// Top-level wrapper: clocks, reset, and UART-to-core wiring
 module top_wrapper (
 	M_CLK_OSC, //clk
 	M_RESET_B, //active low reset
@@ -15,10 +30,10 @@ module top_wrapper (
 //	output [9:0] M_LED;
 	output M_HEADER;
 
-   localparam k = 32;
-   localparam M = 5;
+   	localparam k = 32; // data width
+   	localparam M = 5;  // segments for encoding
 
-	wire pll_locked;
+	wire pll_locked; // optional: probe PLL lock during bring-up
 	wire clk_4mhz_int;
 
 	clk_wiz_v3_6 my_pll (
@@ -36,6 +51,5 @@ module top_wrapper (
         .FTDI_BDBUS_1(FTDI_BDBUS_1),
         .M_HEADER(M_HEADER)
     );
-
 
 endmodule 

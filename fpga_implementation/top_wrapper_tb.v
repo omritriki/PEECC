@@ -1,17 +1,21 @@
 /*
 ======================================================
-   Power Efficient Error Correction Encoding for
-           On-Chip Interconnection Links
+    Power Efficient Error Correction Encoding for
+            On-Chip Interconnection Links
 
-           Shlomit Lenefsky & Omri Triki
-                   06.2025
+            Shlomit Lenefsky & Omri Triki
+                        09.2025
 ======================================================
 */
+
+// Purpose: Simple UART-driven testbench that stimulates the top_wrapper
+//          and provides a programmable UART bit time for RX stimulus.
+
 
 `timescale 1 ns / 1 ps
 module top_wrapper_tb();
 
-    parameter symbol_time = 17361.1;
+    parameter symbol_time = 17361.1; // UART bit time (ns) for testbench stimulus
 
     // Testbench regs and wires
     reg clk;
@@ -29,54 +33,49 @@ module top_wrapper_tb();
         .M_HEADER(M_HEADER)
     );
 
+    // Send a single UART byte over RX into DUT
     task send_uart_byte; // TASK THAT RECEIVES A BYTE AND SENDS IT SERIALLY VIA UART
-	input [7:0] in_byte;
-    begin 
-	//$display("sending byte %0h", in_byte);
-	repeat (4) @(posedge clk);
-	#(symbol_time) rx = 1'b0; // start bit
-	#(symbol_time) rx = in_byte[0];
-	#(symbol_time) rx = in_byte[1];
-	#(symbol_time) rx = in_byte[2];
-	#(symbol_time) rx = in_byte[3];
-	#(symbol_time) rx = in_byte[4];
-	#(symbol_time) rx = in_byte[5];
-	#(symbol_time) rx = in_byte[6];
-	#(symbol_time) rx = in_byte[7];
-	#(symbol_time) rx = 1'b1; // stop bit
-	repeat (4) @(posedge clk);
-	repeat (40) @(posedge clk);
-
-    end
+		input [7:0] in_byte;
+		begin 
+			repeat (4) @(posedge clk);
+			#(symbol_time) rx = 1'b0; // start bit
+			#(symbol_time) rx = in_byte[0];
+			#(symbol_time) rx = in_byte[1];
+			#(symbol_time) rx = in_byte[2];
+			#(symbol_time) rx = in_byte[3];
+			#(symbol_time) rx = in_byte[4];
+			#(symbol_time) rx = in_byte[5];
+			#(symbol_time) rx = in_byte[6];
+			#(symbol_time) rx = in_byte[7];
+			#(symbol_time) rx = 1'b1; // stop bit
+			repeat (4) @(posedge clk);
+			repeat (40) @(posedge clk);
+		end
     endtask
 
     always #(20.833/2) clk = ~clk; //48MHZ clock (IF USING PLL)
     //always #125 clk = ~clk;     //4MHZ clock (IF NOT USING PLL)
 
-   initial begin
-	clk = 0;
-	rst_n = 0;
-	rx = 1;
-	repeat (20) @(posedge clk);
+   	initial begin
+		clk = 0;
+		rst_n = 0;
+		rx = 1;
+		repeat (20) @(posedge clk);
 
-	rst_n = 1;
-	
-	send_uart_byte(8'h00);
-	send_uart_byte(8'h00);
-	
-	repeat (50000) @(posedge clk);
-	
-	send_uart_byte(8'h00);
-	send_uart_byte(8'h00);
+		rst_n = 1;
+		
+		send_uart_byte(8'h00);
+		send_uart_byte(8'h00);
+		
+		repeat (50000) @(posedge clk);
+		
+		send_uart_byte(8'h00);
+		send_uart_byte(8'h00);
 
+		repeat (50000) @(posedge clk);
+		send_uart_byte(8'h00);
+		send_uart_byte(8'h00);
 
-	repeat (50000) @(posedge clk);
-	send_uart_byte(8'h00);
-	send_uart_byte(8'h00);
-
-
-	repeat (50000) @(posedge clk);
-
-
+		repeat (50000) @(posedge clk);
     end
 endmodule
