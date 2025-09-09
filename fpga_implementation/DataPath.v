@@ -202,9 +202,11 @@ module my_transition_counter #(parameter n = 37) (
     reg [10:0] registers_cnt [(n/2):0];
 	reg [10:0] temp_max;
 	reg [21:0] temp_sum;
-	reg [4:0] temp_reg;	 
+	reg [4:0] temp_reg;
 
-    integer i, j, transition_count;
+reg [15:0] total_measurements;	
+
+    integer i, j, k, transition_count;
     
 	always @(posedge clk or negedge rst_n) begin
 		if (~rst_n) begin
@@ -298,6 +300,35 @@ module input_data_generator #(parameter k = 32)(
             end
         end
     end
+endmodule*/
+
+module lfsr_14bit (
+    input  wire        clk,
+    input  wire        rst_n,
+    input  wire [13:0] seed,       // Initial seed
+    output wire        lsb_out     // Changed from msb_out to lsb_out to match Python
+);
+
+    reg [13:0] lfsr_reg;
+    reg feedback;
+    integer i;
+
+    // On reset, load the seed. Otherwise, shift and feedback.
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin 
+            lfsr_reg <= seed;
+				feedback <= 1'b0;
+		  end
+        else begin
+            // feedback: XOR of registers at 13, 4, 3, 1, 0
+            feedback <= lfsr_reg[13] ^ lfsr_reg[4] ^ lfsr_reg[3] ^ lfsr_reg[1] ^ lfsr_reg[0];
+            lfsr_reg <= {lfsr_reg[12:0], feedback};
+        end
+    end
+
+    // Python takes the last bit: register[-1], which is lfsr_reg[0] in Verilog
+    assign lsb_out = lfsr_reg[0];
+
 endmodule
 
 
