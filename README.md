@@ -6,51 +6,79 @@ This project implements and analyzes power-efficient error correction techniques
 ## Project Structure
 
 ```
-python_simulation/
-├── config/
-│   ├── __init__.py
-│   ├── logging_config.py
-│   └── simulation_config.py
-├── core/
-│   ├── __init__.py
-│   ├── generator.py
-│   ├── simulator.py
-│   ├── transition_count.py
-│   ├── error_generator.py
-│   ├── comparator.py
-│   └── lfsr.py
-├── coding_schemes/
-│   ├── __init__.py
-│   ├── base_coding_scheme.py
-│   ├── paper1/
+PEECC/
+├── python_simulation/           # Software simulation and analysis
+│   ├── config/
 │   │   ├── __init__.py
-│   │   ├── transition_signaling.py
-│   │   ├── offset.py
-│   │   ├── offset_xor.py
-│   │   └── mbit_bi.py
-│   ├── paper2/
+│   │   ├── logging_config.py
+│   │   └── simulation_config.py
+│   ├── core/
 │   │   ├── __init__.py
-│   │   ├── dapbi.py
-│   │   ├── dap.py
-│   │   └── hamming_x.py
-│   └── syndrome_based/          # MAIN PROJECT FOCUS
-│       ├── __init__.py
-│       ├── H_matrix.py          # Original hard-coded parity check matrices
-│       ├── syndrome_based_encoder.py  # Main encoder with auto LUT generation
-│       ├── syndrome_lut.py      # Generated coset leaders lookup table
-│       ├── syndrome_encoder_summary.txt  # Comprehensive documentation
-│       └── matrix_generation/   # Automated matrix generation system
-│           ├── main.py          # Orchestration script for complete generation
-│           ├── hv_greedy_algorithm.py  # H_V matrix generation using greedy algorithm
-│           ├── hu_generator.py  # H_U matrix generation from H_V
-│           ├── generate_lut.py  # Syndrome LUT generation
-│           └── output/          # Generated files
-│               ├── generated_H_matrix.py  # Drop-in replacement for H_matrix.py
-│               └── generated_syndrome_lut.py  # Generated coset leaders lookup table
-└── controller.py
+│   │   ├── generator.py
+│   │   ├── simulator.py
+│   │   ├── transition_count.py
+│   │   ├── error_generator.py
+│   │   ├── comparator.py
+│   │   └── lfsr.py
+│   ├── coding_schemes/
+│   │   ├── __init__.py
+│   │   ├── base_coding_scheme.py
+│   │   ├── paper1/
+│   │   │   ├── __init__.py
+│   │   │   ├── transition_signaling.py
+│   │   │   ├── offset.py
+│   │   │   ├── offset_xor.py
+│   │   │   └── mbit_bi.py
+│   │   ├── paper2/
+│   │   │   ├── __init__.py
+│   │   │   ├── dapbi.py
+│   │   │   ├── dap.py
+│   │   │   └── hamming_x.py
+│   │   └── syndrome_based/          # MAIN PROJECT FOCUS
+│   │       ├── __init__.py
+│   │       ├── H_matrix.py          # Original hard-coded parity check matrices
+│   │       ├── syndrome_based_encoder.py  # Main encoder with auto LUT generation
+│   │       ├── syndrome_lut.py      # Generated coset leaders lookup table
+│   │       ├── syndrome_encoder_summary.txt  # Comprehensive documentation
+│   │       └── matrix_generation/   # Automated matrix generation system
+│   │           ├── main.py          # Orchestration script for complete generation
+│   │           ├── hv_greedy_algorithm.py  # H_V matrix generation using greedy algorithm
+│   │           ├── hu_generator.py  # H_U matrix generation from H_V
+│   │           ├── generate_lut.py  # Syndrome LUT generation
+│   │           └── output/          # Generated files
+│   │               ├── generated_H_matrix.py  # Drop-in replacement for H_matrix.py
+│   │               └── generated_syndrome_lut.py  # Generated coset leaders lookup table
+│   └── controller.py
+└── fpga_implementation/         # Hardware implementation and analysis
+    ├── DataPath.v              # Main data-path pipeline (encoder/decoder flow)
+    ├── FSM_controller.v        # Finite state machine for pipeline control
+    ├── TopModule.v             # Top-level SoC integration
+    ├── top_wrappers.v          # Board-level wrapper with PLL
+    ├── top_wrapper_tb.v        # UART-driven testbench
+    ├── uart_communication/     # UART interface modules
+    │   ├── uart_interface.vhd
+    │   ├── uart2BusTop_pkg.vhd
+    │   ├── uartRx.vhd
+    │   ├── uartTx.vhd
+    │   └── uartTop.vhd
+    ├── scope_interface/        # Oscilloscope data acquisition tools
+    ├── data_processing/        # Post-processing and analysis tools
+    │   ├── voltage_traces/     # Voltage analysis and bus isolation
+    │   └── m_bit_histograms/   # Transition histogram analysis
+    ├── syndrome_based_coding/  # Syndrome-based hardware modules
+    │   ├── new_datapath.v
+    │   ├── new_datapath_tb.v
+    │   └── coset_leader_lut.vh
+    └── m_bit_histograms/       # Legacy histogram analysis
+        ├── m2_histogram.py
+        ├── m5_histogram.py
+        ├── m10_histogram.py
+        └── m16_histogram.py
 ```
 
 ### Key Components
+
+#### Python Simulation
 | Component | Description |
 |-----------|-------------|
 | **config/** | Configuration files for simulation parameters and logging |
@@ -59,6 +87,19 @@ python_simulation/
 | **coding_schemes/paper2/** | Schemes from Sridhara & Shanbhag's unified framework |
 | **coding_schemes/syndrome_based/** | **MAIN PROJECT: Novel syndrome-based error correction** |
 | **controller.py** | Main entry point for running simulations |
+
+#### FPGA Implementation
+| Component | Description |
+|-----------|-------------|
+| **DataPath.v** | Main data-path pipeline implementing encoder/decoder flow |
+| **FSM_controller.v** | Finite state machine controlling pipeline enables and UART handshakes |
+| **TopModule.v** | Top-level SoC integration of FSM, data-path, and UART interface |
+| **top_wrappers.v** | Board-level wrapper with PLL for system clocks and UART IO |
+| **top_wrapper_tb.v** | UART-driven testbench for hardware validation |
+| **uart_communication/** | UART interface modules for PC communication |
+| **scope_interface/** | Oscilloscope data acquisition and measurement tools |
+| **data_processing/** | Post-processing tools for voltage traces and histogram analysis |
+| **syndrome_based_coding/** | Hardware modules for syndrome-based encoding implementation |
 
 ## Main Project: Syndrome-Based Error Correction
 
@@ -135,6 +176,7 @@ pip install -r requirements.txt
 
 ## Usage
 
+### Software Simulation
 Run the simulation controller:
 ```bash
 python python_simulation/controller.py
@@ -143,6 +185,28 @@ python python_simulation/controller.py
 The controller will prompt for:
 1. Coding scheme selection (including the main syndrome-based encoder)
 2. Simulation mode (Random words, LFSR sequence, or All possible words)
+
+### Hardware Implementation
+The FPGA implementation provides a complete hardware validation platform:
+
+#### Synthesis and Implementation
+1. **Top-level Module**: `top_wrappers.v` - Board-level wrapper with PLL
+2. **Core Logic**: `TopModule.v` - SoC integration of FSM, data-path, and UART
+3. **Data Path**: `DataPath.v` - Main pipeline implementing encoder/decoder flow
+4. **Control**: `FSM_controller.v` - State machine for pipeline orchestration
+
+#### Testing and Validation
+1. **Testbench**: `top_wrapper_tb.v` - UART-driven validation
+2. **UART Interface**: Complete PC communication stack
+3. **Scope Interface**: Oscilloscope data acquisition tools
+4. **Data Processing**: Post-processing for voltage traces and histograms
+
+#### Hardware Features
+- **32-bit data width** with configurable M-bit segmentation
+- **UART communication** for PC control and data logging
+- **Transition counting** with histogram accumulation
+- **Real-time power measurement** via oscilloscope interface
+- **Configurable encoding schemes** via UART commands
 
 ### Supported Coding Schemes
 
@@ -178,6 +242,8 @@ The controller will prompt for:
 - Automatic validation of encoding/decoding correctness
 
 ## Key Features
+
+### Software Simulation
 - **Novel Syndrome-Based Error Correction**: Main project contribution
 - **Automated Matrix Generation**: Complete H_V and H_U matrix generation with single command
 - **Greedy Algorithm**: Optimal H_V matrix with identity + 7 extra vectors
@@ -188,6 +254,17 @@ The controller will prompt for:
 - Multiple generation modes for thorough testing
 - Support for various encoding schemes with different error handling capabilities
 - **Automatic LUT Generation**: No manual setup required for syndrome-based encoding
+
+### Hardware Implementation
+- **Complete FPGA Platform**: Full hardware validation of encoding schemes
+- **Real-time Processing**: Hardware-accelerated encoding/decoding pipeline
+- **UART Communication**: PC control and data logging interface
+- **Oscilloscope Integration**: Real-time power measurement and analysis
+- **Transition Histogram**: Hardware-accelerated transition counting
+- **Configurable Parameters**: Runtime configuration via UART commands
+- **Professional Design**: Clean, documented, and synthesis-ready Verilog code
+- **Comprehensive Testing**: UART-driven testbench for validation
+- **Data Processing Tools**: Python scripts for post-processing measurement data
 
 ## Implementation Papers
 
