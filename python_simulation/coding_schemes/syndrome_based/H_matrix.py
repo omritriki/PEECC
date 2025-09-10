@@ -1,3 +1,14 @@
+"""
+======================================================
+    Power Efficient Error Correction Encoding for
+            On-Chip Interconnection Links
+
+            Shlomit Lenefsky & Omri Triki
+                        06.2025
+======================================================
+"""
+
+
 import numpy as np
 import pandas as pd
 

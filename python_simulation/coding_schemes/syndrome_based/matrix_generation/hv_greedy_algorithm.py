@@ -1,7 +1,6 @@
 import numpy as np
 from itertools import product
 import random
-import sys
 
 # Matrix dimensions
 M = 6  # number of rows (syndrome length)

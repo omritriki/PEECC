@@ -1,3 +1,14 @@
+"""
+======================================================
+    Power Efficient Error Correction Encoding for
+            On-Chip Interconnection Links
+
+            Shlomit Lenefsky & Omri Triki
+                        06.2025
+======================================================
+"""
+
+
 # Coset Leaders Lookup Table
 # Format: {syndrome_tuple: np.array(v_bits)}
 

@@ -288,5 +288,6 @@ The FPGA implementation provides a complete hardware validation platform:
 ## Authors
 Shlomit Lenefsky & Omri Triki  
 Prof. Osnat Keren
+Prof. Itamar Levi
 
-June 2025
+September 2025

@@ -8,11 +8,12 @@
 ======================================================
 """
 
+
 import logging
 from coding_schemes.base_coding_scheme import CodingScheme
 import numpy as np  
 from .H_matrix import return_H_U, return_H_V
-from .syndrome_lut import get_leader
+from .coset_leader_lut import get_leader
 
 class SyndromeBasedEncoder(CodingScheme):
     """

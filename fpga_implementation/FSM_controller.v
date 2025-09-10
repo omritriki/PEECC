@@ -14,7 +14,7 @@
 
 
 // Drives enable strobes across pipeline stages and orchestrates UART transaction
-module FSM_controller (
+module fsm_controller (
     input  wire         clk,
     input  wire         rst_n,
     input  wire         valid_in,
