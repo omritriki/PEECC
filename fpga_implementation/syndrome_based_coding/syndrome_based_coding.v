@@ -1,15 +1,32 @@
+/*
+======================================================
+    Power Efficient Error Correction Encoding for
+            On-Chip Interconnection Links
+
+            Shlomit Lenefsky & Omri Triki
+                        09.2025
+======================================================
+
+File: syndrome_based_coding.v
+Purpose: Implements the main Power Efficient SEC encoder/decoder modules
+         - Syndrome-based encoding with coset leader lookup
+         - Single-bit error correction via syndrome matching
+         - Delta-syndrome flow for minimum transition encoding
+*/
+
+
 `include "h_matrix.vh"
 `include "coset_leader_lut.vh"
 
 
 // Matrix-vector multiply: s = H_U * u^T mod 2
 // H_U is 6x32, u is 32-bit, result s is 6-bit
+// Uses bitwise AND + XOR reduction for efficient GF(2) multiplication
 module hu_mul (
-    input  wire [31:0] u,   // information word
-    output wire [5:0]  s    // result vector
+    input  wire [31:0] u,  
+    output wire [5:0]  s    
 );
     // Dot products (mask + reduction XOR) using shared constants
-    // Note: Bit order alignment with Python - assuming Python uses LSB-first indexing
     assign s[0] = ^(u & `HU0);
     assign s[1] = ^(u & `HU1);
     assign s[2] = ^(u & `HU2);
@@ -20,8 +37,8 @@ module hu_mul (
 endmodule
 
 
-// Encoder aligned with Python behavior
-module ecc_encoder (
+// Main Power Efficient SEC encoder implementing delta-syndrome flow
+module my_encoder #(parameter M = 5, k = 32, A = 8)(
     input  wire        clk,
     input  wire        rst_n,       // active-low reset
     input  wire [31:0] info_word,   // 32-bit information word
@@ -48,11 +65,6 @@ module ecc_encoder (
 
     // Step 5: Previous redundancy vector register (v_prev in Python)
     reg [12:0] v_prev;
-`ifdef DEBUG
-    // Debug registers for codeword and its syndrome (declare at module scope for Verilog)
-    reg [44:0] cw_dbg;
-    reg [5:0]  s_codeword;
-`endif
     
     // Step 6: Compute current redundancy: v_curr = v_prev XOR delta_v
     wire [12:0] v_curr = v_prev ^ delta_v;
@@ -75,28 +87,11 @@ module ecc_encoder (
     assign v_out = v_curr;
     assign info_out = info_word;
 
-`ifdef DEBUG
-    always @(posedge clk) begin
-        if (rst_n) begin
-            // Compute codeword-level syndrome to verify H*[u|v]=0
-            // Build codeword as encoder sees it (no pipeline):
-            cw_dbg = {info_word, v_curr};
-            s_codeword[0] = ^(cw_dbg & `HROW0);
-            s_codeword[1] = ^(cw_dbg & `HROW1);
-            s_codeword[2] = ^(cw_dbg & `HROW2);
-            s_codeword[3] = ^(cw_dbg & `HROW3);
-            s_codeword[4] = ^(cw_dbg & `HROW4);
-            s_codeword[5] = ^(cw_dbg & `HROW5);
-            //$display("[ENC] info=%h, s_curr=%b, delta_s=%b, addr=%b, delta_v=%013b, v_curr=%013b, Hcw=%b", 
-                     //info_word, s_curr, delta_s, {delta_s[0],delta_s[1],delta_s[2],delta_s[3],delta_s[4],delta_s[5]}, delta_v, v_curr, s_codeword);
-        end
-    end
-`endif
-
 endmodule
 
 
-module ecc_decoder (
+// Power Efficient SEC decoder with single-bit error correction
+module my_decoder #(parameter M = 5, k = 32, A = 8)(
     input  wire [44:0] c_in,
     output wire [31:0] data_out
 );
@@ -157,55 +152,5 @@ module ecc_decoder (
     // Step 6: Extract corrected information bits
     // Use bypass for zero syndrome (no error case)
     assign data_out = syndrome_is_zero ? c_in[44:13] : c_corr[44:13];
-
-endmodule
-
-
-// Top module with proper timing alignment
-module top_module (
-    input  wire        clk,
-    input  wire        rst_n,
-    input  wire [31:0] info_in,
-    output wire [31:0] decoded_out,
-    output wire        match
-);
-    
-    // Encoder outputs
-    wire [31:0] info_out_enc;
-    wire [12:0] v_out_enc;
-
-    ecc_encoder u_encoder (
-        .clk      (clk),
-        .rst_n    (rst_n),
-        .info_word(info_in),
-        .info_out (info_out_enc),
-        .v_out    (v_out_enc)
-    );
-
-    // Pipeline registers to align timing
-    reg [31:0] info_pipe1;
-    reg [12:0] v_pipe1;
-    
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            info_pipe1 <= 32'b0;
-            v_pipe1 <= 13'b0;
-        end else begin
-            info_pipe1 <= info_in;
-            v_pipe1 <= v_out_enc;
-        end
-    end
-
-    // Build codeword: [info_bits, redundancy_bits]
-    // Ensure bit ordering matches Python's np.concatenate((u_array, v_curr))
-    wire [44:0] codeword = {info_pipe1, v_pipe1};
-
-    ecc_decoder u_decoder (
-        .c_in(codeword),
-        .data_out(decoded_out)
-    );
-
-    // Compare input with decoded output
-    assign match = (decoded_out == info_pipe1);
 
 endmodule

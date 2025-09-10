@@ -68,6 +68,7 @@ PEECC/
     ├── syndrome_based_coding/ 
     │   ├── new_datapath.v
     │   ├── new_datapath_tb.v
+    │   ├── h_matrix.vh
     │   └── coset_leader_lut.vh
     └── m_bit_histograms/     
         ├── m2_histogram.py
