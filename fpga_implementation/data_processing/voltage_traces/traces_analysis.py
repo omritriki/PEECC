@@ -3,10 +3,9 @@ import scipy.io as sio
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-# --- Hard-coded .mat file paths (edit these) ---
-FILE_A = "/Users/omritriki/Programming/PEECC/fpga_implementation/data_processing/voltage_traces/traces_m1/m1_gen_enc.mat"
-FILE_B = "/Users/omritriki/Programming/PEECC/fpga_implementation/data_processing/voltage_traces/traces_m1/m1_gen_enc_bus.mat"
+# Base directory for traces
+BASE_DIR = "/Users/omritriki/Programming/PEECC/fpga_implementation/data_processing/voltage_traces"
+OUTPUT_DIR = f"{BASE_DIR}/output"
 
 
 def load_primary_array(path: str):
@@ -15,16 +14,6 @@ def load_primary_array(path: str):
     _, arr = max(arrays, key=lambda kv: kv[1].size)
     arr = np.asarray(arr)
     return arr
-
-
-def validate_paths(paths):
-    missing = [p for p in paths if not os.path.exists(p)]
-    if missing:
-        print("The following paths do not exist. Please edit FILE_A/FILE_B in this script:")
-        for p in missing:
-            print(" -", p)
-        return False
-    return True
 
 
 def compute_difference(arr_a: np.ndarray, arr_b: np.ndarray) -> np.ndarray:
@@ -58,23 +47,41 @@ def plot_two_vectors(vec1: np.ndarray, vec2: np.ndarray, title1: str, title2: st
 
 
 def main():
-    if not validate_paths([FILE_A, FILE_B]):
-        return
+    M_values = [1, 2, 3, 4, 5, 7, 8, 15, 16]
 
-    arr_a = load_primary_array(FILE_A)
-    arr_b = load_primary_array(FILE_B)
+    # Pretty header
+    header = f"{'M':>3} | {'Max Bus Voltage [mV]':>12} | {'Max Bus Voltage per Wire [mV]':>14}"
+    print("-" * len(header))
+    print(header)
+    print("-" * len(header))
 
-    if arr_a is None or arr_b is None:
-        return
+    per_wire_values = []
 
-    # Show original vectors first
-    plot_two_vectors(arr_a, arr_b, f"Generator + Encoder", f"Generator + Encoder + Bus")
+    for M in M_values:
+        file_a = f"{BASE_DIR}/m{M}_traces/m{M}_gen_enc.mat"
+        file_b = f"{BASE_DIR}/m{M}_traces/m{M}_gen_enc_bus.mat"
 
-    try:
-        c = compute_difference(arr_a, arr_b)
-        plot_vector(c, "Bus Voltage Difference")
-    except ValueError as e:
-        print("Could not compute A - B:", e)
+        gen_enc = load_primary_array(file_a)
+        gen_enc_bus = load_primary_array(file_b)
+
+        c = compute_difference(gen_enc, gen_enc_bus)
+        max_diff = np.max(c)
+        per_wire = max_diff / (32 + M)
+        print(f"{M:>3} | {max_diff:12.2f}         |    {per_wire:14.2f}")
+        per_wire_values.append(per_wire)
+
+    # Plot max voltage per wire
+    plt.figure(figsize=(8, 4))
+    plt.plot(M_values, per_wire_values, marker='o')
+    plt.title("Max Bus Voltage per Wire")
+    plt.xlabel("M value")
+    plt.ylabel("Max per wire [mV]")
+    plt.grid(True, linestyle='--', alpha=0.5)
+    plt.tight_layout()
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    save_path = os.path.join(OUTPUT_DIR, "max_per_wire.jpg")
+    plt.savefig(save_path, format="jpeg", dpi=200, bbox_inches="tight")
+    # plt.show()
 
 
 if __name__ == "__main__":

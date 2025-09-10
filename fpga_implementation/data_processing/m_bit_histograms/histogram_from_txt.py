@@ -1,7 +1,12 @@
+import os
 import re
-import argparse
 import matplotlib.pyplot as plt
 
+# Base directory and M values (aligned with traces_analysis.py)
+BASE_DIR = "/Users/omritriki/Programming/PEECC/fpga_implementation/data_processing/m_bit_histograms/register_values"
+# Output directory for saved histogram images
+OUTPUT_DIR = "/Users/omritriki/Programming/PEECC/fpga_implementation/data_processing/m_bit_histograms/output"
+M_VALUES = [1, 2, 3, 4, 5, 7, 8, 15, 16]
 
 def parse_register_file(path: str):
     xs = []
@@ -21,17 +26,7 @@ def parse_register_file(path: str):
     return xs, ys
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Plot M-bit histogram from decimal register counts text file")
-    parser.add_argument("file", type=str, help="Path to registers text file (e.g., m2_registers.txt)")
-    args = parser.parse_args()
-
-    xs, ys = parse_register_file(args.file)
-
-    if not xs:
-        print("No register lines found. Expected lines like: 'register    10:   65'")
-        return
-
+def plot_histogram(xs, ys, M):
     # Compact consecutive zero-valued bins into grouped labels
     plot_indices = []
     plot_values = []
@@ -57,20 +52,26 @@ def main():
             plot_labels.append(str(xs[i]))
             i += 1
 
-    # Print compact table to console
-    width = max(len(lbl) for lbl in plot_labels)
-    for lbl, val in zip(plot_labels, plot_values):
-        print(f"{lbl.rjust(width)} : {val}")
-
     # Plot
     plt.figure(figsize=(max(8, 0.5 * len(plot_labels)), 4))
     plt.bar(plot_indices, plot_values, width=0.8, color="#4e79a7")
-    plt.xlabel("Number of bit flips (grouped)")
-    plt.ylabel("Occurrences (decimal)")
-    plt.title("M-Bit Bus Invert Bit-flip histogram")
+    plt.xlabel("Number of bit flips")
+    plt.ylabel("Occurrences")
+    plt.title("M-Bit Bus Invert Bit-flip Histogram (M={})".format(M))
     plt.xticks(plot_indices, plot_labels, rotation=0)
     plt.tight_layout()
-    plt.show()
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    save_path = os.path.join(OUTPUT_DIR, f"histogram_m{M}.jpg")
+    plt.savefig(save_path, format="jpeg", dpi=200, bbox_inches="tight")
+    plt.close()
+
+
+def main():
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    for M in M_VALUES:
+        path = f"{BASE_DIR}/m{M}_registers.txt"
+        xs, ys = parse_register_file(path)
+        plot_histogram(xs, ys, M)
 
 
 if __name__ == "__main__":
