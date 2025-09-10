@@ -49,13 +49,7 @@ def plot_two_vectors(vec1: np.ndarray, vec2: np.ndarray, title1: str, title2: st
 def main():
     M_values = [1, 2, 3, 4, 5, 7, 8, 15, 16]
 
-    # Pretty header
-    header = f"{'M':>3} | {'Max Bus Voltage [mV]':>12} | {'Max Bus Voltage per Wire [mV]':>14}"
-    print("-" * len(header))
-    print(header)
-    print("-" * len(header))
-
-    per_wire_values = []
+    max_values = []
 
     for M in M_values:
         file_a = f"{BASE_DIR}/m{M}_traces/m{M}_gen_enc.mat"
@@ -66,20 +60,18 @@ def main():
 
         c = compute_difference(gen_enc, gen_enc_bus)
         max_diff = np.max(c)
-        per_wire = max_diff / (32 + M)
-        print(f"{M:>3} | {max_diff:12.2f}         |    {per_wire:14.2f}")
-        per_wire_values.append(per_wire)
+        max_values.append(max_diff)
 
-    # Plot max voltage per wire
+    # Plot max voltage as function of M
     plt.figure(figsize=(8, 4))
-    plt.plot(M_values, per_wire_values, marker='o')
-    plt.title("Max Bus Voltage per Wire")
+    plt.plot(M_values, max_values, marker='o')
+    plt.title("Max Bus Voltage vs M")
     plt.xlabel("M value")
-    plt.ylabel("Max per wire [mV]")
+    plt.ylabel("Max voltage [mV]")
     plt.grid(True, linestyle='--', alpha=0.5)
     plt.tight_layout()
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    save_path = os.path.join(OUTPUT_DIR, "max_per_wire.jpg")
+    save_path = os.path.join(OUTPUT_DIR, "max_voltage_vs_m.jpg")
     plt.savefig(save_path, format="jpeg", dpi=200, bbox_inches="tight")
     # plt.show()
 
