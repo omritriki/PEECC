@@ -12,7 +12,7 @@
 //          and UART interface for IO and observability.
 
 
-module TopModule #(parameter M=5, k=32, A=8)(
+module top_module #(parameter M=5, k=32, A=8)(
     input M_CLK_OSC, //clk
     input M_RESET_B, //active low reset
     input FTDI_BDBUS_0, //FTDI device bus, need only [0] for rx and [1] for tx

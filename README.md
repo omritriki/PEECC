@@ -50,31 +50,32 @@ PEECC/
 │   │               └── generated_syndrome_lut.py  
 │   └── controller.py
 └── fpga_implementation/         # Hardware implementation and analysis
-    ├── DataPath.v            
-    ├── FSM_controller.v       
-    ├── TopModule.v            
-    ├── top_wrappers.v          
-    ├── top_wrapper_tb.v       
-    ├── uart_communication/   
+    ├── datapath.v              # Main data-path pipeline (encoder/decoder flow)
+    ├── fsm_controller.v        # Finite state machine for pipeline control
+    ├── top_module.v            # Top-level SoC integration
+    ├── top_wrappers.v          # Board-level wrapper with PLL
+    ├── top_wrapper_tb.v        # UART-driven testbench
+    ├── m_bit_coding.v          # M-bit Bus Invert (M-BI) encoding modules
+    ├── uart_files/             # UART interface modules
     │   ├── uart_interface.vhd
     │   ├── uart2BusTop_pkg.vhd
     │   ├── uartRx.vhd
     │   ├── uartTx.vhd
     │   └── uartTop.vhd
-    ├── scope_interface/      
-    ├── data_processing/       
-    │   ├── voltage_traces/   
-    │   └── m_bit_histograms/  
-    ├── syndrome_based_coding/ 
-    │   ├── new_datapath.v
-    │   ├── new_datapath_tb.v
-    │   ├── h_matrix.vh
-    │   └── coset_leader_lut.vh
-    └── m_bit_histograms/     
-        ├── m2_histogram.py
-        ├── m5_histogram.py
-        ├── m10_histogram.py
-        └── m16_histogram.py
+    ├── scope_interface/        # Oscilloscope data acquisition tools
+    ├── data_processing/        # Post-processing and analysis tools
+    │   ├── voltage_traces/     # Voltage analysis and bus isolation
+    │   │   ├── traces_analysis.py
+    │   │   └── output/         # Generated plots
+    │   └── m_bit_histograms/   # Transition histogram analysis
+    │       ├── register_values/ # Register count data files
+    │       └── output/         # Generated histogram images
+    └── syndrome_based_coding/  # Power Efficient SEC hardware modules
+        ├── syndrome_based_coding.v  # Main encoder/decoder implementation
+        ├── new_datapath.v
+        ├── new_datapath_tb.v
+        ├── h_matrix.vh
+        └── coset_leader_lut.vh
 ```
 
 ### Key Components
@@ -97,10 +98,11 @@ PEECC/
 | **top_module.v** | Top-level SoC integration of FSM, data-path, and UART interface |
 | **top_wrappers.v** | Board-level wrapper with PLL for system clocks and UART IO |
 | **top_wrapper_tb.v** | UART-driven testbench for hardware validation |
-| **uart/** | UART interface modules for PC communication |
+| **m_bit_coding.v** | M-bit Bus Invert (M-BI) encoding modules |
+| **uart_files/** | UART interface modules for PC communication |
 | **scope_interface/** | Oscilloscope data acquisition and measurement tools |
 | **data_processing/** | Post-processing tools for voltage traces and histogram analysis |
-| **syndrome_based_coding/** | Hardware modules for syndrome-based encoding implementation |
+| **syndrome_based_coding/** | Power Efficient SEC hardware modules |
 
 ## Main Project: Power Efficient SEC
 
@@ -209,21 +211,28 @@ The FPGA implementation provides a complete hardware validation platform:
 - **Real-time power measurement** via oscilloscope interface
 - **Configurable encoding schemes** via UART commands
 
-### Data Processing and Plots
+### Data Processing and Analysis
 
-- Voltage traces analysis:
-  - Script: `fpga_implementation/data_processing/voltage_traces/traces_analysis.py`
-  - Runs across M values [1, 2, 3, 4, 5, 7, 8, 15, 16], computes max bus voltage difference and per-wire values, and saves a summary plot.
-  - Usage:
-    ```bash
-    python -u fpga_implementation/data_processing/voltage_traces/traces_analysis.py
-    ```
-  - Output:
-    - `fpga_implementation/data_processing/voltage_traces/output/max_per_wire.jpg`
+#### Voltage Traces Analysis
+- **Script**: `fpga_implementation/data_processing/voltage_traces/traces_analysis.py`
+- **Function**: Analyzes voltage differences between generator+encoder and generator+encoder+bus across M values [1, 2, 3, 4, 5, 7, 8, 15, 16]
+- **Output**: 
+  - Console table with max voltage difference and per-wire values
+  - Plot: `fpga_implementation/data_processing/voltage_traces/output/max_per_wire.jpg`
+- **Usage**:
+  ```bash
+  python -u fpga_implementation/data_processing/voltage_traces/traces_analysis.py
+  ```
 
-- M-bit histograms from register captures:
-  - Register files live under `fpga_implementation/data_processing/m_bit_histograms/register_values/`.
-  - Generated histogram images are saved under `fpga_implementation/data_processing/m_bit_histograms/output/` (one image per M).
+#### M-bit Histogram Generation
+- **Script**: `fpga_implementation/data_processing/m_bit_histograms/histogram_from_txt.py`
+- **Function**: Generates transition count histograms from register capture data
+- **Input**: Register count files in `fpga_implementation/data_processing/m_bit_histograms/register_values/`
+- **Output**: Histogram images saved to `fpga_implementation/data_processing/m_bit_histograms/output/`
+- **Usage**:
+  ```bash
+  python -u fpga_implementation/data_processing/m_bit_histograms/histogram_from_txt.py
+  ```
 
 ### Supported Coding Schemes
 
@@ -282,6 +291,17 @@ The FPGA implementation provides a complete hardware validation platform:
 - **Professional Design**: Clean, documented, and synthesis-ready Verilog code
 - **Comprehensive Testing**: UART-driven testbench for validation
 - **Data Processing Tools**: Python scripts for post-processing measurement data
+- **Power Efficient SEC**: Novel syndrome-based error correction with coset leader lookup
+- **M-bit Bus Invert**: Segmented bus inversion for power reduction
+
+## Project Statistics
+- **Total Code Lines**: 5,836 (excluding data files, logs, and documentation)
+- **File Types**: Python (.py), Verilog (.v), VHDL (.vhd), Verilog Headers (.vh)
+- **Main Components**: 
+  - Software simulation framework with automated matrix generation
+  - Complete FPGA implementation with UART communication
+  - Data processing tools for voltage analysis and histogram generation
+  - Power Efficient SEC with novel syndrome-based error correction
 
 ## Implementation Papers
 
