@@ -1,7 +1,7 @@
 # Power Efficient Error Correction Encoding for On-Chip Interconnection Links
 
 ## Overview
-This project implements and analyzes power-efficient error correction techniques for reliable data transfer over on-chip interconnection links. The **main focus** is on **Syndrome-Based Error Correction**, a novel approach that minimizes dynamic power consumption while providing robust error correction capabilities. The system also includes various encoding schemes from two seminal papers in the field for comparative analysis.
+This project implements and analyzes power-efficient error correction techniques for reliable data transfer over on-chip interconnection links. The **main focus** is on **Power Efficient SEC**, a novel approach that minimizes dynamic power consumption while providing robust error correction capabilities. The system also includes various encoding schemes from two seminal papers in the field for comparative analysis.
 
 ## Project Structure
 
@@ -36,40 +36,40 @@ PEECC/
 │   │   │   └── hamming_x.py
 │   │   └── syndrome_based/          # MAIN PROJECT FOCUS
 │   │       ├── __init__.py
-│   │       ├── H_matrix.py          # Original hard-coded parity check matrices
-│   │       ├── syndrome_based_encoder.py  # Main encoder with auto LUT generation
-│   │       ├── syndrome_lut.py      # Generated coset leaders lookup table
-│   │       ├── syndrome_encoder_summary.txt  # Comprehensive documentation
-│   │       └── matrix_generation/   # Automated matrix generation system
-│   │           ├── main.py          # Orchestration script for complete generation
-│   │           ├── hv_greedy_algorithm.py  # H_V matrix generation using greedy algorithm
-│   │           ├── hu_generator.py  # H_U matrix generation from H_V
-│   │           ├── generate_lut.py  # Syndrome LUT generation
-│   │           └── output/          # Generated files
-│   │               ├── generated_H_matrix.py  # Drop-in replacement for H_matrix.py
-│   │               └── generated_syndrome_lut.py  # Generated coset leaders lookup table
+│   │       ├── H_matrix.py          
+│   │       ├── syndrome_based_encoder.py  
+│   │       ├── syndrome_lut.py      
+│   │       ├── syndrome_encoder_summary.txt  
+│   │       └── matrix_generation/  
+│   │           ├── main.py          
+│   │           ├── hv_greedy_algorithm.py  
+│   │           ├── hu_generator.py  
+│   │           ├── generate_lut.py  
+│   │           └── output/         
+│   │               ├── generated_H_matrix.py  
+│   │               └── generated_syndrome_lut.py  
 │   └── controller.py
 └── fpga_implementation/         # Hardware implementation and analysis
-    ├── DataPath.v              # Main data-path pipeline (encoder/decoder flow)
-    ├── FSM_controller.v        # Finite state machine for pipeline control
-    ├── TopModule.v             # Top-level SoC integration
-    ├── top_wrappers.v          # Board-level wrapper with PLL
-    ├── top_wrapper_tb.v        # UART-driven testbench
-    ├── uart_communication/     # UART interface modules
+    ├── DataPath.v            
+    ├── FSM_controller.v       
+    ├── TopModule.v            
+    ├── top_wrappers.v          
+    ├── top_wrapper_tb.v       
+    ├── uart_communication/   
     │   ├── uart_interface.vhd
     │   ├── uart2BusTop_pkg.vhd
     │   ├── uartRx.vhd
     │   ├── uartTx.vhd
     │   └── uartTop.vhd
-    ├── scope_interface/        # Oscilloscope data acquisition tools
-    ├── data_processing/        # Post-processing and analysis tools
-    │   ├── voltage_traces/     # Voltage analysis and bus isolation
-    │   └── m_bit_histograms/   # Transition histogram analysis
-    ├── syndrome_based_coding/  # Syndrome-based hardware modules
+    ├── scope_interface/      
+    ├── data_processing/       
+    │   ├── voltage_traces/   
+    │   └── m_bit_histograms/  
+    ├── syndrome_based_coding/ 
     │   ├── new_datapath.v
     │   ├── new_datapath_tb.v
     │   └── coset_leader_lut.vh
-    └── m_bit_histograms/       # Legacy histogram analysis
+    └── m_bit_histograms/     
         ├── m2_histogram.py
         ├── m5_histogram.py
         ├── m10_histogram.py
@@ -85,26 +85,26 @@ PEECC/
 | **core/** | Core simulation functionality and utilities |
 | **coding_schemes/paper1/** | Schemes from Cheng & Pedram's tutorial paper |
 | **coding_schemes/paper2/** | Schemes from Sridhara & Shanbhag's unified framework |
-| **coding_schemes/syndrome_based/** | **MAIN PROJECT: Novel syndrome-based error correction** |
+| **coding_schemes/syndrome_based/** | **MAIN PROJECT: Power Efficient SEC** |
 | **controller.py** | Main entry point for running simulations |
 
 #### FPGA Implementation
 | Component | Description |
 |-----------|-------------|
-| **DataPath.v** | Main data-path pipeline implementing encoder/decoder flow |
-| **FSM_controller.v** | Finite state machine controlling pipeline enables and UART handshakes |
-| **TopModule.v** | Top-level SoC integration of FSM, data-path, and UART interface |
+| **datapath.v** | Main data-path pipeline implementing encoder/decoder flow |
+| **fsm_controller.v** | Finite state machine controlling pipeline enables and UART handshakes |
+| **top_module.v** | Top-level SoC integration of FSM, data-path, and UART interface |
 | **top_wrappers.v** | Board-level wrapper with PLL for system clocks and UART IO |
 | **top_wrapper_tb.v** | UART-driven testbench for hardware validation |
-| **uart_communication/** | UART interface modules for PC communication |
+| **uart/** | UART interface modules for PC communication |
 | **scope_interface/** | Oscilloscope data acquisition and measurement tools |
 | **data_processing/** | Post-processing tools for voltage traces and histogram analysis |
 | **syndrome_based_coding/** | Hardware modules for syndrome-based encoding implementation |
 
-## Main Project: Syndrome-Based Error Correction
+## Main Project: Power Efficient SEC
 
 ### Overview
-The **Syndrome-Based Error Correction** is the primary contribution of this project. It implements a novel approach that combines error correction with power efficiency through intelligent redundancy encoding.
+The **Power Efficient SEC** is the primary contribution of this project. It implements a novel approach that combines error correction with power efficiency through intelligent redundancy encoding.
 
 ### Key Features
 - **6×45 Parity Check Matrix**: H = [H_U | H_V] where H_U is 6×32 (information) and H_V is 6×13 (redundancy)
@@ -191,9 +191,9 @@ The FPGA implementation provides a complete hardware validation platform:
 
 #### Synthesis and Implementation
 1. **Top-level Module**: `top_wrappers.v` - Board-level wrapper with PLL
-2. **Core Logic**: `TopModule.v` - SoC integration of FSM, data-path, and UART
-3. **Data Path**: `DataPath.v` - Main pipeline implementing encoder/decoder flow
-4. **Control**: `FSM_controller.v` - State machine for pipeline orchestration
+2. **Core Logic**: `top_module.v` - SoC integration of FSM, data-path, and UART
+3. **Data Path**: `datapath.v` - Main pipeline implementing encoder/decoder flow
+4. **Control**: `fsm_controller.v` - State machine for pipeline orchestration
 
 #### Testing and Validation
 1. **Testbench**: `top_wrapper_tb.v` - UART-driven validation
@@ -208,9 +208,25 @@ The FPGA implementation provides a complete hardware validation platform:
 - **Real-time power measurement** via oscilloscope interface
 - **Configurable encoding schemes** via UART commands
 
+### Data Processing and Plots
+
+- Voltage traces analysis:
+  - Script: `fpga_implementation/data_processing/voltage_traces/traces_analysis.py`
+  - Runs across M values [1, 2, 3, 4, 5, 7, 8, 15, 16], computes max bus voltage difference and per-wire values, and saves a summary plot.
+  - Usage:
+    ```bash
+    python -u fpga_implementation/data_processing/voltage_traces/traces_analysis.py
+    ```
+  - Output:
+    - `fpga_implementation/data_processing/voltage_traces/output/max_per_wire.jpg`
+
+- M-bit histograms from register captures:
+  - Register files live under `fpga_implementation/data_processing/m_bit_histograms/register_values/`.
+  - Generated histogram images are saved under `fpga_implementation/data_processing/m_bit_histograms/output/` (one image per M).
+
 ### Supported Coding Schemes
 
-#### **MAIN PROJECT: Syndrome-Based Error Correction**
+#### **MAIN PROJECT: Power Efficient SEC**
 - **Syndrome-Based Encoder**: Novel approach combining error correction with power efficiency
   - 32-bit information words with 13-bit redundancy
   - Automated matrix generation using greedy algorithms
@@ -267,13 +283,6 @@ The FPGA implementation provides a complete hardware validation platform:
 - **Data Processing Tools**: Python scripts for post-processing measurement data
 
 ## Implementation Papers
-
-### **MAIN PROJECT: Syndrome-Based Error Correction**
-- **Novel Contribution**: Power-efficient error correction using coset leaders
-- **Key Innovation**: Combines error correction with transition cost optimization
-- **Technical Foundation**: Based on established coset-leader theory in coding theory
-- **Matrix Generation**: Automated H_V and H_U matrix generation using greedy algorithms
-- **System Architecture**: Complete matrix generation and LUT system with single command execution
 
 ### Paper 1
 - Title: Memory Bus Encoding for Low Power: A Tutorial
