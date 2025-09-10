@@ -50,12 +50,12 @@ PEECC/
 │   │               └── generated_syndrome_lut.py  
 │   └── controller.py
 └── fpga_implementation/         # Hardware implementation and analysis
-    ├── datapath.v              # Main data-path pipeline (encoder/decoder flow)
-    ├── fsm_controller.v        # Finite state machine for pipeline control
-    ├── top_module.v            # Top-level SoC integration
-    ├── top_wrappers.v          # Board-level wrapper with PLL
-    ├── top_wrapper_tb.v        # UART-driven testbench
-    ├── m_bit_coding.v          # M-bit Bus Invert (M-BI) encoding modules
+    ├── datapath.v              
+    ├── fsm_controller.v        
+    ├── top_module.v            
+    ├── top_wrappers.v          
+    ├── top_wrapper_tb.v        
+    ├── m_bit_coding.v          
     ├── uart_files/             # UART interface modules
     │   ├── uart_interface.vhd
     │   ├── uart2BusTop_pkg.vhd
@@ -64,14 +64,14 @@ PEECC/
     │   └── uartTop.vhd
     ├── scope_interface/        # Oscilloscope data acquisition tools
     ├── data_processing/        # Post-processing and analysis tools
-    │   ├── voltage_traces/     # Voltage analysis and bus isolation
+    │   ├── voltage_traces/     
     │   │   ├── traces_analysis.py
-    │   │   └── output/         # Generated plots
-    │   └── m_bit_histograms/   # Transition histogram analysis
-    │       ├── register_values/ # Register count data files
-    │       └── output/         # Generated histogram images
+    │   │   └── output/         
+    │   └── m_bit_histograms/   
+    │       ├── register_values/
+    │       └── output/         
     └── syndrome_based_coding/  # Power Efficient SEC hardware modules
-        ├── syndrome_based_coding.v  # Main encoder/decoder implementation
+        ├── syndrome_based_coding.v  
         ├── new_datapath.v
         ├── new_datapath_tb.v
         ├── h_matrix.vh
@@ -318,6 +318,7 @@ The FPGA implementation provides a complete hardware validation platform:
 ## Authors
 Shlomit Lenefsky & Omri Triki  
 Prof. Osnat Keren
+
 Prof. Itamar Levi
 
 September 2025
