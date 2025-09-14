@@ -87,9 +87,9 @@ module fsm_controller (
                         done     <= 1'b1;
                     end
                     if (txFinish) begin
-                        if (state_counter == 4'd1) begin
+                        if (state_counter == 4'd15) begin
                             state_counter  <= 4'd0;
-                            next_state_reg <= next_state_reg + 3'd4;
+                            next_state_reg <= next_state_reg + 3'd1;
                         end
                         else begin
                             state_counter <= state_counter + 1'b1;
