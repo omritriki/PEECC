@@ -49,7 +49,9 @@ def plot_two_vectors(vec1: np.ndarray, vec2: np.ndarray, title1: str, title2: st
 def main():
     M_values = [1, 2, 3, 4, 5, 7, 8, 15, 16]
 
+    END_IDX = 2500000  # average c over samples [0:END_IDX)
     max_values = []
+    avg_window_values = []
 
     for M in M_values:
         file_a = f"{BASE_DIR}/m{M}_traces/m{M}_gen_enc.mat"
@@ -61,19 +63,21 @@ def main():
         c = compute_difference(gen_enc, gen_enc_bus)
         max_diff = np.max(c)
         max_values.append(max_diff)
+        # Average over [0:END_IDX)
+        c_flat = c.ravel()
+        avg_window = float(np.mean(c_flat[:min(len(c_flat), END_IDX)]))
+        avg_window_values.append(avg_window)
+        # (no plotting)
 
-    # Plot max voltage as function of M
-    plt.figure(figsize=(8, 4))
-    plt.plot(M_values, max_values, marker='o')
-    plt.title("Max Bus Voltage vs M")
-    plt.xlabel("M value")
-    plt.ylabel("Max voltage [mV]")
-    plt.grid(True, linestyle='--', alpha=0.5)
-    plt.tight_layout()
+    # Write summary file only (no prints, no plots)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    save_path = os.path.join(OUTPUT_DIR, "max_voltage_vs_m.jpg")
-    plt.savefig(save_path, format="jpeg", dpi=200, bbox_inches="tight")
-    # plt.show()
+    save_path = os.path.join(OUTPUT_DIR, "max_and_avg_c_vs_m.txt")
+    lines = ["M,MaxC_mV,AvgC_0_to_127000_mV"]
+    for M, mx, av in zip(M_values, max_values, avg_window_values):
+        lines.append(f"{M},{mx:.2f},{av:.2f}")
+    with open(save_path, "w") as f:
+        f.write("\n".join(lines))
+    # No plotting or printing
 
 
 if __name__ == "__main__":
