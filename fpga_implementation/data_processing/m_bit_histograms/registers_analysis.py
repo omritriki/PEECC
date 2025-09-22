@@ -68,10 +68,23 @@ def plot_histogram(xs, ys, M):
 
 def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
+    summary_lines = []
+    summary_path = os.path.join(OUTPUT_DIR, "summary_transitions.txt")
+    # Prepare header
+    summary_lines.append("M,Average Bit Transitions,Max Transitions")
     for M in M_VALUES:
         path = f"{BASE_DIR}/m{M}_registers.txt"
         xs, ys = parse_register_file(path)
         plot_histogram(xs, ys, M)
+        total = sum(ys) if ys else 0
+        weighted = sum(i * c for i, c in zip(xs, ys)) if ys else 0
+        avg = (weighted / total) if total > 0 else 0.0
+        max_transitions = max((i for i, c in zip(xs, ys) if c > 0), default=0)
+        summary_lines.append(f"{M},{avg:.2f},{max_transitions}")
+
+    # Write summary file
+    with open(summary_path, "w") as f:
+        f.write("\n".join(summary_lines))
 
 
 if __name__ == "__main__":
