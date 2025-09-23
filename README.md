@@ -64,9 +64,9 @@ PEECC/
     │   └── uartTop.vhd
     ├── scope_interface/        # Oscilloscope data acquisition tools
     ├── data_processing/        # Post-processing and analysis tools
-    │   ├── voltage_traces/     
-    │   │   ├── traces_analysis.py
-    │   │   └── output/         
+    │   ├── voltage_traces/     # Manual values + raw traces
+    │   │   ├── full_traces.txt # Editable Max/Avg per M used for plotting
+    │   │   └── output/         # Generated plots (JPG)
     │   └── m_bit_histograms/   
     │       ├── register_values/
     │       └── output/         
@@ -213,15 +213,13 @@ The FPGA implementation provides a complete hardware validation platform:
 
 ### Data Processing and Analysis
 
-#### Voltage Traces Analysis
-- **Script**: `fpga_implementation/data_processing/voltage_traces/traces_analysis.py`
-- **Function**: Analyzes voltage differences between generator+encoder and generator+encoder+bus across M values [1, 2, 3, 4, 5, 7, 8, 15, 16]
-- **Output**: 
-  - Console table with max voltage difference and per-wire values
-  - Plot: `fpga_implementation/data_processing/voltage_traces/output/max_per_wire.jpg`
-- **Usage**:
+#### Voltage Plot (manual overrides workflow)
+- **Script**: `fpga_implementation/data_processing/scripts/full_system_voltage_analysis.py`
+- **Function**: Reads `full_traces.txt`, normalizes each series independently, and saves a plot of Max/Avg vs M.
+- **Output**: `fpga_implementation/data_processing/output/full_voltage_vs_m.jpg`
+- **Run**:
   ```bash
-  python -u fpga_implementation/data_processing/voltage_traces/traces_analysis.py
+  python -u fpga_implementation/data_processing/scripts/full_system_voltage_analysis.py
   ```
 
 #### M-bit Histogram Generation
@@ -318,7 +316,6 @@ The FPGA implementation provides a complete hardware validation platform:
 ## Authors
 Shlomit Lenefsky & Omri Triki  
 Prof. Osnat Keren
-
 Prof. Itamar Levi
 
 September 2025
