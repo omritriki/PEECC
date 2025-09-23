@@ -64,9 +64,9 @@ PEECC/
     │   └── uartTop.vhd
     ├── scope_interface/        # Oscilloscope data acquisition tools
     ├── data_processing/        # Post-processing and analysis tools
-    │   ├── voltage_traces/     # Manual values + raw traces
-    │   │   ├── full_traces.txt # Editable Max/Avg per M used for plotting
-    │   │   └── output/         # Generated plots (JPG)
+    │   ├── voltage_traces/     
+    │   │   ├── full_traces.txt 
+    │   │   └── output/         
     │   └── m_bit_histograms/   
     │       ├── register_values/
     │       └── output/         
@@ -268,7 +268,7 @@ The FPGA implementation provides a complete hardware validation platform:
 ## Key Features
 
 ### Software Simulation
-- **Novel Syndrome-Based Error Correction**: Main project contribution
+- **Syndrome-Based Error Correction**: Main project contribution
 - **Automated Matrix Generation**: Complete H_V and H_U matrix generation with single command
 - **Greedy Algorithm**: Optimal H_V matrix with identity + 7 extra vectors
 - **Drop-in Replacement**: Generated matrices work seamlessly with existing code
@@ -291,15 +291,6 @@ The FPGA implementation provides a complete hardware validation platform:
 - **Data Processing Tools**: Python scripts for post-processing measurement data
 - **Power Efficient SEC**: Novel syndrome-based error correction with coset leader lookup
 - **M-bit Bus Invert**: Segmented bus inversion for power reduction
-
-## Project Statistics
-- **Total Code Lines**: 5,836 (excluding data files, logs, and documentation)
-- **File Types**: Python (.py), Verilog (.v), VHDL (.vhd), Verilog Headers (.vh)
-- **Main Components**: 
-  - Software simulation framework with automated matrix generation
-  - Complete FPGA implementation with UART communication
-  - Data processing tools for voltage analysis and histogram generation
-  - Power Efficient SEC with novel syndrome-based error correction
 
 ## Implementation Papers
 
